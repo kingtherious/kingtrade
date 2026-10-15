@@ -25,7 +25,7 @@
     <h1>Masuk ke Admin</h1>
     <p>Kelola lisensi, akun client, konten website, monitoring API, dan keamanan sistem.</p>
     <form id="loginForm">
-      <div class="field"><label for="username">Username admin</label><input id="username" name="username" autocomplete="username" required placeholder="Masukkan username"></div>
+      <div class="field"><label for="username">Email admin</label><input id="username" name="email" type="email" autocomplete="username" required placeholder="Masukkan email Supabase"></div>
       <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Masukkan password"></div>
       <button class="primary" type="submit">Masuk ke Dashboard</button>
       <div class="error" id="loginError" role="status"></div>
@@ -103,22 +103,45 @@
     <section class="page hidden" id="page-admins"><section class="panel"><div class="panel-head"><h2>Manajemen Admin User</h2><button class="btn teal" data-action="add-admin">+ Tambah admin</button></div><div class="placeholder">Pembuatan admin harus dilakukan oleh admin yang sudah terautentikasi. Simpan password menggunakan Argon2id atau bcrypt di backend, bukan plaintext di file HTML.</div></section></section>
   </main>
 </section>
+<!-- Supabase JS client: publishable key is intended for browser use; protect data with RLS. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/*
-  Integrasi backend yang diperlukan:
-  POST /api/admin/login -> memvalidasi kredensial di server dan mengatur session cookie HttpOnly, Secure, SameSite.
-  GET  /api/admin/me    -> memeriksa sesi admin.
-  POST /api/admin/logout
-  Semua endpoint data harus memeriksa sesi dan role admin di server.
-  Jangan memasukkan username/password admin ke dalam source frontend.
-*/
+// Isi dua nilai ini dengan Project URL dasar dan Publishable key milik project Supabase.
+// Jangan pernah memasukkan sb_secret_ atau service_role key ke file ini.
+const SUPABASE_URL = 'https://nzrjskgbcnbmilvzrqqr.supabase.co/';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_IzCPxJIzOLxVwqz4ZYWD6Q_Yd-aXqe-';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
+
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  loginError.textContent = 'Login belum aktif: endpoint backend /api/admin/login belum dikonfigurasi. Jangan gunakan kredensial produksi sampai autentikasi server tersedia.';
-  // Setelah backend siap, kirim form ke endpoint login server dan hanya tampilkan dashboard
-  // jika server mengembalikan sesi yang valid. Jangan validasi password di browser.
+  loginError.textContent = 'Memeriksa akun...';
+  const email = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+
+  if (SUPABASE_URL.includes('PASTE_') || SUPABASE_PUBLISHABLE_KEY.includes('PASTE_')) {
+    loginError.textContent = 'Konfigurasi Supabase belum diisi.';
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error || !data.user) {
+    loginError.textContent = 'Login gagal. Periksa email dan password.';
+    return;
+  }
+
+  const { data: isAdmin, error: roleError } = await supabaseClient.rpc('is_kingtherious_admin');
+  if (roleError || isAdmin !== true) {
+    await supabaseClient.auth.signOut();
+    loginError.textContent = 'Akun berhasil login, tetapi tidak memiliki hak admin.';
+    return;
+  }
+
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('adminShell').style.display = 'block';
+  loginError.textContent = '';
 });
 
 const titles = {
@@ -148,10 +171,11 @@ document.querySelectorAll('[data-goto]').forEach(btn=>btn.addEventListener('clic
 document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',()=>{
   alert('Aksi ini belum aktif. Hubungkan ke endpoint backend dengan validasi sesi dan role admin.');
 }));
-document.getElementById('logoutBtn').addEventListener('click',()=>{
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  await supabaseClient.auth.signOut();
   document.getElementById('adminShell').style.display='none';
   document.getElementById('loginView').style.display='grid';
-  loginError.textContent='Sesi demo ditutup. Autentikasi server belum dikonfigurasi.';
+  loginError.textContent='Kamu sudah keluar.';
 });
 </script>
 </body>
