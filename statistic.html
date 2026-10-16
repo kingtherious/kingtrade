@@ -1,605 +1,198 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#050b14">
-<meta name="description" content="Dashboard performa akun MT5 yang terhubung dengan EA KINGTHERIOUS: equity, drawdown, win rate, profit factor, dan riwayat transaksi.">
-<title>Dashboard Performa | KINGTHERIOUS</title>
-<style>
-  :root{
-    --bg:#050b14; --panel:#0a1422; --panel-2:#0e1b2e; --line:#172a43;
-    --text:#e8eef8; --muted:#8196b0; --faint:#4d6180;
-    --profit:#2ee6a6; --loss:#ff5d73; --accent:#4da3ff; --gold:#f5b942;
-    --radius:14px;
-    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  }
-  *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5;
-       background-image:radial-gradient(1200px 500px at 85% -10%, rgba(77,163,255,.10), transparent 60%),
-                        radial-gradient(900px 400px at -5% 0%, rgba(46,230,166,.06), transparent 55%);
-       background-attachment:fixed}
-  a{color:inherit;text-decoration:none}
-  .wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050b14">
+  <meta name="description" content="KINGTHERIOUS — Live Trading Statistics & Performance Transparency.">
+  <title>Statistik Live & Performa Akun | KINGTHERIOUS</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050a12;
+      --panel: rgba(4, 17, 30, .88);
+      --line: rgba(0, 190, 226, .38);
+      --cyan: #08d8ed;
+      --teal: #00e0b2;
+      --text: #f3f7ff;
+      --muted: #a9bdd7;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 75% 35%, rgba(0, 96, 135, .14), transparent 38%),
+        radial-gradient(ellipse at 10% 60%, rgba(0, 204, 170, .07), transparent 32%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: inherit; text-decoration: none; }
+    .topbar {
+      min-height: 88px;
+      padding: 14px clamp(18px, 3vw, 46px);
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(0, 194, 232, .35);
+      background: rgba(4, 11, 21, .94);
+    }
+    .brand { display: flex; align-items: center; gap: 15px; }
+    .brand-mark { width: 49px; height: 49px; display: grid; place-items: center; color: var(--cyan); }
+    .brand-mark svg { width: 100%; height: 100%; }
+    .brand-name { font-size: 22px; line-height: 1.05; letter-spacing: .055em; font-weight: 850; }
+    .brand-tag { color: var(--teal); font-size: 10px; font-weight: 750; letter-spacing: .22em; margin-top: 7px; }
+    
+    main { padding: 40px clamp(18px, 3vw, 46px); max-width: 1280px; margin: 0 auto; }
+    .page-header { margin-bottom: 35px; }
+    .page-header h1 { font-size: clamp(28px, 3vw, 42px); margin: 0 0 10px; font-weight: 850; }
+    .page-header p { color: var(--muted); font-size: 16px; margin: 0; }
 
-  /* top bar */
-  .top{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rgba(5,11,20,.82);border-bottom:1px solid var(--line)}
-  .top .wrap{display:flex;align-items:center;justify-content:space-between;height:60px;gap:12px}
-  .brand{display:flex;flex-direction:column;line-height:1.1}
-  .brand b{letter-spacing:.16em;font-size:15px}
-  .brand span{font-size:9px;letter-spacing:.24em;color:var(--muted)}
-  .nav{display:flex;gap:6px;align-items:center;font-size:13px}
-  .nav a{padding:8px 12px;border-radius:8px;color:var(--muted)}
-  .nav a:hover{color:var(--text);background:var(--panel)}
-  .nav a.on{color:var(--text);background:var(--panel-2)}
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 8px; color: var(--cyan);
+      font-weight: 600; font-size: 14px;
+    }
+    .back-btn:hover { text-decoration: underline; }
 
-  /* hero */
-  .head{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;padding:28px 0 18px}
-  .head h1{margin:0;font-size:clamp(22px,4vw,32px);letter-spacing:-.01em}
-  .head p{margin:4px 0 0;color:var(--muted);font-size:14px}
-  .live{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-family:var(--mono)}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--faint)}
-  .dot.on{background:var(--profit);box-shadow:0 0 0 4px rgba(46,230,166,.15)}
-  .dot.demo{background:var(--gold);box-shadow:0 0 0 4px rgba(245,185,66,.15)}
+    /* Styling Tabel Transparansi */
+    .table-container {
+      width: 100%; overflow-x: auto;
+      border: 1px solid rgba(0, 152, 208, .3);
+      border-radius: 18px; background: rgba(2, 15, 28, .85);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    table {
+      width: 100%; border-collapse: collapse; text-align: left;
+      font-size: 14px; white-space: nowrap;
+    }
+    th, td {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(0, 174, 226, .15);
+    }
+    th {
+      background: rgba(4, 25, 45, .9);
+      color: var(--cyan); font-weight: 750; letter-spacing: 0.03em;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(0, 213, 218, .04); }
 
-  .banner{display:none;margin:0 0 16px;padding:12px 14px;border:1px solid rgba(245,185,66,.35);background:rgba(245,185,66,.08);border-radius:10px;color:#f3d18a;font-size:13px}
-  .banner.show{display:block}
+    .badge-buy { color: #00e0b2; background: rgba(0,224,178,0.1); padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+    .badge-sell { color: #ff5c5c; background: rgba(255,92,92,0.1); padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+    .profit-pos { color: var(--teal); font-weight: 700; }
+    .profit-neg { color: #ff5c5c; font-weight: 700; }
 
-  /* controls */
-  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
-  .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
-  .seg button{all:unset;cursor:pointer;padding:7px 12px;font-size:13px;color:var(--muted);border-radius:7px}
-  .seg button[aria-pressed="true"]{background:var(--panel-2);color:var(--text)}
-  .seg button:focus-visible,.btn:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  select,.btn{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit;font-size:13px}
-  .btn{cursor:pointer}
-  .btn:hover,select:hover{border-color:#27426a}
-  .spacer{flex:1}
-
-  /* cards */
-  .card{background:linear-gradient(180deg,var(--panel),#08111e);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
-  .card h2{margin:0 0 12px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  .grid{display:grid;gap:14px}
-  .kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:14px}
-  .kpi .lbl{font-size:12px;color:var(--muted)}
-  .kpi .val{font-size:26px;font-weight:650;letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums}
-  .kpi .sub{font-size:12px;color:var(--faint);margin-top:2px;font-family:var(--mono)}
-  .pos{color:var(--profit)} .neg{color:var(--loss)}
-  .cols{grid-template-columns:2fr 1fr}
-  .cols-2{grid-template-columns:1fr 1fr}
-  @media (max-width:900px){.cols,.cols-2{grid-template-columns:1fr}}
-
-  .chart{position:relative;width:100%}
-  .chart svg{display:block;width:100%;height:auto;overflow:visible}
-  .tip{position:absolute;pointer-events:none;background:#0b1a2e;border:1px solid #27426a;border-radius:8px;padding:8px 10px;font-size:12px;font-family:var(--mono);white-space:nowrap;display:none;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.4)}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:6px}
-  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
-
-  /* account + ring */
-  .acct{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;font-size:13px}
-  .acct div span{display:block;color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
-  .acct div b{font-family:var(--mono);font-weight:600;font-size:14px}
-  .ringbox{display:flex;align-items:center;gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
-  .ringbox .t{font-size:13px;color:var(--muted)}
-  .ringbox .t b{color:var(--text);font-family:var(--mono)}
-
-  /* lists */
-  .bars{display:flex;flex-direction:column;gap:10px}
-  .barrow{display:grid;grid-template-columns:78px 1fr 92px;gap:10px;align-items:center;font-size:13px}
-  .barrow .n{font-family:var(--mono);color:var(--muted)}
-  .barrow .track{position:relative;height:10px;background:#0c1829;border-radius:6px;overflow:hidden}
-  .barrow .fill{position:absolute;top:0;bottom:0;border-radius:6px}
-  .barrow .v{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
-  .barrow small{display:block;color:var(--faint);font-size:11px}
-
-  .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
-  th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
-  th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
-  tbody tr:hover{background:rgba(77,163,255,.05)}
-  .tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-family:var(--mono);border:1px solid}
-  .tag.buy{color:var(--accent);border-color:rgba(77,163,255,.4);background:rgba(77,163,255,.08)}
-  .tag.sell{color:var(--gold);border-color:rgba(245,185,66,.4);background:rgba(245,185,66,.08)}
-  .empty{padding:28px;text-align:center;color:var(--muted);font-size:13px}
-
-  details{margin-top:14px}
-  summary{cursor:pointer;color:var(--muted);font-size:13px}
-  pre{background:#060e1a;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;font-size:12px;color:#b7c7de;font-family:var(--mono)}
-  code{font-family:var(--mono);font-size:12px;color:#b7c7de}
-  .note{font-size:12px;color:var(--faint);padding:20px 0 40px}
-  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-  @media (prefers-reduced-motion:no-preference){.kpi .val{transition:color .2s}}
-</style>
+    footer { border-top: 1px solid rgba(0, 174, 226, .18); padding: 22px clamp(18px, 3vw, 46px); color: #7e92ac; text-align: center; font-size: 12px; margin-top: 60px; }
+  </style>
 </head>
 <body>
 
-<header class="top">
-  <div class="wrap">
-    <a class="brand" href="index.html"><b>KINGTHERIOUS</b><span>AUTOMATED TRADING SYSTEMS</span></a>
-    <nav class="nav" aria-label="Navigasi utama">
-      <a href="index.html#performa">Performa EA</a>
-      <a href="index.html#download">Download EA</a>
-      <a href="dashboard.html" class="on" aria-current="page">Dashboard</a>
-    </nav>
-  </div>
-</header>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none">
+          <path d="M8 18 23 27 31 7 40 27 56 17 51 48 33 59 14 48 8 18Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M23 27 25 46 33 52 40 27M14 31 25 39M50 30 40 39M31 7 33 25" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span>
+        <div class="brand-name">KINGTHERIOUS</div>
+        <div class="brand-tag">LIVE STATISTICS</div>
+      </span>
+    </a>
+    <a href="index.html" class="back-btn">← Kembali ke Beranda</a>
+  </header>
 
-<main class="wrap">
-  <section class="head">
-    <div>
-      <h1>Statistik Performa Akun MT5</h1>
-      <p>Hasil trading akun yang dijalankan oleh EA KINGTHERIOUS.</p>
+  <main>
+    <div class="page-header">
+      <h1>Transparansi Data Akun MT5 Live</h1>
+      <p>Memantau metrik performa, posisi entry terakhir, dan profit secara real-time dari seluruh akun klien.</p>
     </div>
-    <div class="live" id="live"><span class="dot" id="dot"></span><span id="liveText">Memuat…</span></div>
-  </section>
 
-  <div class="banner" id="banner" role="status">
-    <b>Data demo.</b> Angka di bawah ini hanya contoh desain, bukan hasil akun nyata. Letakkan file <code>data/account.json</code> dari EA/exporter Anda atau tekan <b>Muat JSON</b> untuk menampilkan data akun sebenarnya.
-  </div>
-
-  <section class="controls" aria-label="Filter">
-    <div class="seg" role="group" aria-label="Periode" id="rangeSeg">
-      <button data-r="7" aria-pressed="false">7 hari</button>
-      <button data-r="30" aria-pressed="false">30 hari</button>
-      <button data-r="90" aria-pressed="false">90 hari</button>
-      <button data-r="all" aria-pressed="true">Semua</button>
+    <!-- Tabel Data Akun -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID Akun MT5</th>
+            <th>Nama Akun</th>
+            <th>Total Profit</th>
+            <th>Avg. Monthly Profit</th>
+            <th>Win Rate</th>
+            <th>Entry Position</th>
+            <th>Last Pair</th>
+            <th>Last Profit</th>
+          </tr>
+        </thead>
+        <tbody id="statsTableBody">
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--muted); padding: 30px;">Memuat data dari server...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <label class="sr" for="selSymbol">Simbol</label>
-    <select id="selSymbol"><option value="all">Semua simbol</option></select>
-    <label class="sr" for="selMagic">Magic number</label>
-    <select id="selMagic"><option value="all">Semua magic</option></select>
-    <span class="spacer"></span>
-    <button class="btn" id="btnLoad" type="button">Muat JSON</button>
-    <input type="file" id="file" accept="application/json,.json" hidden>
-  </section>
+  </main>
 
-  <section class="grid kpis" id="kpis" aria-label="Ringkasan"></section>
+  <footer>
+    <span>© <span id="year"></span> KINGTHERIOUS. All rights reserved.</span>
+  </footer>
 
-  <section class="grid cols" style="margin-bottom:14px">
-    <div class="card">
-      <h2>Kurva Equity &amp; Drawdown</h2>
-      <div class="legend"><span><i style="background:var(--accent)"></i>Saldo</span><span><i style="background:var(--loss)"></i>Drawdown</span></div>
-      <div class="chart" id="eqChart"></div>
-    </div>
-    <div class="card">
-      <h2>Akun</h2>
-      <div class="acct" id="acct"></div>
-      <div class="ringbox" id="ringbox"></div>
-    </div>
-  </section>
+  <!-- Integrasi Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-  <section class="grid cols-2" style="margin-bottom:14px">
-    <div class="card">
-      <h2>Profit/Rugi Harian</h2>
-      <div class="chart" id="dayChart"></div>
-    </div>
-    <div class="card">
-      <h2>Per Simbol</h2>
-      <div class="bars" id="symBars"></div>
-    </div>
-  </section>
+    // Masukkan URL & Anon Key dari Project Supabase Anda
+    const SUPABASE_URL = 'https://PROJECT_REF.supabase.co';
+    const SUPABASE_ANON_KEY = 'SUPABASE_ANON_KEY';
+    
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  <section class="grid cols-2" style="margin-bottom:14px">
-    <div class="card">
-      <h2>Bulanan</h2>
-      <div class="bars" id="monthBars"></div>
-    </div>
-    <div class="card">
-      <h2>Posisi Terbuka</h2>
-      <div class="tablewrap" id="openTbl"></div>
-    </div>
-  </section>
+    async function loadTradingData() {
+      const tbody = document.getElementById('statsTableBody');
+      try {
+        const { data, error } = await supabaseClient
+          .from('trading_stats')
+          .select('*')
+          .order('updated_at', { ascending: false });
 
-  <section class="card">
-    <h2>Riwayat Transaksi</h2>
-    <div class="tablewrap" id="tradeTbl"></div>
-    <div style="margin-top:12px;display:flex;gap:10px">
-      <button class="btn" id="btnMore" type="button">Tampilkan lebih banyak</button>
-      <button class="btn" id="btnCsv" type="button">Unduh CSV</button>
-    </div>
-  </section>
+        if (error) throw error;
 
-  <details class="card">
-    <summary>Cara menghubungkan akun MT5 ke halaman ini</summary>
-    <p style="font-size:13px;color:var(--muted)">Halaman ini membaca <code>data/account.json</code> (diperbarui otomatis tiap 60 detik). Format yang dibaca:</p>
-<pre>{
-  "account": { "login": "****1234", "server": "Broker-Live", "currency": "USD",
-               "balance": 1250.40, "equity": 1262.10, "leverage": 500,
-               "updated": "2026-10-16T08:30:00" },
-  "initial_deposit": 1000,
-  "deals": [
-    { "ticket": 1, "time": "2026-10-15T14:20:00", "open_time": "2026-10-15T13:05:00",
-      "symbol": "XAUUSD", "type": "buy", "volume": 0.10, "magic": 20250,
-      "profit": 12.5, "commission": -0.7, "swap": 0 }
-  ],
-  "open_positions": [
-    { "ticket": 9, "symbol": "EURUSD", "type": "sell", "volume": 0.1,
-      "open_time": "2026-10-16T07:10:00", "open_price": 1.0842, "profit": 3.2 }
-  ]
-}</pre>
-    <p style="font-size:13px;color:var(--muted)">File itu bisa dibuat otomatis oleh <code>export_mt5_stats.py</code> (di folder yang sama), yang membaca riwayat langsung dari terminal MT5 Anda.</p>
-  </details>
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--muted); padding: 30px;">Belum ada data akun yang terhubung.</td></tr>`;
+          return;
+        }
 
-  <p class="note">Trading memiliki risiko kerugian. Hasil masa lalu tidak menjamin hasil mendatang. Statistik dihitung dari transaksi yang sudah ditutup, setelah komisi dan swap.</p>
-</main>
+        tbody.innerHTML = ''; // Bersihkan loading
+        
+        data.forEach(row => {
+          const positionBadge = row.entry_position 
+            ? `<span class="${row.entry_position.toUpperCase() === 'BUY' ? 'badge-buy' : 'badge-sell'}">${row.entry_position.toUpperCase()}</span>` 
+            : '-';
 
-<script>
-(function(){
-"use strict";
+          const lastProfitClass = Number(row.last_entry_profit) >= 0 ? 'profit-pos' : 'profit-neg';
+          const totalProfitClass = Number(row.total_profit) >= 0 ? 'profit-pos' : 'profit-neg';
 
-/* ---------- helpers ---------- */
-const $ = s => document.querySelector(s);
-const nf = (n,d=2) => Number(n).toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d});
-const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const sign = n => n>0?'+':(n<0?'−':'');
-const money = n => sign(n)+nf(Math.abs(n));
-const cls = n => n>0?'pos':(n<0?'neg':'');
-const dkey = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const mkey = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-const BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-const fmtDate = d => d.getDate()+' '+BULAN[d.getMonth()]+' '+String(d.getFullYear()).slice(2);
-const fmtDT = d => String(d.getDate()).padStart(2,'0')+' '+BULAN[d.getMonth()]+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-const fmtDur = ms => {
-  if(!(ms>0)) return '–';
-  const m = Math.round(ms/60000);
-  if(m<60) return m+'m';
-  const h = Math.floor(m/60);
-  return h<24 ? h+'j '+(m%60)+'m' : Math.floor(h/24)+'h '+(h%24)+'j';
-};
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="font-weight: 700; color: var(--cyan);">${row.account_id || '-'}</td>
+            <td>${row.account_name || 'Akun Klien'}</td>
+            <td class="${totalProfitClass}">$${Number(row.total_profit || 0).toLocaleString()}</td>
+            <td>+${Number(row.monthly_profit || 0)}%</td>
+            <td>${Number(row.win_rate || 0)}%</td>
+            <td>${positionBadge}</td>
+            <td style="font-weight: 600;">${row.last_entry_pair || '-'}</td>
+            <td class="${lastProfitClass}">$${Number(row.last_entry_profit || 0).toLocaleString()}</td>
+          `;
+          tbody.appendChild(tr);
+        });
 
-/* ---------- state ---------- */
-const state = { data:null, demo:false, uploaded:false, range:'all', symbol:'all', magic:'all', limit:15 };
-
-/* ---------- data ---------- */
-function normalize(raw){
-  const acc = raw.account || {};
-  const deals = (raw.deals || []).map((d,i)=>{
-    const t = new Date(d.time);
-    const ot = d.open_time ? new Date(d.open_time) : null;
-    const profit = +d.profit||0, comm = +d.commission||0, swap = +d.swap||0;
-    return {
-      ticket: d.ticket ?? i, time: t, open: ot, symbol: String(d.symbol||'?'),
-      type: String(d.type||'').toLowerCase()==='sell'?'sell':'buy',
-      volume: +d.volume||0, magic: d.magic ?? 0, pl: profit+comm+swap
-    };
-  }).filter(d=>!isNaN(d.time)).sort((a,b)=>a.time-b.time);
-  const open = (raw.open_positions||[]).map(p=>({
-    ticket:p.ticket, symbol:String(p.symbol||'?'), type:String(p.type||'').toLowerCase()==='sell'?'sell':'buy',
-    volume:+p.volume||0, open:p.open_time?new Date(p.open_time):null, price:p.open_price, pl:+p.profit||0
-  }));
-  const totalPL = deals.reduce((s,d)=>s+d.pl,0);
-  const init = raw.initial_deposit!=null ? +raw.initial_deposit : ((+acc.balance||0)-totalPL);
-  return {
-    account:{ login:acc.login||'–', server:acc.server||'–', currency:acc.currency||'USD',
-              balance:+acc.balance||init+totalPL, equity:acc.equity!=null?+acc.equity:null,
-              leverage:acc.leverage||null, updated:acc.updated?new Date(acc.updated):null },
-    init, deals, open
-  };
-}
-
-function demoData(){
-  let s = 20261016;
-  const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s>>>15, 1|s); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; };
-  const syms = [['XAUUSD',.35],['EURUSD',.22],['GBPUSD',.18],['USDJPY',.15],['AUDUSD',.10]];
-  const pick = () => { let r=rnd(),a=0; for(const [n,w] of syms){a+=w; if(r<=a) return n;} return 'EURUSD'; };
-  const deals = []; const now = new Date(); let id = 1;
-  for(let i=90;i>=1;i--){
-    const day = new Date(now); day.setDate(now.getDate()-i);
-    const wd = day.getDay(); if(wd===0||wd===6) continue;
-    const n = 1+Math.floor(rnd()*3);
-    for(let k=0;k<n;k++){
-      const win = rnd()<0.66, sym = pick(), vol = +(0.05+Math.floor(rnd()*4)*0.05).toFixed(2);
-      const close = new Date(day); close.setHours(8+Math.floor(rnd()*12), Math.floor(rnd()*60), 0, 0);
-      const open = new Date(close.getTime() - (10+rnd()*240)*60000);
-      const base = sym==='XAUUSD' ? 1.6 : 1;
-      const profit = win ? (3+rnd()*16)*vol*10*base : -(5+rnd()*13)*vol*10*base;
-      deals.push({ticket:id++, time:close.toISOString(), open_time:open.toISOString(), symbol:sym,
-        type:rnd()<.5?'buy':'sell', volume:vol, magic:20250+(sym==='XAUUSD'?1:0),
-        profit:+profit.toFixed(2), commission:+(-0.7*vol*2).toFixed(2), swap:0});
+      } catch (err) {
+        console.error('Gagal mengambil data:', err.message);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #ff5c5c; padding: 30px;">Gagal memuat data dari database.</td></tr>`;
+      }
     }
-  }
-  const init = 1000, tot = deals.reduce((a,d)=>a+d.profit+d.commission,0);
-  return normalize({
-    account:{login:'****0000', server:'Demo-Server', currency:'USD', balance:+(init+tot).toFixed(2),
-             equity:+(init+tot+4.8).toFixed(2), leverage:500, updated:now.toISOString()},
-    initial_deposit:init, deals,
-    open_positions:[{ticket:9001,symbol:'EURUSD',type:'buy',volume:0.1,open_time:new Date(now-45*60000).toISOString(),open_price:1.0842,profit:4.8}]
-  });
-}
 
-async function load(){
-  if(state.uploaded) return;
-  try{
-    const r = await fetch('data/account.json?t='+Date.now(),{cache:'no-store'});
-    if(!r.ok) throw new Error(r.status);
-    state.data = normalize(await r.json()); state.demo = false;
-  }catch(e){
-    if(!state.data){ state.data = demoData(); state.demo = true; }
-    else if(!state.demo){ /* keep last real data on a transient failure */ }
-  }
-  render();
-}
-
-/* ---------- stats ---------- */
-function filtered(){
-  const d = state.data; if(!d) return [];
-  const since = state.range==='all' ? null : Date.now() - (+state.range)*864e5;
-  return d.deals.filter(t =>
-    (!since || t.time.getTime()>=since) &&
-    (state.symbol==='all' || t.symbol===state.symbol) &&
-    (state.magic==='all' || String(t.magic)===state.magic));
-}
-
-function compute(trades){
-  const d = state.data;
-  const all = d.deals;
-  const first = trades[0];
-  const prior = first ? all.filter(t=>t.time<first.time && (state.symbol==='all'||t.symbol===state.symbol) && (state.magic==='all'||String(t.magic)===state.magic)).reduce((s,t)=>s+t.pl,0) : 0;
-  const startBal = d.init + prior;
-  const wins = trades.filter(t=>t.pl>0), losses = trades.filter(t=>t.pl<0);
-  const gW = wins.reduce((s,t)=>s+t.pl,0), gL = Math.abs(losses.reduce((s,t)=>s+t.pl,0));
-  const net = gW - gL;
-  let bal = startBal, peak = startBal, maxDD = 0, maxDDPct = 0, streak=0, maxLoseStreak=0, curWinStreak=0, maxWinStreak=0;
-  const curve = [{t:first?new Date(first.time.getTime()-36e5):new Date(), bal:startBal, dd:0}];
-  for(const t of trades){
-    bal += t.pl; if(bal>peak) peak = bal;
-    const dd = peak-bal, ddp = peak>0 ? dd/peak*100 : 0;
-    if(dd>maxDD) maxDD = dd; if(ddp>maxDDPct) maxDDPct = ddp;
-    curve.push({t:t.time, bal, dd:-ddp, pl:t.pl});
-    if(t.pl<0){ streak++; curWinStreak=0; if(streak>maxLoseStreak) maxLoseStreak=streak; }
-    else if(t.pl>0){ streak=0; curWinStreak++; if(curWinStreak>maxWinStreak) maxWinStreak=curWinStreak; }
-  }
-  const n = trades.length;
-  const holds = trades.filter(t=>t.open).map(t=>t.time-t.open);
-  const days = {}, months = {}, syms = {};
-  for(const t of trades){
-    const dk = dkey(t.time), mk = mkey(t.time);
-    (days[dk] ||= {pl:0,n:0}).pl += t.pl; days[dk].n++;
-    (months[mk] ||= {pl:0,n:0,w:0}).pl += t.pl; months[mk].n++; if(t.pl>0) months[mk].w++;
-    (syms[t.symbol] ||= {pl:0,n:0,w:0}).pl += t.pl; syms[t.symbol].n++; if(t.pl>0) syms[t.symbol].w++;
-  }
-  const buys = trades.filter(t=>t.type==='buy'), sells = trades.filter(t=>t.type==='sell');
-  return {
-    n, net, startBal, endBal:bal, gW, gL, wins:wins.length, losses:losses.length,
-    winRate: n? wins.length/n*100 : 0,
-    pf: gL>0 ? gW/gL : (gW>0?Infinity:0),
-    expectancy: n? net/n : 0,
-    avgWin: wins.length? gW/wins.length : 0,
-    avgLoss: losses.length? -gL/losses.length : 0,
-    best: n? Math.max(...trades.map(t=>t.pl)) : 0,
-    worst: n? Math.min(...trades.map(t=>t.pl)) : 0,
-    maxDD, maxDDPct, maxLoseStreak, maxWinStreak,
-    retPct: startBal>0 ? net/startBal*100 : 0,
-    avgHold: holds.length? holds.reduce((a,b)=>a+b,0)/holds.length : 0,
-    curve, days, months, syms,
-    buy:{n:buys.length, pl:buys.reduce((s,t)=>s+t.pl,0)}, sell:{n:sells.length, pl:sells.reduce((s,t)=>s+t.pl,0)}
-  };
-}
-
-/* ---------- rendering ---------- */
-function render(){
-  const d = state.data; if(!d) return;
-  const cur = d.account.currency;
-
-  // filter option lists (kept in sync with data)
-  fillSelect($('#selSymbol'), [...new Set(d.deals.map(t=>t.symbol))].sort(), 'Semua simbol', state.symbol);
-  fillSelect($('#selMagic'), [...new Set(d.deals.map(t=>String(t.magic)))].sort(), 'Semua magic', state.magic);
-
-  const trades = filtered();
-  const S = compute(trades);
-  state.last = {trades, S};
-
-  // status
-  $('#dot').className = 'dot ' + (state.demo?'demo':'on');
-  const upd = d.account.updated;
-  $('#liveText').textContent = state.demo ? 'Mode demo' : ('Diperbarui '+(upd?fmtDT(upd):'–'));
-  $('#banner').classList.toggle('show', state.demo);
-
-  // KPIs
-  const k = [
-    ['Profit bersih', money(S.net)+' '+cur, cls(S.net), nf(S.retPct,1)+'% dari modal awal'],
-    ['Win rate', nf(S.winRate,1)+'%', '', S.wins+' menang / '+S.losses+' kalah'],
-    ['Profit factor', isFinite(S.pf)?nf(S.pf,2):'∞', S.pf>=1?'pos':'neg', 'Gross +'+nf(S.gW,0)+' / −'+nf(S.gL,0)],
-    ['Max drawdown', nf(S.maxDDPct,1)+'%', S.maxDDPct>20?'neg':'', nf(S.maxDD)+' '+cur],
-    ['Total transaksi', String(S.n), '', 'Rata-rata hold '+fmtDur(S.avgHold)],
-    ['Expectancy', money(S.expectancy), cls(S.expectancy), 'per transaksi'],
-    ['Rata-rata menang / kalah', nf(S.avgWin,2)+' / '+nf(Math.abs(S.avgLoss),2), '', 'Rasio '+(S.avgLoss? nf(S.avgWin/Math.abs(S.avgLoss),2):'–')],
-    ['Terbaik / terburuk', money(S.best)+' / '+money(S.worst), '', 'Streak kalah maks '+S.maxLoseStreak]
-  ];
-  $('#kpis').innerHTML = k.map(([l,v,c,s])=>`<div class="card kpi"><div class="lbl">${esc(l)}</div><div class="val ${c}" ${v.length>14?'style="font-size:20px;margin-top:8px"':''}>${esc(v)}</div><div class="sub">${esc(s)}</div></div>`).join('');
-
-  // account
-  const a = d.account;
-  const floating = d.open.reduce((s,p)=>s+p.pl,0);
-  $('#acct').innerHTML = [
-    ['Login', a.login], ['Server', a.server],
-    ['Saldo', nf(a.balance)+' '+cur],
-    ['Equity', a.equity!=null? nf(a.equity)+' '+cur : '–'],
-    ['Floating P/L', d.open.length? `<span class="${cls(floating)}">${money(floating)}</span>`:'–'],
-    ['Leverage', a.leverage? '1:'+a.leverage : '–']
-  ].map(([l,v])=>`<div><span>${l}</span><b>${typeof v==='string'&&v.startsWith('<')?v:esc(v)}</b></div>`).join('');
-
-  $('#ringbox').innerHTML = ring(S.winRate) + `<div class="t">Buy: <b>${S.buy.n}</b> <span class="${cls(S.buy.pl)}">(${money(S.buy.pl)})</span><br>Sell: <b>${S.sell.n}</b> <span class="${cls(S.sell.pl)}">(${money(S.sell.pl)})</span><br>Streak menang maks: <b>${S.maxWinStreak}</b></div>`;
-
-  equityChart($('#eqChart'), S.curve, cur);
-  dailyChart($('#dayChart'), S.days, cur);
-  barList($('#symBars'), Object.entries(S.syms).sort((a,b)=>b[1].pl-a[1].pl).map(([n,v])=>({n,pl:v.pl,sub:v.n+' trade · '+nf(v.w/v.n*100,0)+'% win'})), cur);
-  barList($('#monthBars'), Object.entries(S.months).sort((a,b)=>a[0]<b[0]?1:-1).slice(0,12).map(([k,v])=>{
-    const [y,m]=k.split('-'); return {n:BULAN[+m-1]+' '+y.slice(2), pl:v.pl, sub:v.n+' trade · '+nf(v.w/v.n*100,0)+'% win'};
-  }), cur);
-  openTable(d.open, cur);
-  tradeTable(trades, cur);
-}
-
-function fillSelect(sel, vals, allLabel, current){
-  const sig = vals.join('|');
-  if(sel.dataset.sig===sig) { sel.value = current; return; }
-  sel.dataset.sig = sig;
-  sel.innerHTML = `<option value="all">${allLabel}</option>` + vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
-  sel.value = vals.includes(current)||current==='all' ? current : 'all';
-}
-
-function ring(pct){
-  const r=26, c=2*Math.PI*r, off=c*(1-Math.min(100,Math.max(0,pct))/100);
-  return `<svg width="68" height="68" viewBox="0 0 68 68" role="img" aria-label="Win rate ${nf(pct,1)} persen">
-    <circle cx="34" cy="34" r="${r}" fill="none" stroke="#14253d" stroke-width="8"/>
-    <circle cx="34" cy="34" r="${r}" fill="none" stroke="var(--profit)" stroke-width="8" stroke-linecap="round"
-      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 34 34)"/>
-    <text x="34" y="38" text-anchor="middle" font-size="13" font-weight="700" fill="var(--text)" font-family="var(--mono)">${nf(pct,0)}%</text></svg>`;
-}
-
-function ticks(min,max,n){
-  if(min===max){ min-=1; max+=1; }
-  const span = max-min, step0 = span/n, mag = Math.pow(10,Math.floor(Math.log10(step0)));
-  const f = step0/mag, step = (f<1.5?1:f<3?2:f<7?5:10)*mag;
-  const out=[]; for(let v=Math.ceil(min/step)*step; v<=max+1e-9; v+=step) out.push(+v.toFixed(10));
-  return out;
-}
-
-function emptyMsg(el,msg){ el.innerHTML = `<div class="empty">${msg}</div>`; }
-
-function equityChart(el, curve, cur){
-  if(curve.length<2){ emptyMsg(el,'Belum ada transaksi pada filter ini.'); return; }
-  const W = Math.max(300, el.clientWidth||640), H = 330;
-  const m = {l:58,r:12,t:10,b:26}, eqH = 190, gap = 26, ddTop = m.t+eqH+gap, ddH = 56;
-  const t0 = curve[0].t.getTime(), t1 = curve[curve.length-1].t.getTime()||t0+1;
-  const bals = curve.map(p=>p.bal);
-  let lo = Math.min(...bals), hi = Math.max(...bals); const pad=(hi-lo)*.08||1; lo-=pad; hi+=pad;
-  const X = t => m.l + (t-t0)/((t1-t0)||1)*(W-m.l-m.r);
-  const Y = v => m.t + (1-(v-lo)/(hi-lo))*eqH;
-  const ddMin = Math.min(0, ...curve.map(p=>p.dd)) || -1;
-  const Yd = v => ddTop + (v/ddMin)*ddH;  // v<=0 -> 0..ddH
-
-  const line = curve.map((p,i)=>(i?'L':'M')+X(p.t.getTime()).toFixed(1)+' '+Y(p.bal).toFixed(1)).join('');
-  const area = line+`L${X(t1).toFixed(1)} ${m.t+eqH}L${X(t0).toFixed(1)} ${m.t+eqH}Z`;
-  const ddLine = curve.map((p,i)=>(i?'L':'M')+X(p.t.getTime()).toFixed(1)+' '+Yd(p.dd).toFixed(1)).join('');
-  const ddArea = ddLine+`L${X(t1).toFixed(1)} ${ddTop}L${X(t0).toFixed(1)} ${ddTop}Z`;
-
-  const yt = ticks(lo,hi,4).filter(v=>v>=lo&&v<=hi);
-  let g = '';
-  for(const v of yt) g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#13243b" stroke-width="1"/><text x="${m.l-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#7f93ad" font-family="var(--mono)">${nf(v,0)}</text>`;
-  const nx = W<520?3:5;
-  for(let i=0;i<=nx;i++){ const t=t0+(t1-t0)*i/nx; g += `<text x="${X(t)}" y="${H-6}" text-anchor="${i===0?'start':i===nx?'end':'middle'}" font-size="11" fill="#7f93ad" font-family="var(--mono)">${fmtDate(new Date(t))}</text>`; }
-  g += `<text x="${m.l-8}" y="${ddTop+10}" text-anchor="end" font-size="10" fill="#7f93ad" font-family="var(--mono)">0%</text><text x="${m.l-8}" y="${ddTop+ddH}" text-anchor="end" font-size="10" fill="#7f93ad" font-family="var(--mono)">${nf(ddMin,0)}%</text>`;
-
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Kurva equity dan drawdown">
-    <defs><linearGradient id="gEq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4da3ff" stop-opacity=".28"/><stop offset="1" stop-color="#4da3ff" stop-opacity="0"/></linearGradient></defs>
-    ${g}
-    <path d="${area}" fill="url(#gEq)"/>
-    <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>
-    <path d="${ddArea}" fill="var(--loss)" fill-opacity=".22"/>
-    <path d="${ddLine}" fill="none" stroke="var(--loss)" stroke-width="1.5"/>
-    <line id="eqCursor" y1="${m.t}" y2="${ddTop+ddH}" stroke="#4d6180" stroke-dasharray="3 3" style="display:none"/>
-    <circle id="eqDot" r="4" fill="var(--accent)" stroke="#050b14" stroke-width="2" style="display:none"/>
-    <rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${ddTop+ddH-m.t}" fill="transparent" id="eqHit"/>
-  </svg><div class="tip" id="eqTip"></div>`;
-
-  const hit = el.querySelector('#eqHit'), cursor = el.querySelector('#eqCursor'), dot = el.querySelector('#eqDot'), tip = el.querySelector('#eqTip');
-  const move = ev => {
-    const r = el.getBoundingClientRect();
-    const px = ((ev.touches?ev.touches[0].clientX:ev.clientX) - r.left) * (W/r.width);
-    const tt = t0 + (px-m.l)/(W-m.l-m.r)*(t1-t0);
-    let best = 0, bd = Infinity;
-    curve.forEach((p,i)=>{ const dd=Math.abs(p.t.getTime()-tt); if(dd<bd){bd=dd;best=i;} });
-    const p = curve[best], x = X(p.t.getTime());
-    cursor.setAttribute('x1',x); cursor.setAttribute('x2',x); cursor.style.display='';
-    dot.setAttribute('cx',x); dot.setAttribute('cy',Y(p.bal)); dot.style.display='';
-    tip.innerHTML = `${fmtDT(p.t)}<br>Saldo <b>${nf(p.bal)} ${cur}</b><br>DD <b class="${p.dd<0?'neg':''}">${nf(p.dd,1)}%</b>` + (p.pl!=null?`<br>Trade <b class="${cls(p.pl)}">${money(p.pl)}</b>`:'');
-    tip.style.display='block';
-    const tx = x*(r.width/W), tw = tip.offsetWidth;
-    tip.style.left = Math.min(Math.max(0, tx+12), r.width-tw)+'px';
-    tip.style.top = '8px';
-  };
-  const leave = ()=>{ cursor.style.display='none'; dot.style.display='none'; tip.style.display='none'; };
-  hit.addEventListener('mousemove',move); hit.addEventListener('mouseleave',leave);
-  hit.addEventListener('touchstart',move,{passive:true}); hit.addEventListener('touchmove',move,{passive:true}); hit.addEventListener('touchend',leave);
-}
-
-function dailyChart(el, days, cur){
-  const keys = Object.keys(days).sort();
-  if(!keys.length){ emptyMsg(el,'Belum ada transaksi pada filter ini.'); return; }
-  const show = keys.slice(-45);
-  const W = Math.max(280, el.clientWidth||440), H = 240, m={l:48,r:8,t:10,b:24};
-  const vals = show.map(k=>days[k].pl);
-  let hi = Math.max(0,...vals), lo = Math.min(0,...vals); if(hi===lo){hi=1;lo=-1;}
-  const Y = v => m.t + (1-(v-lo)/(hi-lo))*(H-m.t-m.b);
-  const bw = (W-m.l-m.r)/show.length;
-  let g = '';
-  for(const v of ticks(lo,hi,4)) g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v===0?'#27426a':'#13243b'}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#7f93ad" font-family="var(--mono)">${nf(v,0)}</text>`;
-  const bars = show.map((k,i)=>{
-    const v = days[k].pl, y0 = Y(0), y1 = Y(v), x = m.l + i*bw + bw*.15;
-    const [yy,mm,dd] = k.split('-');
-    return `<rect x="${x.toFixed(1)}" y="${Math.min(y0,y1).toFixed(1)}" width="${Math.max(1,bw*.7).toFixed(1)}" height="${Math.max(1,Math.abs(y1-y0)).toFixed(1)}" rx="1.5" fill="${v>=0?'var(--profit)':'var(--loss)'}"><title>${dd} ${BULAN[+mm-1]} ${yy}: ${money(v)} ${cur} (${days[k].n} trade)</title></rect>`;
-  }).join('');
-  const f = show[0].split('-'), l = show[show.length-1].split('-');
-  g += `<text x="${m.l}" y="${H-6}" font-size="11" fill="#7f93ad" font-family="var(--mono)">${+f[2]} ${BULAN[+f[1]-1]}</text><text x="${W-m.r}" y="${H-6}" text-anchor="end" font-size="11" fill="#7f93ad" font-family="var(--mono)">${+l[2]} ${BULAN[+l[1]-1]}</text>`;
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Profit atau rugi per hari">${g}${bars}</svg>`;
-}
-
-function barList(el, rows, cur){
-  if(!rows.length){ emptyMsg(el,'Belum ada data.'); return; }
-  const mx = Math.max(...rows.map(r=>Math.abs(r.pl)),1);
-  el.innerHTML = rows.map(r=>{
-    const w = Math.abs(r.pl)/mx*50;
-    const pos = r.pl>=0;
-    return `<div class="barrow"><div class="n">${esc(r.n)}</div>
-      <div class="track" aria-hidden="true"><div class="fill" style="${pos?'left:50%':'right:50%'};width:${w}%;background:${pos?'var(--profit)':'var(--loss)'}"></div><div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:#27426a"></div></div>
-      <div class="v ${cls(r.pl)}">${money(r.pl)}<small>${esc(r.sub)}</small></div></div>`;
-  }).join('');
-}
-
-function openTable(rows, cur){
-  const el = $('#openTbl');
-  if(!rows.length){ emptyMsg(el,'Tidak ada posisi terbuka.'); return; }
-  el.innerHTML = `<table><thead><tr><th>Simbol</th><th>Tipe</th><th class="num">Lot</th><th>Dibuka</th><th class="num">P/L (${esc(cur)})</th></tr></thead><tbody>` +
-    rows.map(p=>`<tr><td>${esc(p.symbol)}</td><td><span class="tag ${p.type}">${p.type.toUpperCase()}</span></td><td class="num">${nf(p.volume)}</td><td>${p.open?fmtDT(p.open):'–'}</td><td class="num ${cls(p.pl)}">${money(p.pl)}</td></tr>`).join('') + `</tbody></table>`;
-}
-
-function tradeTable(trades, cur){
-  const el = $('#tradeTbl');
-  if(!trades.length){ emptyMsg(el,'Belum ada transaksi pada filter ini.'); $('#btnMore').style.display='none'; return; }
-  const rows = trades.slice().reverse().slice(0,state.limit);
-  $('#btnMore').style.display = trades.length>state.limit ? '' : 'none';
-  el.innerHTML = `<table><thead><tr><th>Ditutup</th><th>Simbol</th><th>Tipe</th><th class="num">Lot</th><th class="num">Durasi</th><th class="num">P/L (${esc(cur)})</th></tr></thead><tbody>` +
-    rows.map(t=>`<tr><td>${fmtDT(t.time)}</td><td>${esc(t.symbol)}</td><td><span class="tag ${t.type}">${t.type.toUpperCase()}</span></td><td class="num">${nf(t.volume)}</td><td class="num">${t.open?fmtDur(t.time-t.open):'–'}</td><td class="num ${cls(t.pl)}">${money(t.pl)}</td></tr>`).join('') + `</tbody></table>`;
-}
-
-/* ---------- events ---------- */
-$('#rangeSeg').addEventListener('click', e=>{
-  const b = e.target.closest('button'); if(!b) return;
-  state.range = b.dataset.r; state.limit = 15;
-  document.querySelectorAll('#rangeSeg button').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
-  render();
-});
-$('#selSymbol').addEventListener('change', e=>{ state.symbol = e.target.value; state.limit = 15; render(); });
-$('#selMagic').addEventListener('change', e=>{ state.magic = e.target.value; state.limit = 15; render(); });
-$('#btnMore').addEventListener('click', ()=>{ state.limit += 25; render(); });
-$('#btnLoad').addEventListener('click', ()=>$('#file').click());
-$('#file').addEventListener('change', e=>{
-  const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = () => {
-    try{ state.data = normalize(JSON.parse(r.result)); state.demo = false; state.uploaded = true;
-         state.symbol='all'; state.magic='all'; render(); }
-    catch(err){ alert('File JSON tidak valid: '+err.message); }
-  };
-  r.readAsText(f); e.target.value='';
-});
-$('#btnCsv').addEventListener('click', ()=>{
-  const {trades} = state.last || {trades:[]};
-  const head = 'ticket,close_time,symbol,type,volume,magic,net_pl';
-  const body = trades.map(t=>[t.ticket,t.time.toISOString(),t.symbol,t.type,t.volume,t.magic,t.pl.toFixed(2)].join(','));
-  const url = URL.createObjectURL(new Blob([head+'\n'+body.join('\n')],{type:'text/csv'}));
-  const a = document.createElement('a'); a.href=url; a.download='kingtherious-trades.csv'; a.click(); URL.revokeObjectURL(url);
-});
-let rt; window.addEventListener('resize', ()=>{ clearTimeout(rt); rt = setTimeout(()=>state.data&&render(), 150); });
-
-load();
-setInterval(load, 60000);
-})();
-</script>
+    // Panggil fungsi saat halaman dibuka
+    loadTradingData();
+  </script>
 </body>
 </html>
