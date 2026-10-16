@@ -43,6 +43,7 @@
     </div>
     <div><div class="nav-label">OVERVIEW</div><nav class="side-nav">
       <button class="active" data-page="overview"><span class="ico">▦</span> Dashboard</button>
+      <button data-page="trade-entries"><span class="ico">📊</span> Statistik Entry Posisi</button>
     </nav></div>
     <div><div class="nav-label">LICENSE & CLIENT</div><nav class="side-nav">
       <button data-page="licenses"><span class="ico">◇</span> Akun MT5 & Lisensi</button>
@@ -91,6 +92,51 @@
       </div>
       <div class="notice">Tampilan dashboard ini adalah kerangka UI. Data dan aksi sensitif harus berasal dari API server yang memeriksa sesi admin dan hak akses pada setiap permintaan.</div>
     </section>
+    <section class="page hidden" id="page-trade-entries">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Statistik Entry Posisi & Riwayat Trading MT5</h2>
+      <button class="btn teal" data-action="refresh-trades">Muat Ulang Data</button>
+    </div>
+    
+    <!-- Opsi Filter di Setiap Menu / Kolom -->
+    <div class="toolbar" style="margin-bottom: 14px;">
+      <input id="filterAccount" placeholder="Filter ID / Nama Akun..." aria-label="Filter Akun">
+      <input id="filterSymbol" placeholder="Filter Symbol Pair (e.g. XAUUSD)..." aria-label="Filter Pair">
+      <select id="filterType" aria-label="Filter Tipe">
+        <option value="">Semua Tipe (Buy/Sell)</option>
+        <option value="BUY">BUY</option>
+        <option value="SELL">SELL</option>
+      </select>
+      <select id="filterStatus" aria-label="Filter Status Posisi">
+        <option value="">Semua Status (Floating/Closed)</option>
+        <option value="FLOATING">Floating</option>
+        <option value="CLOSED">Closed</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID Akun MT5</th>
+            <th>Nama Akun (Navigator)</th>
+            <th>Symbol Pair</th>
+            <th>Tiket</th>
+            <th>Tipe</th>
+            <th>Volume</th>
+            <th>Time (Waktu Open)</th>
+            <th>Profit ($)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tradeEntriesBody">
+          <tr><td colspan="9">Memuat data posisi...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
 
     <section class="page hidden" id="page-licenses">
       <section class="panel"><div class="panel-head"><h2>Daftar Akun MT5 / Lisensi</h2><button class="btn teal" data-action="add-license">+ Tambah lisensi</button></div>
@@ -363,6 +409,83 @@ document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   document.getElementById('adminShell').style.display='none';
   document.getElementById('loginView').style.display='grid';
   loginError.textContent='Kamu sudah keluar.';
+});
+
+  // Logika untuk memuat dan memfilter data Trade Entries khusus Admin
+async function loadTradeEntries() {
+  const tbody = document.getElementById('tradeEntriesBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="9">Mengambil data dari Supabase...</td></tr>';
+
+  const { data, error } = await supabaseClient
+    .from('trade_entries')
+    .select('*')
+    .order('time', { ascending: false });
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red);">Gagal memuat data: ${error.message}</td></tr>`;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9">Belum ada data entry posisi yang dikirim oleh EA.</td></tr>';
+    return;
+  }
+
+  window._allTradeEntries = data; // Simpan untuk filter lokal
+  renderTradeTable(data);
+}
+
+function renderTradeTable(rows) {
+  const tbody = document.getElementById('tradeEntriesBody');
+  tbody.innerHTML = '';
+
+  rows.forEach(row => {
+    const profitColor = row.profit >= 0 ? 'color: var(--teal);' : 'color: var(--red);';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.account_id}</td>
+      <td>${row.account_name}</td>
+      <td><strong>${row.symbol}</strong></td>
+      <td>${row.ticket}</td>
+      <td><span class="status ${row.type.toLowerCase() === 'buy' ? 'active' : 'blocked'}">${row.type}</span></td>
+      <td>${row.volume}</td>
+      <td>${row.time}</td>
+      <td style="${profitColor} font-weight: bold;">$${Number(row.profit).toFixed(2)}</td>
+      <td><span class="status ${row.status.toLowerCase() === 'closed' ? 'expired' : 'active'}">${row.status}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Event Listener untuk Filter Real-time
+function applyTradeFilters() {
+  if (!window._allTradeEntries) return;
+  
+  const accVal = document.getElementById('filterAccount').value.toLowerCase();
+  const symVal = document.getElementById('filterSymbol').value.toLowerCase();
+  const typeVal = document.getElementById('filterType').value;
+  const statusVal = document.getElementById('filterStatus').value;
+
+  const filtered = window._allTradeEntries.filter(item => {
+    const matchAcc = String(item.account_id).toLowerCase().includes(accVal) || String(item.account_name).toLowerCase().includes(accVal);
+    const matchSym = String(item.symbol).toLowerCase().includes(symVal);
+    const matchType = typeVal === "" || item.type.toUpperCase() === typeVal;
+    const matchStatus = statusVal === "" || item.status.toUpperCase() === statusVal;
+    return matchAcc && matchSym && matchType && matchStatus;
+  });
+
+  renderTradeTable(filtered);
+}
+
+document.getElementById('filterAccount')?.addEventListener('input', applyTradeFilters);
+document.getElementById('filterSymbol')?.addEventListener('input', applyTradeFilters);
+document.getElementById('filterType')?.addEventListener('change', applyTradeFilters);
+document.getElementById('filterStatus')?.addEventListener('change', applyTradeFilters);
+
+// Panggil fungsi saat tab "trade-entries" dibuka
+document.querySelector('[data-page="trade-entries"]')?.addEventListener('click', () => {
+  loadTradeEntries();
 });
 </script>
 </body>
