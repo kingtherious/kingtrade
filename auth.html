@@ -1,111 +1,565 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk & Daftar - KINGTHERIOUS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Masuk / Daftar — KINGTHERIOUS</title>
+  <style>
+    :root {
+      --bg: #020d17;
+      --panel: rgba(2, 19, 31, .94);
+      --line: #00cfe3;
+      --cyan: #00e5f2;
+      --teal: #00d6b3;
+      --text: #f3f7ff;
+      --muted: #a9c2e4;
+      --field: #031725;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse at 78% 53%, rgba(0, 174, 206, .12), transparent 38%),
+        linear-gradient(rgba(0, 203, 223, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 203, 223, .035) 1px, transparent 1px),
+        var(--bg);
+      background-size: auto, 32px 32px, 32px 32px, auto;
+    }
+
+    .auth-shell {
+      min-height: 100vh;
+      padding: 30px;
+      display: grid;
+      place-items: center;
+    }
+
+    .auth-layout {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      width: min(1480px, 100%);
+      min-height: 700px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(410px, .85fr);
+      align-items: center;
+      gap: clamp(38px, 6vw, 100px);
+      padding: clamp(34px, 5.5vw, 84px);
+      border: 1px solid rgba(0, 218, 239, .76);
+      border-radius: 26px;
+      background: linear-gradient(120deg, rgba(0, 20, 32, .83), rgba(0, 15, 27, .73));
+      box-shadow: inset 0 0 70px rgba(0, 193, 220, .035), 0 22px 70px rgba(0, 0, 0, .22);
+    }
+
+    .auth-layout::before,
+    .auth-layout::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .auth-layout::before {
+      width: 300px;
+      height: 300px;
+      right: 3%;
+      top: 17%;
+      border: 1px solid rgba(0, 221, 238, .18);
+      transform: rotate(45deg);
+      border-radius: 35px;
+    }
+
+    .auth-layout::after {
+      width: 420px;
+      height: 1px;
+      right: -25px;
+      top: 43%;
+      background: linear-gradient(90deg, transparent, rgba(0, 220, 237, .4), transparent);
+      transform: rotate(-45deg);
+    }
+
+    .intro { max-width: 680px; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 18px;
+      border: 1px solid var(--teal);
+      border-radius: 999px;
+      color: var(--cyan);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .035em;
+      background: rgba(0, 213, 179, .055);
+    }
+
+    .eyebrow svg { width: 20px; height: 20px; }
+    h1 {
+      margin: 27px 0 18px;
+      max-width: 680px;
+      font-size: clamp(42px, 5.1vw, 76px);
+      line-height: 1.04;
+      letter-spacing: -.055em;
+      font-weight: 850;
+    }
+    h1 span {
+      display: block;
+      color: var(--cyan);
+      background: linear-gradient(90deg, #00d8c1, #00cfe9 78%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .intro-copy {
+      max-width: 540px;
+      margin: 0;
+      color: #c3d7f3;
+      font-size: clamp(16px, 1.4vw, 20px);
+      line-height: 1.7;
+    }
+
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 24px;
+      margin-top: 44px;
+    }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-height: 48px;
+      padding-right: 24px;
+      border-right: 1px solid rgba(0, 221, 239, .6);
+      color: #dce9ff;
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 650;
+    }
+    .feature:last-child { border-right: 0; padding-right: 0; }
+    .feature svg { width: 36px; height: 36px; color: var(--cyan); flex-shrink: 0; }
+
+    .auth-card {
+      position: relative;
+      width: 100%;
+      max-width: 540px;
+      justify-self: end;
+      padding: 26px 30px 27px;
+      border: 1px solid var(--cyan);
+      border-radius: 21px;
+      background: linear-gradient(150deg, rgba(2, 24, 39, .98), rgba(1, 15, 27, .98));
+      box-shadow: 0 0 40px rgba(0, 202, 225, .06), inset 0 1px 0 rgba(255, 255, 255, .025);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid rgba(0, 195, 223, .45);
+      border-radius: 999px;
+      background: #031725;
+    }
+    .tab {
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 12px;
+      color: #dce8fa;
+      background: transparent;
+      font: inherit;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+    }
+    .tab.active {
+      color: #00131c;
+      background: linear-gradient(100deg, #00d8bf, #00dce9);
+      box-shadow: 0 4px 18px rgba(0, 220, 216, .15);
+    }
+
+    .card-heading { margin: 29px 0 24px; }
+    .card-heading h2 {
+      margin: 0 0 7px;
+      font-size: clamp(25px, 2.1vw, 32px);
+      line-height: 1.2;
+      letter-spacing: -.035em;
+    }
+    .card-heading p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.55; }
+
+    .field { margin-bottom: 15px; }
+    .field label {
+      display: block;
+      margin: 0 0 8px 2px;
+      color: #c9dcf7;
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .input-wrap { position: relative; }
+    .input-wrap > svg {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      width: 21px;
+      height: 21px;
+      transform: translateY(-50%);
+      color: #d4e5ff;
+      pointer-events: none;
+    }
+    .input-wrap input {
+      display: block;
+      width: 100%;
+      min-height: 56px;
+      padding: 0 48px;
+      border: 1px solid #087f9d;
+      border-radius: 13px;
+      outline: none;
+      color: var(--text);
+      background: rgba(1, 20, 33, .86);
+      font: inherit;
+      font-size: 14px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .input-wrap input::placeholder { color: #91afd4; opacity: 1; }
+    .input-wrap input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(0, 215, 232, .1);
+    }
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      transform: translateY(-50%);
+      border: 0;
+      color: #d4e5ff;
+      background: transparent;
+      cursor: pointer;
+    }
+    .toggle-password svg { width: 20px; height: 20px; }
+
+    .form-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 4px 0 23px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .remember { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; }
+    .remember input {
+      width: 19px;
+      height: 19px;
+      margin: 0;
+      accent-color: var(--teal);
+      cursor: pointer;
+    }
+    a { color: var(--cyan); text-decoration: none; font-weight: 700; }
+    a:hover { text-decoration: underline; }
+
+    .primary-btn, .secondary-btn {
+      width: 100%;
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      border-radius: 13px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .18s ease, filter .18s ease, background .18s ease;
+    }
+    .primary-btn {
+      border: 0;
+      color: #00151c;
+      background: linear-gradient(100deg, #00d9bc, #00dbe9);
+      box-shadow: 0 8px 24px rgba(0, 214, 208, .1);
+    }
+    .primary-btn:hover, .secondary-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .primary-btn svg { width: 20px; height: 20px; }
+    .secondary-btn {
+      margin-top: 20px;
+      border: 1px solid var(--cyan);
+      color: #edf5ff;
+      background: rgba(0, 22, 36, .6);
+    }
+    .secondary-btn svg { width: 21px; height: 21px; color: var(--cyan); }
+
+    .separator {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin: 25px 2px 0;
+      color: #a8c3e5;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .separator::before, .separator::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: linear-gradient(90deg, transparent, rgba(42, 132, 170, .8));
+    }
+    .separator::after { transform: scaleX(-1); }
+
+    .security-note {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 24px 0 0;
+      color: #9eb9dc;
+      font-size: 11px;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .security-note svg { width: 19px; height: 19px; color: var(--cyan); flex-shrink: 0; }
+    .form-message { min-height: 18px; margin: 12px 0 0; color: #ffcc70; font-size: 12px; text-align: center; }
+    .hidden { display: none !important; }
+
+    .risk-note {
+      max-width: 1100px;
+      margin: 25px auto 0;
+      padding: 0 15px;
+      color: #7897bc;
+      font-size: 11px;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .auth-shell { padding: 18px; }
+      .auth-layout {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding: 40px clamp(22px, 5vw, 54px);
+      }
+      .intro { max-width: 720px; }
+      .auth-card { justify-self: center; max-width: 560px; }
+      .features { margin-top: 30px; }
+      h1 { font-size: clamp(42px, 8vw, 68px); }
+    }
+    @media (max-width: 560px) {
+      .auth-shell { padding: 10px; }
+      .auth-layout { padding: 27px 17px; border-radius: 18px; gap: 32px; }
+      .eyebrow { font-size: 11px; padding: 9px 13px; }
+      h1 { margin-top: 22px; font-size: clamp(39px, 12vw, 55px); }
+      .intro-copy { font-size: 15px; }
+      .features { display: grid; grid-template-columns: 1fr; gap: 17px; }
+      .feature { border-right: 0; padding: 0; }
+      .feature svg { width: 31px; height: 31px; }
+      .auth-card { padding: 20px 16px; border-radius: 17px; }
+      .card-heading { margin: 24px 0 20px; }
+      .card-heading h2 { font-size: 25px; }
+      .form-options { align-items: flex-start; font-size: 12px; }
+      .risk-note { margin-top: 17px; font-size: 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
+    }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between">
-
-    <!-- Header / Navbar Sederhana -->
-    <header class="p-6 flex justify-between items-center max-w-7xl mx-auto w-full">
-        <a href="index.html" class="flex items-center space-x-2 text-xl font-bold tracking-wider">
-            <span>KINGTHERIOUS</span>
-        </a>
-        <a href="index.html" class="text-sm text-slate-400 hover:text-white transition">← Kembali ke Beranda</a>
-    </header>
-
-    <!-- Main Container -->
-    <main class="flex-grow flex items-center justify-center px-4 py-12">
-        <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
-            
-            <!-- Tab Switcher (Login / Register) -->
-            <div class="flex bg-slate-800 p-1 rounded-xl mb-8">
-                <button id="tab-login" onclick="switchTab('login')" class="flex-1 py-2.5 text-sm font-medium rounded-lg transition text-white bg-slate-700 shadow">Masuk</button>
-                <button id="tab-register" onclick="switchTab('register')" class="flex-1 py-2.5 text-sm font-medium rounded-lg transition text-slate-400 hover:text-white">Daftar</button>
-            </div>
-
-            <!-- Form Login -->
-            <form id="form-login" class="space-y-5" onsubmit="handleLogin(event)">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Email Trading</label>
-                    <input type="email" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition" placeholder="nama@email.com">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Kata Sandi</label>
-                    <input type="password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition" placeholder="••••••••">
-                </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-blue-600/20">Masuk ke Akun</button>
-            </form>
-
-            <!-- Form Register -->
-            <form id="form-register" class="space-y-5 hidden" onsubmit="handleRegister(event)">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Nama Lengkap</label>
-                    <input type="text" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition" placeholder="Nama Anda">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Email Trading</label>
-                    <input type="email" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition" placeholder="nama@email.com">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Nomor Akun MT4/MT5</label>
-                    <input type="text" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition" placeholder="Contoh: 12345678">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Kata Sandi</label>
-                    <input type="password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition" placeholder="••••••••">
-                </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-blue-600/20">Daftarkan Lisensi</button>
-            </form>
-
+<body>
+  <main class="auth-shell">
+    <section class="auth-layout" aria-label="Akses akun KINGTHERIOUS">
+      <div class="intro">
+        <div class="eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/></svg>
+          AKSES MEMBER RESMI
         </div>
-    </main>
+        <h1>Mulai Trading <span>Lebih Terarah</span></h1>
+        <p class="intro-copy">Masuk ke akun Anda atau buat akun baru untuk mengelola lisensi Expert Advisor.</p>
 
-    <!-- Footer -->
-    <footer class="p-6 text-center text-xs text-slate-500">
-        © KINGTHERIOUS. All rights reserved.
-    </footer>
+        <div class="features">
+          <div class="feature">
+            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.1" aria-hidden="true"><path d="M20 3 34 8v10c0 9-6 15-14 19C12 33 6 27 6 18V8L20 3Z"/><path d="m13 20 5 5 10-11"/></svg>
+            <span>Akses<br />Lisensi EA</span>
+          </div>
+          <div class="feature">
+            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.1" aria-hidden="true"><rect x="7" y="17" width="26" height="20" rx="4"/><path d="M12 17V11a8 8 0 0 1 16 0v6"/><path d="M20 24v6"/></svg>
+            <span>Data Akun<br />Terenkripsi</span>
+          </div>
+          <div class="feature">
+            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.1" aria-hidden="true"><path d="M7 22v-5a13 13 0 0 1 26 0v5"/><rect x="4" y="20" width="7" height="12" rx="3"/><rect x="29" y="20" width="7" height="12" rx="3"/><path d="M29 32c-2 4-6 5-11 5"/></svg>
+            <span>Dukungan<br />Member</span>
+          </div>
+        </div>
+      </div>
 
-    <!-- Script JavaScript untuk Tab & Simulasi Submit -->
-    <script>
-        function switchTab(tab) {
-            const loginForm = document.getElementById('form-login');
-            const registerForm = document.getElementById('form-register');
-            const loginTab = document.getElementById('tab-login');
-            const registerTab = document.getElementById('tab-register');
+      <div class="auth-card">
+        <div class="tabs" role="tablist" aria-label="Pilih akses akun">
+          <button class="tab active" id="loginTab" type="button" role="tab" aria-selected="true">Masuk</button>
+          <button class="tab" id="registerTab" type="button" role="tab" aria-selected="false">Daftar</button>
+        </div>
 
-            if (tab === 'login') {
-                loginForm.classList.remove('hidden');
-                registerForm.classList.add('hidden');
-                
-                loginTab.className = "flex-1 py-2.5 text-sm font-medium rounded-lg transition text-white bg-slate-700 shadow";
-                registerTab.className = "flex-1 py-2.5 text-sm font-medium rounded-lg transition text-slate-400 hover:text-white";
-            } else {
-                loginForm.classList.add('hidden');
-                registerForm.classList.remove('hidden');
-                
-                registerTab.className = "flex-1 py-2.5 text-sm font-medium rounded-lg transition text-white bg-slate-700 shadow";
-                loginTab.className = "flex-1 py-2.5 text-sm font-medium rounded-lg transition text-slate-400 hover:text-white";
-            }
+        <div class="card-heading">
+          <h2 id="formTitle">Selamat datang kembali</h2>
+          <p id="formSubtitle">Masuk untuk melanjutkan ke dashboard Anda</p>
+        </div>
+
+        <form id="authForm">
+          <div class="field hidden" id="nameField">
+            <label for="fullName">Nama lengkap</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
+              <input id="fullName" name="fullName" type="text" placeholder="Nama lengkap Anda" autocomplete="name" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="email">Email atau username</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
+              <input id="email" name="email" type="text" placeholder="Email atau username" autocomplete="username" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="password">Kata sandi</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/></svg>
+              <input id="password" name="password" type="password" placeholder="Kata sandi" autocomplete="current-password" required minlength="8" />
+              <button class="toggle-password" id="togglePassword" type="button" aria-label="Tampilkan kata sandi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="field hidden" id="confirmField">
+            <label for="confirmPassword">Konfirmasi kata sandi</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="m9 15 2 2 4-4"/></svg>
+              <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Ulangi kata sandi" autocomplete="new-password" minlength="8" />
+            </div>
+          </div>
+
+          <div class="form-options" id="loginOptions">
+            <label class="remember"><input type="checkbox" name="remember" checked /> Ingat saya</label>
+            <a href="#" id="forgotLink">Lupa kata sandi?</a>
+          </div>
+
+          <div class="form-options hidden" id="registerOptions">
+            <label class="remember"><input type="checkbox" id="agreeTerms" /> Saya menyetujui <a href="#" id="termsLink">syarat layanan</a></label>
+          </div>
+
+          <button class="primary-btn" id="submitButton" type="submit">
+            <span id="submitText">Masuk ke Akun</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+          <p class="form-message" id="formMessage" aria-live="polite"></p>
+        </form>
+
+        <div class="separator" id="separator">atau lanjutkan dengan</div>
+        <button class="secondary-btn" id="switchButton" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="7" r="4"/><path d="M2 21v-2a8 8 0 0 1 13-6"/><path d="M19 14v8M15 18h8"/></svg>
+          <span id="switchText">Daftar Akun Baru</span>
+        </button>
+
+        <p class="security-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          Data Anda aman dan terlindungi dengan enkripsi tingkat tinggi.
+        </p>
+      </div>
+    </section>
+
+    <p class="risk-note">Trading forex memiliki risiko tinggi. Pastikan Anda memahami risiko yang ada sebelum melakukan transaksi. KINGTHERIOUS tidak bertanggung jawab atas kerugian yang mungkin terjadi.</p>
+  </main>
+
+  <script>
+    const loginTab = document.getElementById('loginTab');
+    const registerTab = document.getElementById('registerTab');
+    const nameField = document.getElementById('nameField');
+    const confirmField = document.getElementById('confirmField');
+    const loginOptions = document.getElementById('loginOptions');
+    const registerOptions = document.getElementById('registerOptions');
+    const formTitle = document.getElementById('formTitle');
+    const formSubtitle = document.getElementById('formSubtitle');
+    const submitText = document.getElementById('submitText');
+    const switchText = document.getElementById('switchText');
+    const switchButton = document.getElementById('switchButton');
+    const separator = document.getElementById('separator');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirmPassword');
+    const fullName = document.getElementById('fullName');
+    const agreeTerms = document.getElementById('agreeTerms');
+    const formMessage = document.getElementById('formMessage');
+    const authForm = document.getElementById('authForm');
+    let mode = 'login';
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      const registering = mode === 'register';
+      loginTab.classList.toggle('active', !registering);
+      registerTab.classList.toggle('active', registering);
+      loginTab.setAttribute('aria-selected', String(!registering));
+      registerTab.setAttribute('aria-selected', String(registering));
+      nameField.classList.toggle('hidden', !registering);
+      confirmField.classList.toggle('hidden', !registering);
+      loginOptions.classList.toggle('hidden', registering);
+      registerOptions.classList.toggle('hidden', !registering);
+      separator.classList.toggle('hidden', registering);
+      switchButton.classList.toggle('hidden', registering);
+      fullName.required = registering;
+      confirmPassword.required = registering;
+      agreeTerms.required = registering;
+      password.autocomplete = registering ? 'new-password' : 'current-password';
+      formTitle.textContent = registering ? 'Buat akun member' : 'Selamat datang kembali';
+      formSubtitle.textContent = registering
+        ? 'Daftar untuk mengelola lisensi Expert Advisor Anda'
+        : 'Masuk untuk melanjutkan ke dashboard Anda';
+      submitText.textContent = registering ? 'Buat Akun Sekarang' : 'Masuk ke Akun';
+      switchText.textContent = registering ? 'Sudah punya akun? Masuk' : 'Daftar Akun Baru';
+      formMessage.textContent = '';
+    }
+
+    loginTab.addEventListener('click', () => setMode('login'));
+    registerTab.addEventListener('click', () => setMode('register'));
+    switchButton.addEventListener('click', () => setMode(mode === 'login' ? 'register' : 'login'));
+
+    document.getElementById('togglePassword').addEventListener('click', () => {
+      const isPassword = password.type === 'password';
+      password.type = isPassword ? 'text' : 'password';
+      document.getElementById('togglePassword').setAttribute('aria-label', isPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+    });
+
+    document.getElementById('forgotLink').addEventListener('click', (event) => {
+      event.preventDefault();
+      formMessage.textContent = 'Fitur pemulihan kata sandi perlu dihubungkan ke backend.';
+    });
+    document.getElementById('termsLink').addEventListener('click', (event) => {
+      event.preventDefault();
+      formMessage.textContent = 'Tambahkan tautan halaman syarat layanan website Anda.';
+    });
+
+    authForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      formMessage.textContent = '';
+      if (mode === 'register') {
+        if (password.value !== confirmPassword.value) {
+          formMessage.textContent = 'Konfirmasi kata sandi belum cocok.';
+          confirmPassword.focus();
+          return;
         }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            alert('Fitur login akan segera terhubung dengan database.');
+        if (!agreeTerms.checked) {
+          formMessage.textContent = 'Centang persetujuan syarat layanan terlebih dahulu.';
+          agreeTerms.focus();
+          return;
         }
-
-        function handleRegister(e) {
-            e.preventDefault();
-            alert('Registrasi berhasil! Lisensi akun Anda sedang diproses.');
-        }
-    </script>
+        formMessage.textContent = 'Tampilan formulir siap. Hubungkan proses pendaftaran ke backend Anda.';
+      } else {
+        formMessage.textContent = 'Tampilan formulir siap. Hubungkan proses masuk ke backend Anda.';
+      }
+    });
+  </script>
 </body>
 </html>
