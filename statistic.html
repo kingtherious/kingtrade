@@ -144,13 +144,13 @@
       <table>
         <thead>
           <tr>
-            <th>ID Akun (account_id)</th>
-            <th>Total Profit (total_profit)</th>
-            <th>Avg. Monthly (monthly_profit)</th>
-            <th>Win Rate (win_rate)</th>
-            <th>Entry Posisi (entry_position)</th>
-            <th>Pair Terakhir (last_entry_pair)</th>
-            <th>Profit Terakhir (last_entry_profit)</th>
+            <th>ID Akun</th>
+            <th>Total Profit</th>
+            <th>Avg. Monthly</th>
+            <th>Win Rate</th>
+            <th>Entry Posisi</th>
+            <th>Pair Terakhir</th>
+            <th>Profit Terakhir</th>
           </tr>
         </thead>
         <tbody id="statsTableBody">
@@ -171,9 +171,11 @@
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Ganti dengan URL dan Anon Key Supabase Anda
-    const SUPABASE_URL = 'https://PROJECT_REF.supabase.co';
-    const SUPABASE_ANON_KEY = 'SUPABASE_ANON_KEY';
+    // =========================================================================
+    // SILAKAN ISI URL DAN ANON KEY SUPABASE ANDA DI SINI
+    // =========================================================================
+    const SUPABASE_URL = 'URL_SUPABASE_ANDA';
+    const SUPABASE_ANON_KEY = 'ANON_KEY_SUPABASE_ANDA';
     
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -188,7 +190,10 @@
         if (error) throw error;
 
         if (!data || data.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 30px;">Belum ada data akun MT5 yang masuk.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 30px;">Belum ada data akun MT5 yang masuk di database.</td></tr>`;
+          document.getElementById('avgMonthly').textContent = '0%';
+          document.getElementById('avgWinRate').textContent = '0%';
+          document.getElementById('totalAccounts').textContent = '0';
           return;
         }
 
@@ -200,7 +205,7 @@
           sumMonthly += Number(row.monthly_profit || 0);
           sumWinRate += Number(row.win_rate || 0);
 
-          // Badge untuk status Buy / Sell
+          // Format Badge Buy/Sell
           let positionBadge = '-';
           if (row.entry_position) {
             const pos = row.entry_position.toUpperCase();
@@ -223,7 +228,7 @@
           tbody.appendChild(tr);
         });
 
-        // Update nilai ringkasan di kartu atas
+        // Hitung Ringkasan
         const count = data.length;
         document.getElementById('avgMonthly').textContent = `+${(sumMonthly / count).toFixed(1)}%`;
         document.getElementById('avgWinRate').textContent = `${(sumWinRate / count).toFixed(1)}%`;
@@ -231,7 +236,7 @@
 
       } catch (err) {
         console.error('Gagal mengambil data:', err.message);
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ff5c5c; padding: 30px;">Gagal memuat data dari Supabase. Periksa konfigurasi API key Anda.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ff5c5c; padding: 30px;">Gagal memuat data dari Supabase. Pastikan URL dan Anon Key sudah diisi dengan benar.</td></tr>`;
       }
     }
 
