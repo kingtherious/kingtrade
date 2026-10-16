@@ -215,7 +215,11 @@ async function loadLicenses() {
 
 async function loadStats() {
   const { data, error } = await db.from('trading_stats').select('*');
-  if (error || !data || !data.length) { $('pBody').innerHTML = '<tr><td colspan="3" class="empty">Belum ada data performa.</td></tr>'; $('hWin').textContent = '-'; return; }
+  if (error || !data || !data.length) { 
+    $('pBody').innerHTML = '<tr><td colspan="3" class="empty">Belum ada data performa.</td></tr>'; 
+    $('hWin').textContent = '-'; 
+    return; 
+  }
   $('pBody').innerHTML = data.map(r => `<tr><td>${esc(Number(r.monthly_profit || 0).toFixed(1))}%</td><td>${esc(Number(r.win_rate || 0).toFixed(1))}%</td><td>$${esc(Number(r.total_profit || 0).toLocaleString())}</td></tr>`).join('');
   $('hWin').textContent = (data.reduce((s, r) => s + Number(r.win_rate || 0), 0) / data.length).toFixed(1) + '%';
 }
