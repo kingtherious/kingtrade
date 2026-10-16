@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Member | KINGTHERIOUS</title>
 <!--
-  SQL untuk menu "Lisensi akun" (jalankan sekali di Supabase > SQL Editor):
+  SQL untuk tabel di Supabase (jalankan sekali di SQL Editor jika belum lengkap):
 
   create table licenses (
     id uuid default gen_random_uuid() primary key,
     user_id uuid references auth.users default auth.uid(),
     account_number text not null,
     broker text,
-    platform text,
+    platform text default 'MT5',
     status text default 'pending',
     created_at timestamptz default now()
   );
@@ -20,11 +20,18 @@
   create policy "lihat milik sendiri" on licenses for select using (auth.uid() = user_id);
   create policy "tambah milik sendiri" on licenses for insert with check (auth.uid() = user_id and status = 'pending');
 
-  Download EA: buat bucket PRIVATE bernama ea-files (Storage), upload KINGTHERIOUS_EA.ex5 dan .ex4, lalu:
-  create policy "download jika lisensi aktif" on storage.objects for select
-    using (bucket_id = 'ea-files' and exists (select 1 from licenses where user_id = auth.uid() and status = 'active'));
-
-  Admin: setelah akun terlihat di daftar IB broker, ubah status menjadi 'active' lewat Table Editor.
+  Tabel trading_stats (pastikan memiliki relasi ke account_number atau user_id):
+  create table trading_stats (
+    id uuid default gen_random_uuid() primary key,
+    user_id uuid references auth.users default auth.uid(),
+    account_number text not null,
+    monthly_profit numeric,
+    win_rate numeric,
+    total_profit numeric,
+    updated_at timestamptz default now()
+  );
+  alter table trading_stats enable row level security;
+  create policy "lihat stats milik sendiri" on trading_stats for select using (auth.uid() = user_id);
 -->
 <style>
 :root{color-scheme:dark;--bg:#050a12;--panel:#071526;--line:rgba(0,190,226,.3);--cyan:#08d8ed;--teal:#00e0b2;--text:#f3f7ff;--muted:#a9bdd7;--red:#ff6b7a}
@@ -96,7 +103,7 @@ th{color:var(--muted);font-weight:600}
   <!-- Ringkasan -->
   <section class="view active" id="home">
    <h1 id="hello">Selamat datang</h1>
-   <p class="sub">Pantau lisensi dan performa EA kamu di sini.</p>
+   <p class="sub">Pantau lisensi dan performa akun trading kamu di sini.</p>
    <div class="grid">
     <div class="card"><div class="k">Status email</div><div class="v" id="hEmail">-</div></div>
     <div class="card"><div class="k">Akun trading terdaftar</div><div class="v c" id="hLic">0</div></div>
@@ -109,14 +116,14 @@ th{color:var(--muted);font-weight:600}
   <!-- Lisensi akun -->
   <section class="view" id="license">
    <h1>Lisensi akun</h1>
-   <p class="sub">Daftarkan akun MT4/MT5 yang akan memakai EA. Akun harus terdaftar di bawah IB admin.</p>
+   <p class="sub">Daftarkan akun MT5 yang akan memakai EA. Akun harus terdaftar di bawah IB admin.</p>
    <div class="card" style="margin-bottom:20px"><h2>Belum punya akun di bawah IB admin?</h2><p class="k" style="margin:0 0 12px">Buka akun baru lewat salah satu link broker partner di bawah, lalu daftarkan nomornya di form.</p><div id="ibLinks"></div></div>
    <div class="card" style="margin-bottom:20px">
     <form id="licForm">
      <div class="row">
       <label>Nomor akun<input id="lNo" inputmode="numeric" placeholder="Contoh: 12345678" required></label>
       <label>Broker partner IB<select id="lBroker" required></select></label>
-      <label>Platform<select id="lPlat"><option>MT5</option><option>MT4</option></select></label>
+      <label>Platform<select id="lPlat" disabled><option value="MT5" selected>MT5</option></select></label>
      </div>
      <label style="display:flex;gap:10px;align-items:flex-start;font-weight:500"><input type="checkbox" id="lIb" required style="width:auto;margin-top:3px">Saya menyatakan akun ini dibuka lewat link IB admin. Admin akan memverifikasinya sebelum EA bisa diunduh.</label>
      <div><button class="btn" type="submit">Daftarkan akun</button></div>
@@ -132,17 +139,15 @@ th{color:var(--muted);font-weight:600}
    <p class="sub">EA hanya bisa diunduh jika akun trading kamu sudah didaftarkan dan diverifikasi admin sebagai member IB.</p>
    <div class="card">
     <div class="dl"><div><b>KINGTHERIOUS EA (MT5)</b><span class="k">File .ex5 untuk MetaTrader 5</span></div><button class="btn" id="dl5" data-file="KINGTHERIOUS_EA.ex5" disabled>Download MT5</button></div>
-    <div class="dl"><div><b>KINGTHERIOUS EA (MT4)</b><span class="k">File .ex4 untuk MetaTrader 4</span></div><button class="btn" id="dl4" data-file="KINGTHERIOUS_EA.ex4" disabled>Download MT4</button></div>
     <p class="k" id="dlNote" style="margin:14px 0 0" role="status"></p>
    </div>
   </section>
 
   <!-- Performa -->
   <section class="view" id="perf">
-   <h1>Performa</h1>
-   <p class="sub">Ringkasan statistik dari akun trading yang terhubung.</p>
-   <div class="card"><div class="wrap"><table><thead><tr><th>Profit bulanan</th><th>Win rate</th><th>Total profit</th></tr></thead><tbody id="pBody"><tr><td colspan="3" class="empty">Memuat...</td></tr></tbody></table></div>
-   <p style="margin:16px 0 0"><a class="btn alt" href="statistic.html">Buka statistik lengkap</a></p></div>
+   <h1>Performa Akun</h1>
+   <p class="sub">Ringkasan statistik dari akun trading kamu yang terhubung dan terverifikasi.</p>
+   <div class="card"><div class="wrap"><table><thead><tr><th>Nomor Akun</th><th>Profit Bulanan</th><th>Win Rate</th><th>Total Profit</th></tr></thead><tbody id="pBody"><tr><td colspan="4" class="empty">Memuat...</td></tr></tbody></table></div></div>
   </section>
 
   <!-- Profil -->
@@ -163,11 +168,9 @@ th{color:var(--muted);font-weight:600}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// Isi sama persis dengan yang di index.html (Supabase > Project Settings > API)
 const SUPABASE_URL = 'https://nzrjskgbcnbmilvzrqqr.supabase.co/';
 const SUPABASE_ANON_KEY = 'sb_publishable_IzCPxJIzOLxVwqz4ZYWD6Q_Yd-aXqe-';
 
-// Ganti dengan broker partner IB kamu dan link pendaftaran IB masing-masing
 const IB_BROKERS = [
   { name: 'Nama Broker 1', link: 'https://link-ib-broker-1.example' },
   { name: 'Nama Broker 2', link: 'https://link-ib-broker-2.example' }
@@ -175,7 +178,7 @@ const IB_BROKERS = [
 
 const $ = id => document.getElementById(id);
 const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let db = null, user = null, licenses = [];
+let db = null, user = null, licenses = [], statsData = [];
 
 try {
   if (!window.supabase) throw new Error('Library Supabase gagal dimuat.');
@@ -183,7 +186,6 @@ try {
   db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch (e) { document.body.innerHTML = '<p style="padding:30px">Konfigurasi database belum benar: ' + esc(e.message) + '</p>'; }
 
-// Pindah menu
 document.querySelectorAll('.menu[data-view]').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.menu').forEach(m => m.classList.remove('active'));
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -192,36 +194,59 @@ document.querySelectorAll('.menu[data-view]').forEach(b => b.addEventListener('c
 
 async function logout() { await db.auth.signOut(); location.href = 'index.html'; }
 
-function renderLicenses() {
-  const active = licenses.filter(l => l.status === 'active').length;
-  $('hLic').textContent = licenses.length; $('hActive').textContent = active;
+function renderData() {
+  const activeLicenses = licenses.filter(l => l.status === 'active');
+  $('hLic').textContent = licenses.length; 
+  $('hActive').textContent = activeLicenses.length;
+  
+  // Render daftar lisensi milik user
   $('lBody').innerHTML = licenses.length ? licenses.map(l => {
     const cls = l.status === 'active' ? 'ok' : l.status === 'rejected' ? 'no' : 'wait';
     const txt = l.status === 'active' ? 'Aktif' : l.status === 'rejected' ? 'Ditolak' : 'Menunggu verifikasi IB';
-    return `<tr><td>${esc(l.account_number)}</td><td>${esc(l.broker)}</td><td>${esc(l.platform)}</td><td><span class="badge ${cls}">${txt}</span></td></tr>`;
+    return `<tr><td>${esc(l.account_number)}</td><td>${esc(l.broker)}</td><td>${esc(l.platform || 'MT5')}</td><td><span class="badge ${cls}">${txt}</span></td></tr>`;
   }).join('') : '<tr><td colspan="4" class="empty">Belum ada akun. Daftarkan akun pertama kamu di form di atas.</td></tr>';
-  ['dl5', 'dl4'].forEach(id => { $(id).disabled = !active; });
-  $('dlNote').textContent = active ? '' : !licenses.length
-    ? 'Belum bisa diunduh. Daftarkan ID akun dan broker di menu Lisensi akun terlebih dahulu.'
+
+  // Tombol download EA MT5
+  $('dl5').disabled = activeLicenses.length === 0;
+  $('dlNote').textContent = activeLicenses.length > 0 ? '' : !licenses.length
+    ? 'Belum bisa diunduh. Daftarkan ID akun dan broker MT5 di menu Lisensi akun terlebih dahulu.'
     : 'Belum bisa diunduh. Akun kamu masih menunggu verifikasi sebagai member IB admin.';
-  $('nextStep').textContent = !licenses.length ? 'Daftarkan akun trading yang dibuka lewat link IB admin di menu Lisensi akun.' : active ? 'Lisensi aktif. Unduh EA di menu Download EA.' : 'Akun sudah terdaftar. Tunggu admin memverifikasi akun sebagai member IB.';
+  
+  $('nextStep').textContent = !licenses.length 
+    ? 'Daftarkan akun trading MT5 yang dibuka lewat link IB admin di menu Lisensi akun.' 
+    : activeLicenses.length > 0 ? 'Lisensi aktif. Unduh EA di menu Download EA.' 
+    : 'Akun sudah terdaftar. Tunggu admin memverifikasi akun sebagai member IB.';
+
+  // Render Performa khusus akun user yang terdaftar & terhubung
+  const userAccountNumbers = licenses.map(l => l.account_number);
+  const filteredStats = statsData.filter(s => userAccountNumbers.includes(s.account_number));
+
+  if (!filteredStats.length) {
+    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada data performa untuk akun yang terdaftar. Data akan muncul otomatis setelah akun terverifikasi dan tersambung.</td></tr>';
+    $('hWin').textContent = '-';
+  } else {
+    $('pBody').innerHTML = filteredStats.map(r => `<tr><td><b>${esc(r.account_number)}</b></td><td>${esc(Number(r.monthly_profit || 0).toFixed(1))}%</td><td>${esc(Number(r.win_rate || 0).toFixed(1))}%</td><td>$${esc(Number(r.total_profit || 0).toLocaleString())}</td></tr>`).join('');
+    const avgWin = filteredStats.reduce((s, r) => s + Number(r.win_rate || 0), 0) / filteredStats.length;
+    $('hWin').textContent = avgWin.toFixed(1) + '%';
+  }
 }
 
 async function loadLicenses() {
-  const { data, error } = await db.from('licenses').select('*').order('created_at', { ascending: false });
-  if (error) { $('lBody').innerHTML = '<tr><td colspan="4" class="empty">Tabel licenses belum dibuat. Jalankan SQL di bagian atas file ini.</td></tr>'; $('nextStep').textContent = 'Tabel licenses belum disiapkan di Supabase.'; return; }
-  licenses = data || []; renderLicenses();
+  const { data, error } = await db.from('licenses').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+  if (error) { 
+    $('lBody').innerHTML = '<tr><td colspan="4" class="empty">Tabel licenses belum siap atau RLS membatasi akses.</td></tr>'; 
+    return; 
+  }
+  licenses = data || [];
+  renderData();
 }
 
 async function loadStats() {
-  const { data, error } = await db.from('trading_stats').select('*');
-  if (error || !data || !data.length) { 
-    $('pBody').innerHTML = '<tr><td colspan="3" class="empty">Belum ada data performa.</td></tr>'; 
-    $('hWin').textContent = '-'; 
-    return; 
+  const { data, error } = await db.from('trading_stats').select('*').eq('user_id', user.id);
+  if (!error && data) {
+    statsData = data;
+    renderData();
   }
-  $('pBody').innerHTML = data.map(r => `<tr><td>${esc(Number(r.monthly_profit || 0).toFixed(1))}%</td><td>${esc(Number(r.win_rate || 0).toFixed(1))}%</td><td>$${esc(Number(r.total_profit || 0).toLocaleString())}</td></tr>`).join('');
-  $('hWin').textContent = (data.reduce((s, r) => s + Number(r.win_rate || 0), 0) / data.length).toFixed(1) + '%';
 }
 
 async function init() {
@@ -231,9 +256,11 @@ async function init() {
   const name = user.user_metadata?.full_name || user.email;
   $('hello').textContent = 'Halo, ' + name;
   $('hEmail').textContent = user.email_confirmed_at ? 'Terverifikasi' : 'Belum verifikasi';
-  $('pName').textContent = user.user_metadata?.full_name || '-'; $('pEmail').textContent = user.email;
+  $('pName').textContent = user.user_metadata?.full_name \vert{}\vert{} '-';$('pEmail').textContent = user.email;
   $('app').hidden = false;
-  loadLicenses(); loadStats();
+  
+  await loadLicenses();
+  await loadStats();
 }
 
 $('logoutBtn').addEventListener('click', logout);
@@ -248,17 +275,36 @@ document.querySelectorAll('[data-file]').forEach(b => b.addEventListener('click'
 }));
 
 $('licForm').addEventListener('submit', async e => {
-  e.preventDefault(); const m = $('lMsg'); m.textContent = 'Menyimpan...';
-  const { error } = await db.from('licenses').insert({ account_number: $('lNo').value.trim(), broker: $('lBroker').value.trim(), platform: $('lPlat').value });
-  if (error) { m.style.color = 'var(--red)'; m.textContent = 'Gagal mendaftarkan akun: ' + error.message; return; }
-  m.style.color = 'var(--teal)'; m.textContent = 'Akun terdaftar. Status: menunggu verifikasi.'; e.target.reset(); loadLicenses();
+  e.preventDefault(); 
+  const m = $('lMsg'); 
+  m.textContent = 'Menyimpan...';
+  
+  const { error } = await db.from('licenses').insert({ 
+    user_id: user.id,
+    account_number: $('lNo').value.trim(), 
+    broker: $('lBroker').value.trim(), 
+    platform: 'MT5',
+    status: 'pending' 
+  });
+  
+  if (error) { 
+    m.style.color = 'var(--red)'; 
+    m.textContent = 'Gagal mendaftarkan akun: ' + error.message; 
+    return; 
+  }
+  
+  m.style.color = 'var(--teal)'; 
+  m.textContent = 'Akun berhasil didaftarkan. Status: menunggu verifikasi.'; 
+  e.target.reset(); 
+  loadLicenses();
 });
 
 $('pwForm').addEventListener('submit', async e => {
   e.preventDefault(); const m = $('pwMsg');
   const { error } = await db.auth.updateUser({ password: $('pw').value });
   m.style.color = error ? 'var(--red)' : 'var(--teal)';
-  m.textContent = error ? 'Gagal mengganti kata sandi: ' + error.message : 'Kata sandi diganti.'; if (!error) e.target.reset();
+  m.textContent = error ? 'Gagal mengganti kata sandi: ' + error.message : 'Kata sandi berhasil diganti.'; 
+  if (!error) e.target.reset();
 });
 
 if (db) init();
