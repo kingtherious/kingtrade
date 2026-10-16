@@ -339,13 +339,13 @@
     <span>Automated Trading Systems · Trading involves risk.</span>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://nzrjskgbcnbmilvzrqqr.supabase.co/';
     const SUPABASE_ANON_KEY = 'sb_publishable_IzCPxJIzOLxVwqz4ZYWD6Q_Yd-aXqe-';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Modal Popup Script yang Aman
+    // Modal Popup Script
     const openBtn = document.getElementById('openAuthModal');
     const closeBtn = document.getElementById('closeAuthModal');
     const modal = document.getElementById('authModal');
@@ -433,13 +433,11 @@
           if (error) throw error;
 
           const user = data.user;
-          // Ambil username dari metadata, atau gunakan bagian depan email jika kosong
           const username = user.user_metadata?.username || user.user_metadata?.full_name || user.email.split('@')[0];
 
           alert('Login berhasil! Mengalihkan...');
-          window.closeModal();
+          closeModal(); // Diperbaiki dari window.closeModal()
 
-          // Mengarahkan ke portal dengan format URL berparameter username
           window.location.href = `portal.html?user=${encodeURIComponent(username)}`;
 
         } catch (err) {
@@ -448,40 +446,7 @@
       });
     }
 
-    // Fungsi untuk mengubah UI tombol setelah user masuk
-    function updateUIAfterLogin(user) {
-      const btnText = document.getElementById('authBtnText');
-      if (btnText && user) {
-        // Ambil nama depan atau email pengguna sebagai label tombol
-        const displayName = user.user_metadata?.full_name || user.email.split('@')[0];
-        btnText.textContent = displayName;
-        
-        // Ubah fungsi tombol saat diklik agar memunculkan menu Profil / Logout alih-alih form login
-        const openBtn = document.getElementById('openAuthModal');
-        if (openBtn) {
-          openBtn.onclick = function() {
-            if (confirm('Keluar dari akun (Logout)?')) {
-              supabaseClient.auth.signOut().then(() => {
-                alert('Berhasil keluar.');
-                window.location.reload();
-              });
-            }
-          };
-        }
-      }
-    }
-
-    // Cek otomatis apakah user sudah memiliki sesi login aktif saat halaman dimuat
-    async function checkActiveSession() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session && session.user) {
-        updateUIAfterLogin(session.user);
-      }
-    }
-
-    // Jalankan pengecekan sesi saat halaman dibuka
-    checkActiveSession();
-
+    // Handle Register Supabase
     if (registerForm) {
       registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -501,18 +466,12 @@
       });
     }
 
-    // Real-time Metrics (dari fungsi public_stats di Supabase)
+    // Real-time Metrics dari Supabase
     async function fetchIndexMetrics() {
-  try {
-    const { data, error } = await supabaseClient.rpc('public_stats');
-    if (error) throw error;
-    if (!data) return;
-    // Menampilkan metrik ke elemen beranda secara otomatis[cite: 6]
-    ...
-  } catch (err) {
-    console.error('Gagal memuat metrik beranda:', err.message);
-  }
-}
+      try {
+        const { data, error } = await supabaseClient.rpc('public_stats');
+        if (error) throw error;
+        if (!data) return;
 
         const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
         const num = (v) => (v === null || v === undefined) ? null : Number(v);
