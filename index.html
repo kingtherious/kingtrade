@@ -33,12 +33,12 @@
     .topbar {
       min-height: 88px;
       padding: 14px clamp(18px, 3vw, 46px);
-      display: flex; align-items: center; gap: 28px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
       border-bottom: 1px solid rgba(0, 194, 232, .35);
       background: rgba(4, 11, 21, .94);
       position: relative; z-index: 50;
     }
-    .brand { display: flex; align-items: center; gap: 15px; min-width: 320px; }
+    .brand { display: flex; align-items: center; gap: 15px; }
     .brand-mark {
       width: 49px; height: 49px; display: grid; place-items: center;
       color: var(--cyan);
@@ -46,21 +46,54 @@
     .brand-mark svg { width: 100%; height: 100%; }
     .brand-name { font-size: clamp(18px, 1.8vw, 27px); line-height: 1.05; letter-spacing: .055em; font-weight: 850; }
     .brand-tag { color: var(--teal); font-size: 10px; font-weight: 750; letter-spacing: .22em; margin-top: 7px; }
-    .nav { display: flex; align-items: center; justify-content: center; gap: clamp(20px, 3.4vw, 52px); margin: 0 auto; }
-    .nav a { display: inline-flex; align-items: center; gap: 10px; color: #dce7f8; font-weight: 600; white-space: nowrap; transition: color .2s; }
-    .nav a:hover { color: var(--cyan); }
-    .nav svg { width: 23px; height: 23px; color: var(--cyan); }
+
+    /* Navigasi Menu Tengah */
+    .nav-menu {
+      display: flex; align-items: center; gap: 24px;
+    }
+    .nav-item {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--muted); font-size: 14px; font-weight: 600;
+      transition: color 0.2s;
+    }
+    .nav-item:hover { color: var(--cyan); }
+    .nav-item.active { color: var(--text); }
+    
+    /* Badge Coming Soon */
+    .badge-coming-soon {
+      font-size: 10px; font-weight: 750; color: #ffbd26;
+      background: rgba(255, 189, 38, 0.12);
+      border: 1px solid rgba(255, 189, 38, 0.35);
+      padding: 2px 8px; border-radius: 20px;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      cursor: default;
+    }
+
+    /* UI Live Clock Widget */
+    .header-clock-box {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(2, 15, 28, 0.85);
+      border: 1px solid rgba(0, 190, 226, 0.4);
+      padding: 8px 16px; border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .clock-icon { color: var(--teal); display: flex; align-items: center; }
+    .clock-details { display: flex; flex-direction: column; justify-content: center; }
+    .clock-time { font-family: monospace, monospace; font-size: 16px; font-weight: 800; color: var(--cyan); letter-spacing: 0.05em; line-height: 1.1; }
+    .clock-date { font-size: 11px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+
+    .topbar-right { display: flex; align-items: center; gap: 18px; }
 
     /* Tombol Akses Akun */
     .account-btn {
       display: flex; align-items: center; gap: 10px; border: 1px solid var(--cyan);
-      color: var(--teal); background: rgba(0, 207, 211, .06); padding: 12px 20px;
+      color: var(--teal); background: rgba(0, 207, 211, .06); padding: 10px 18px;
       border-radius: 30px; font-weight: 750; cursor: pointer; transition: all 0.2s ease;
-      position: relative; z-index: 999; /* Memastikan tombol paling atas dan bisa diklik */
+      position: relative; z-index: 999;
       pointer-events: auto !important;
     }
     .account-btn:hover { background: rgba(0, 207, 211, .15); border-color: var(--teal); }
-    .account-btn svg { width: 20px; height: 20px; pointer-events: none; }
+    .account-btn svg { width: 18px; height: 18px; pointer-events: none; }
     .account-btn span { pointer-events: none; }
 
     /* Styling Popup Modal */
@@ -182,10 +215,11 @@
       .brand { gap: 9px; flex: 1; }
       .brand-name { font-size: 17px; }
       .brand-tag { font-size: 8px; }
-      .nav { order: 3; display: flex; width: 100%; justify-content: flex-start; gap: 20px; overflow-x: auto; padding: 8px 0 2px; }
-      .nav a { font-size: 13px; }
-      .nav svg { width: 18px; height: 18px; }
-      .account-btn { padding: 8px 14px; font-size: 13px; }
+      .nav-menu { display: none; } /* Sembunyikan navigasi teks di mobile kecil jika penuh, atau sesuaikan */
+      .header-clock-box { padding: 6px 10px; }
+      .clock-time { font-size: 13px; }
+      .clock-date { font-size: 9px; }
+      .account-btn { padding: 8px 12px; font-size: 12px; }
       main { padding: 18px 12px 30px; }
       .hero { padding: 25px 20px; min-height: 0; border-radius: 18px; gap: 28px; }
       .version { font-size: 11px; margin-bottom: 19px; }
@@ -219,11 +253,33 @@
       </span>
     </a>
 
-    <!-- Tombol Pemicu Modal Masuk / Daftar -->
-    <button class="account-btn" id="openAuthModal" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
-      <span>Masuk / Daftar</span>
-    </button>
+    <!-- Menu Navigasi Baru -->
+    <nav class="nav-menu">
+      <a href="statistic.html" class="nav-item">Live Statistic</a>
+      <div class="nav-item">
+        <span>News Calendar</span>
+        <span class="badge-coming-soon">Coming Soon</span>
+      </div>
+    </nav>
+
+    <div class="topbar-right">
+      <!-- Live Clock Widget -->
+      <div class="header-clock-box">
+        <div class="clock-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="clock-details">
+          <div class="clock-time" id="liveClockTime">00:00:00</div>
+          <div class="clock-date" id="liveClockDate">01:01:2026</div>
+        </div>
+      </div>
+
+      <!-- Tombol Pemicu Modal Masuk / Daftar -->
+      <button class="account-btn" id="openAuthModal" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
+        <span id="authBtnText">Masuk / Daftar</span>
+      </button>
+    </div>
   </header>
 
   <!-- Structure Popup Modal -->
@@ -292,7 +348,7 @@
         </div>
       </div>
 
-      <!-- Metrik Performa Real-time dari Supabase -->
+      <!-- Metrik Performa Real-time Bulan Berjalan dari Supabase -->
       <div class="metrics" aria-label="Metrik performa EA">
         <article class="metric">
           <div class="metric-label">
@@ -328,7 +384,7 @@
         </article>
       </div>
     </section>
-    <p class="disclaimer">Catatan: angka performa di atas diambil secara real-time dari sistem database yang terhubung dengan akun trading aktif.</p>
+    <p class="disclaimer">Catatan: angka performa di atas diambil secara real-time untuk bulan berjalan dan otomatis di-reset saat pergantian bulan kalender.</p>
 
     <section id="download" style="height:1px; overflow:hidden" aria-label="Area tujuan download"></section>
     <section id="backtest" style="height:1px; overflow:hidden" aria-label="Area tujuan backtest"></section>
@@ -339,8 +395,31 @@
     <span>Automated Trading Systems · Trading involves risk.</span>
   </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    // Live Clock Functionality (DD:MM:YYYY & HH:MM:SS)
+    function updateLiveClock() {
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const yyyy = now.getFullYear();
+
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+
+      const dateStr = `${dd}:${mm}:${yyyy}`;
+      const timeStr = `${hh}:${min}:${ss}`;
+
+      const elTime = document.getElementById('liveClockTime');
+      const elDate = document.getElementById('liveClockDate');
+
+      if (elTime) elTime.textContent = timeStr;
+      if (elDate) elDate.textContent = dateStr;
+    }
+    setInterval(updateLiveClock, 1000);
+    updateLiveClock();
+
     const SUPABASE_URL = 'https://nzrjskgbcnbmilvzrqqr.supabase.co/';
     const SUPABASE_ANON_KEY = 'sb_publishable_IzCPxJIzOLxVwqz4ZYWD6Q_Yd-aXqe-';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -436,7 +515,7 @@
           const username = user.user_metadata?.username || user.user_metadata?.full_name || user.email.split('@')[0];
 
           alert('Login berhasil! Mengalihkan...');
-          closeModal(); // Diperbaiki dari window.closeModal()
+          closeModal();
 
           window.location.href = `portal.html?user=${encodeURIComponent(username)}`;
 
@@ -446,7 +525,37 @@
       });
     }
 
-    // Handle Register Supabase
+    // Ubah UI tombol setelah user masuk
+    function updateUIAfterLogin(user) {
+      const btnText = document.getElementById('authBtnText');
+      if (btnText && user) {
+        const displayName = user.user_metadata?.full_name || user.email.split('@')[0];
+        btnText.textContent = displayName;
+        
+        const openBtn = document.getElementById('openAuthModal');
+        if (openBtn) {
+          openBtn.onclick = function() {
+            if (confirm('Keluar dari akun (Logout)?')) {
+              supabaseClient.auth.signOut().then(() => {
+                alert('Berhasil keluar.');
+                window.location.reload();
+              });
+            }
+          };
+        }
+      }
+    }
+
+    // Cek otomatis apakah user sudah memiliki sesi login aktif
+    async function checkActiveSession() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        updateUIAfterLogin(session.user);
+      }
+    }
+
+    checkActiveSession();
+
     if (registerForm) {
       registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -466,31 +575,69 @@
       });
     }
 
-    // Real-time Metrics dari Supabase
-    async function fetchIndexMetrics() {
+    // Real-time Metrics Khusus Bulan Berjalan (Auto-Reset saat berganti bulan)
+    async function fetchIndexMetricsCurrentMonth() {
       try {
-        const { data, error } = await supabaseClient.rpc('public_stats');
+        const { data, error } = await supabaseClient
+          .from('trading_stats')
+          .select('*');
+
         if (error) throw error;
-        if (!data) return;
 
         const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
-        const num = (v) => (v === null || v === undefined) ? null : Number(v);
 
-        const monthly = num(data.avg_monthly_profit);
-        const winRate = num(data.win_rate);
-        const net     = num(data.net_profit);
-        const acc     = num(data.active_accounts);
+        if (!data || data.length === 0) {
+          set('statMonthly', '0%');
+          set('statWinRate', '0%');
+          set('statTotalProfit', '$0');
+          set('statAccounts', '0');
+          return;
+        }
 
-        if (monthly !== null) set('statMonthly', `${monthly >= 0 ? '+' : ''}${monthly.toFixed(1)}%`);
-        if (winRate !== null) set('statWinRate', `${winRate.toFixed(1)}%`);
-        if (net !== null)     set('statTotalProfit', `$${net.toLocaleString()}`);
-        if (acc !== null)     set('statAccounts', acc);
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth(); // 0 - 11
+
+        // Filter data khusus bulan berjalan
+        const currentMonthData = data.filter(row => {
+          const date = new Date(row.updated_at || row.created_at);
+          return date.getFullYear() === currentYear && date.getMonth() === currentMonth;
+        });
+
+        // Jika tidak ada transaksi di bulan berjalan, reset nilai ke 0
+        if (currentMonthData.length === 0) {
+          set('statMonthly', '0%');
+          set('statWinRate', '0%');
+          set('statTotalProfit', '$0');
+          set('statAccounts', '0');
+          return;
+        }
+
+        let sumMonthly = 0;
+        let sumWinRate = 0;
+        let sumTotalProfit = 0;
+
+        currentMonthData.forEach(row => {
+          sumMonthly += Number(row.monthly_profit || 0);
+          sumWinRate += Number(row.win_rate || 0);
+          sumTotalProfit += Number(row.total_profit || 0);
+        });
+
+        const count = currentMonthData.length;
+        const avgMonthly = sumMonthly / count;
+        const avgWinRate = sumWinRate / count;
+
+        set('statMonthly', `${avgMonthly >= 0 ? '+' : ''}${avgMonthly.toFixed(1)}%`);
+        set('statWinRate', `${avgWinRate.toFixed(1)}%`);
+        set('statTotalProfit', `$${sumTotalProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        set('statAccounts', count);
+
       } catch (err) {
-        console.error('Gagal memuat metrik beranda:', err.message);
+        console.error('Gagal memuat metrik beranda bulan berjalan:', err.message);
       }
     }
 
-    fetchIndexMetrics();
+    fetchIndexMetricsCurrentMonth();
   </script>
 </body>
 </html>
