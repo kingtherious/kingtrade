@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Member | KINGTHERIOUS</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050a12;
+      --panel: rgba(4, 17, 30, .88);
+      --line: rgba(0, 190, 226, .38);
+      --cyan: #08d8ed;
+      --teal: #00e0b2;
+      --text: #f3f7ff;
+      --muted: #a9bdd7;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, sans-serif;
+    }
+    .topbar {
+      min-height: 80px;
+      padding: 0 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(0, 194, 232, .35);
+      background: rgba(4, 11, 21, .94);
+    }
+    .brand-name { font-size: 20px; font-weight: 850; letter-spacing: .055em; }
+    .logout-btn {
+      background: rgba(255, 92, 92, 0.1); border: 1px solid rgba(255, 92, 92, 0.3);
+      color: #ff5c5c; padding: 10px 18px; border-radius: 20px; font-weight: 700;
+      cursor: pointer;
+    }
+    main { padding: 40px; max-width: 1000px; margin: 0 auto; }
+    .welcome-card {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 20px; padding: 30px;
+    }
+    h1 { color: var(--cyan); margin-top: 0; }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand-name">KINGTHERIOUS DASHBOARD</div>
+    <button class="logout-btn" id="logoutBtn">Keluar</button>
+  </header>
+
+  <main>
+    <div class="welcome-card">
+      <!-- Sapaan ini akan otomatis berubah sesuai parameter URL ?user=... -->
+      <h1 id="userGreeting">Memuat data...</h1>
+      <p>Email Login: <span id="userEmail" style="color: var(--teal);">-</span></p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Masukkan kredensial Supabase Anda di sini
+    const SUPABASE_URL = 'URL_SUPABASE_ANDA';
+    const SUPABASE_ANON_KEY = 'ANON_KEY_SUPABASE_ANDA';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadUserData() {
+      // 1. Cek Sesi Keamanan Supabase
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        alert('Akses ditolak! Silakan login terlebih dahulu.');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // 2. Ambil parameter 'user' dari URL (Contoh: ?user=budisantoso)
+      const params = new URLSearchParams(window.location.search);
+      let usernameFromURL = params.get('user');
+
+      // Jika parameter URL kosong, ambil default dari email atau metadata akun
+      if (!usernameFromURL) {
+        usernameFromURL = session.user.email.split('@')[0];
+      }
+
+      // 3. Render ke dalam Tampilan HTML
+      document.getElementById('userGreeting').textContent = `Selamat Datang, ${usernameFromURL}!`;
+      document.getElementById('userEmail').textContent = session.user.email;
+    }
+
+    loadUserData();
+
+    // Tombol Keluar
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>
