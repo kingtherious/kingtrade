@@ -288,17 +288,26 @@
         <h1 id="heroTitle">Trading FX Otomatis dengan <span class="gradient-text">Winrate Tinggi Teruji Probabilitasnya</span></h1>
         <p class="intro">Mulai tingkatkan portofolio trading Anda. Dapatkan akses penuh ke Expert Advisor (EA) berlisensi resmi khusus untuk akun trading Anda.</p>
         <div class="actions">
+          <a class="btn btn-primary" href="#" id="heroRegisterBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="5"/><path d="m11.5 11.5 8-8 2 2-2 2 2 2-3 3-2-2-3 3"/></svg>
+            Registrasi Lisensi Akun
+            <span aria-hidden="true">→</span>
+          </a>
+          <a class="btn btn-secondary" href="statistic.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10m5 10V4m5 16v-7m5 7V7"/></svg>
+            Lihat Statistik Live
           </a>
         </div>
       </div>
 
+      <!-- Metrik Performa Real-time dari Supabase -->
       <div class="metrics" aria-label="Metrik performa EA">
         <article class="metric">
           <div class="metric-label">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 17 6-6 4 3 8-9"/><path d="M15 5h6v6"/></svg>
             Avg. Monthly Profit
           </div>
-          <div class="metric-value">+18.4%</div>
+          <div class="metric-value" id="statMonthly">0%</div>
           <div class="metric-note">Rata-rata profit bulanan</div>
         </article>
         <article class="metric">
@@ -306,7 +315,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 20 5v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3Z"/><path d="m8 12 3 3 5-6"/></svg>
             Win Rate
           </div>
-          <div class="metric-value">78.2%</div>
+          <div class="metric-value" id="statWinRate">0%</div>
           <div class="metric-note">Berdasarkan seluruh transaksi</div>
         </article>
         <article class="metric">
@@ -314,20 +323,20 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v5c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 10v5c0 1.7 3.6 3 8 3s8-1.3 8-3v-5M4 15v4c0 1.7 3.6 3 8 3s8-1.3 8-3v-4"/></svg>
             Profit Percentage
           </div>
-          <div class="metric-value">+124.6%</div>
-          <div class="metric-note">Persentase keuntungan total</div>
+          <div class="metric-value" id="statTotalProfit">$0</div>
+          <div class="metric-note">Akumulasi keuntungan total</div>
         </article>
         <article class="metric">
           <div class="metric-label">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             Total Active Accounts
           </div>
-          <div class="metric-value">142</div>
+          <div class="metric-value" id="statAccounts">0</div>
           <div class="metric-note">Akun MT4/MT5 terverifikasi</div>
         </article>
       </div>
     </section>
-    <p class="disclaimer">Catatan: angka performa di atas adalah nilai contoh desain. Ganti dengan data aktual yang dapat diverifikasi sebelum website dipublikasikan. Trading memiliki risiko kerugian dan hasil masa lalu tidak menjamin hasil mendatang.</p>
+    <p class="disclaimer">Catatan: angka performa di atas diambil secara real-time dari sistem database yang terhubung dengan akun trading aktif.</p>
 
     <section id="download" style="height:1px; overflow:hidden" aria-label="Area tujuan download"></section>
     <section id="backtest" style="height:1px; overflow:hidden" aria-label="Area tujuan backtest"></section>
@@ -338,6 +347,8 @@
     <span>Automated Trading Systems · Trading involves risk.</span>
   </footer>
 
+  <!-- Integrasi Supabase JS Client & Script Pengambilan Data Real-time -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     // Modal Popup Script
     const openBtn = document.getElementById('openAuthModal');
@@ -377,7 +388,6 @@
     openBtn.addEventListener('click', () => openModal('login'));
     closeBtn.addEventListener('click', closeModal);
     
-    // Klik tombol Registrasi di Hero juga langsung membuka popup tab Daftar
     heroRegisterBtn.addEventListener('click', (e) => {
       e.preventDefault();
       openModal('register');
@@ -386,12 +396,10 @@
     loginTab.addEventListener('click', () => switchTab('login'));
     registerTab.addEventListener('click', () => switchTab('register'));
 
-    // Tutup popup jika area di luar kartu modal diklik
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
     });
 
-    // Tutup modal dengan tombol Escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && modal.classList.contains('active')) {
         closeModal();
@@ -399,6 +407,50 @@
     });
 
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // =========================================================================
+    // INTEGRASI SUPABASE DI HALAMAN UTAMA (INDEX)
+    // Ganti 'URL_SUPABASE_ANDA' dan 'ANON_KEY_SUPABASE_ANDA' dengan milik Anda
+    // =========================================================================
+    const SUPABASE_URL = 'URL_SUPABASE_ANDA';
+    const SUPABASE_ANON_KEY = 'ANON_KEY_SUPABASE_ANDA';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function fetchIndexMetrics() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('trading_stats')
+          .select('*');
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) return;
+
+        let sumMonthly = 0;
+        let sumWinRate = 0;
+        let sumTotalProfit = 0;
+
+        data.forEach(row => {
+          sumMonthly += Number(row.monthly_profit || 0);
+          sumWinRate += Number(row.win_rate || 0);
+          sumTotalProfit += Number(row.total_profit || 0);
+        });
+
+        const count = data.length;
+
+        // Memasukkan hasil kalkulasi database ke elemen metrik beranda
+        document.getElementById('statMonthly').textContent = `+${(sumMonthly / count).toFixed(1)}%`;
+        document.getElementById('statWinRate').textContent = `${(sumWinRate / count).toFixed(1)}%`;
+        document.getElementById('statTotalProfit').textContent = `$${sumTotalProfit.toLocaleString()}`;
+        document.getElementById('statAccounts').textContent = count;
+
+      } catch (err) {
+        console.error('Gagal memuat metrik beranda:', err.message);
+      }
+    }
+
+    fetchIndexMetrics();
   </script>
 </body>
 </html>
