@@ -347,9 +347,17 @@
     <span>Automated Trading Systems · Trading involves risk.</span>
   </footer>
 
-  <!-- Integrasi Supabase JS Client & Script Pengambilan Data Real-time -->
+  <!-- Integrasi Supabase JS Client & Script Fungsionalitas Login/Register & Real-time Metrics -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    // =========================================================================
+    // KONFIGURASI SUPABASE (Ganti dengan URL dan Anon Key Anda)
+    // =========================================================================
+    const SUPABASE_URL = 'URL_SUPABASE_ANDA';
+    const SUPABASE_ANON_KEY = 'ANON_KEY_SUPABASE_ANDA';
+    
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     // Modal Popup Script
     const openBtn = document.getElementById('openAuthModal');
     const closeBtn = document.getElementById('closeAuthModal');
@@ -388,10 +396,12 @@
     openBtn.addEventListener('click', () => openModal('login'));
     closeBtn.addEventListener('click', closeModal);
     
-    heroRegisterBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      openModal('register');
-    });
+    if (heroRegisterBtn) {
+      heroRegisterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal('register');
+      });
+    }
 
     loginTab.addEventListener('click', () => switchTab('login'));
     registerTab.addEventListener('click', () => switchTab('register'));
@@ -409,14 +419,57 @@
     document.getElementById('year').textContent = new Date().getFullYear();
 
     // =========================================================================
-    // INTEGRASI SUPABASE DI HALAMAN UTAMA (INDEX)
-    // Ganti 'URL_SUPABASE_ANDA' dan 'ANON_KEY_SUPABASE_ANDA' dengan milik Anda
+    // HANDLE LOGIN & REGISTER DENGAN SUPABASE AUTH
     // =========================================================================
-    const SUPABASE_URL = 'URL_SUPABASE_ANDA';
-    const SUPABASE_ANON_KEY = 'ANON_KEY_SUPABASE_ANDA';
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
 
+        if (error) throw error;
+
+        alert('Login berhasil! Selamat datang kembali.');
+        closeModal();
+      } catch (err) {
+        alert('Gagal Masuk: ' + err.message);
+      }
+    });
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+
+      try {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: {
+              full_name: name
+            }
+          }
+        });
+
+        if (error) throw error;
+
+        alert('Registrasi berhasil! Silakan periksa email Anda atau langsung masuk.');
+        switchTab('login');
+      } catch (err) {
+        alert('Gagal Mendaftar: ' + err.message);
+      }
+    });
+
+    // =========================================================================
+    // FETCH METRIK REAL-TIME UNTUK DASHBOARD INDEX
+    // =========================================================================
     async function fetchIndexMetrics() {
       try {
         const { data, error } = await supabaseClient
@@ -424,7 +477,6 @@
           .select('*');
 
         if (error) throw error;
-
         if (!data || data.length === 0) return;
 
         let sumMonthly = 0;
