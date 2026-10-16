@@ -432,22 +432,65 @@
     const yearEl = document.getElementById('year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // Login & Register Handler
+    // Handle Login Supabase
     if (loginForm) {
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
+
         try {
-          const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
           if (error) throw error;
+
           alert('Login berhasil!');
-          closeModal();
+          window.closeModal();
+
+          // Perbarui UI secara instan setelah berhasil login
+          updateUIAfterLogin(data.user);
+
+          // Pilihan: Jika ingin langsung diarahkan ke halaman admin/member khusus:
+          // window.location.href = 'useradmin.html'; 
+
         } catch (err) {
           alert('Gagal Masuk: ' + err.message);
         }
       });
     }
+
+    // Fungsi untuk mengubah UI tombol setelah user masuk
+    function updateUIAfterLogin(user) {
+      const btnText = document.getElementById('authBtnText');
+      if (btnText && user) {
+        // Ambil nama depan atau email pengguna sebagai label tombol
+        const displayName = user.user_metadata?.full_name || user.email.split('@')[0];
+        btnText.textContent = displayName;
+        
+        // Ubah fungsi tombol saat diklik agar memunculkan menu Profil / Logout alih-alih form login
+        const openBtn = document.getElementById('openAuthModal');
+        if (openBtn) {
+          openBtn.onclick = function() {
+            if (confirm('Keluar dari akun (Logout)?')) {
+              supabaseClient.auth.signOut().then(() => {
+                alert('Berhasil keluar.');
+                window.location.reload();
+              });
+            }
+          };
+        }
+      }
+    }
+
+    // Cek otomatis apakah user sudah memiliki sesi login aktif saat halaman dimuat
+    async function checkActiveSession() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        updateUIAfterLogin(session.user);
+      }
+    }
+
+    // Jalankan pengecekan sesi saat halaman dibuka
+    checkActiveSession();
 
     if (registerForm) {
       registerForm.addEventListener('submit', async (e) => {
