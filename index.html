@@ -293,7 +293,7 @@
         <div class="actions">
           <a class="btn btn-primary" href="#" id="heroRegisterBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="5"/><path d="m11.5 11.5 8-8 2 2-2 2 2 2-3 3-2-2-3 3"/></svg>
-            Registrasi Lisensi Akun
+            Registrasi Akun
             <span aria-hidden="true">→</span>
           </a>
           <a class="btn btn-secondary" href="statistic.html">
@@ -450,8 +450,8 @@
           alert('Login berhasil! Mengalihkan...');
           window.closeModal();
 
-          // Mengarahkan ke dashboard dengan format URL berparameter username
-          window.location.href = `dashboard.html?user=${encodeURIComponent(username)}`;
+          // Mengarahkan ke portal dengan format URL berparameter username
+          window.location.href = `portal.html?user=${encodeURIComponent(username)}`;
 
         } catch (err) {
           alert('Gagal Masuk: ' + err.message);
