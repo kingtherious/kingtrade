@@ -257,12 +257,22 @@ th{color:var(--muted);font-weight:600}
    <div class="card"><h2>Akun terdaftar</h2><div class="wrap"><table><thead><tr><th>Nomor akun</th><th>Broker</th><th>Platform</th><th>Status</th></tr></thead><tbody id="lBody"><tr><td colspan="4" class="empty">Memuat...</td></tr></tbody></table></div></div>
   </section>
 
-  <!-- Download EA -->
+<!-- Download EA -->
   <section class="view" id="download">
    <h1>Download EA</h1>
    <p class="sub">EA hanya bisa diunduh jika akun trading kamu sudah didaftarkan dan diverifikasi admin sebagai member IB.</p>
+   
    <div class="card">
-    <div class="dl"><div><b>KINGTHERIOUS EA (MT5)</b><span class="k">File .ex5 untuk MetaTrader 5</span></div><button class="btn" id="dl5" data-file="KINGTHERIOUS_EA.ex5" disabled>Download MT5</button></div>
+    <div class="dl">
+      <div><b>AI NEWS AUTO TRADE (MT5)</b><span class="k">File .ex5 untuk MetaTrader 5</span></div>
+      <button class="btn" id="dl1" data-file="AI NEWS AUTO TRADE.ex5" disabled>Download MT5</button>
+    </div>
+    
+    <div class="dl">
+      <div><b>EA FOR NEWS (MT5)</b><span class="k">File .ex5 untuk MetaTrader 5</span></div>
+      <button class="btn" id="dl2" data-file="EA FOR NEWS.ex5" disabled>Download MT5</button>
+    </div>
+
     <p class="k" id="dlNote" style="margin:14px 0 0" role="status"></p>
    </div>
   </section>
@@ -333,9 +343,14 @@ async function logout() {
 }
 
 function renderData() {
-  const activeLicenses = licenses.filter(l => l.status === 'active');
-  $('hLic').textContent = licenses.length; 
-  $('hActive').textContent = activeLicenses.length;
+// Tombol download EA pertama dan kedua
+  const isEnabled = activeLicenses.length > 0;
+  $('dl1').disabled = !isEnabled;
+  $('dl2').disabled = !isEnabled;
+  
+  $('dlNote').textContent = activeLicenses.length > 0 ? '' : !licenses.length
+    ? 'Belum bisa diunduh. Daftarkan ID akun dan broker MT5 di menu Lisensi akun terlebih dahulu.'
+    : 'Belum bisa diunduh. Permintaan akun kamu sedang menunggu verifikasi admin.';
   
   // Render lisensi akun milik user
   $('lBody').innerHTML = licenses.length ? licenses.map(l => {
@@ -429,7 +444,8 @@ $('ibLinks').innerHTML = IB_BROKERS.map(b => `<a class="btn alt" style="margin:0
 
 document.querySelectorAll('[data-file]').forEach(b => b.addEventListener('click', async () => {
   if (!db) return;
-  const { data, error } = await db.storage.from('ea-files').createSignedUrl(b.dataset.file, 60, { download: true });
+  // Perhatikan nama bucket diubah ke 'EA PUBLISH' sesuai gambar Supabase Anda
+  const { data, error } = await db.storage.from('EA PUBLISH').createSignedUrl(b.dataset.file, 60, { download: true });
   if (error) { $('dlNote').textContent = 'Gagal mengunduh: ' + error.message; return; }
   location.href = data.signedUrl;
 }));
