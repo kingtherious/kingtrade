@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050b14">
   <meta name="description" content="KINGTHERIOUS — Live Trading Statistics & Performance Transparency.">
-  <title>Statistik Live & Performa EA | KINGTHERIOUS</title>
+  <title>Statistik Detail & Performa EA | KINGTHERIOUS</title>
   <style>
     :root {
       color-scheme: dark;
@@ -42,27 +42,59 @@
     .brand-name { font-size: 22px; line-height: 1.05; letter-spacing: .055em; font-weight: 850; }
     .brand-tag { color: var(--teal); font-size: 10px; font-weight: 750; letter-spacing: .22em; margin-top: 7px; }
     
-    main { padding: 40px clamp(18px, 3vw, 46px); max-width: 1200px; margin: 0 auto; }
-    .page-header { margin-bottom: 35px; }
-    .page-header h1 { font-size: clamp(28px, 3vw, 42px); margin: 0 0 10px; font-weight: 850; }
-    .page-header p { color: var(--muted); font-size: 16px; margin: 0; }
-
-    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 40px; }
-    .metric {
-      padding: 24px; border: 1px solid rgba(0, 152, 208, .52);
-      border-radius: 18px; background: rgba(2, 15, 28, .8);
-    }
-    .metric-label { color: #c4d5ee; font-size: 14px; margin-bottom: 8px; }
-    .metric-value { font-size: 36px; font-weight: 850; color: var(--teal); }
-    .metric:nth-child(2) .metric-value { color: var(--cyan); }
+    main { padding: 40px clamp(18px, 3vw, 46px); max-width: 1280px; margin: 0 auto; }
+    .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; }
+    .page-header h1 { font-size: clamp(26px, 2.8vw, 38px); margin: 0 0 8px; font-weight: 850; }
+    .page-header p { color: var(--muted); font-size: 15px; margin: 0; }
 
     .back-btn {
       display: inline-flex; align-items: center; gap: 8px; color: var(--cyan);
-      font-weight: 600; margin-bottom: 20px; font-size: 14px;
+      font-weight: 600; font-size: 14px; border: 1px solid rgba(8, 216, 237, 0.3);
+      padding: 8px 16px; border-radius: 10px; background: rgba(8, 216, 237, 0.05);
+      transition: background 0.2s;
     }
-    .back-btn:hover { text-decoration: underline; }
-    
-    footer { border-top: 1px solid rgba(0, 174, 226, .18); padding: 22px clamp(18px, 3vw, 46px); color: #7e92ac; text-align: center; font-size: 12px; }
+    .back-btn:hover { background: rgba(8, 216, 237, 0.15); }
+
+    /* Kartu Ringkasan Atas */
+    .summary-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 35px;
+    }
+    .summary-card {
+      padding: 20px; border: 1px solid rgba(0, 152, 208, .4);
+      border-radius: 16px; background: rgba(2, 15, 28, .8);
+    }
+    .summary-label { color: #c4d5ee; font-size: 13px; margin-bottom: 6px; }
+    .summary-value { font-size: 28px; font-weight: 850; color: var(--teal); }
+    .summary-card:nth-child(2) .summary-value { color: var(--cyan); }
+
+    /* Tabel Detail Transparansi */
+    .table-container {
+      width: 100%; overflow-x: auto;
+      border: 1px solid rgba(0, 152, 208, .35);
+      border-radius: 18px; background: rgba(2, 15, 28, .85);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    table {
+      width: 100%; border-collapse: collapse; text-align: left;
+      font-size: 14px; white-space: nowrap;
+    }
+    th, td {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(0, 174, 226, .15);
+    }
+    th {
+      background: rgba(4, 25, 45, .95);
+      color: var(--cyan); font-weight: 750; letter-spacing: 0.03em;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(0, 213, 218, .04); }
+
+    .badge-buy { color: #00e0b2; background: rgba(0,224,178,0.12); padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+    .badge-sell { color: #ff5c5c; background: rgba(255,92,92,0.12); padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+    .profit-pos { color: var(--teal); font-weight: 700; }
+    .profit-neg { color: #ff5c5c; font-weight: 700; }
+
+    footer { border-top: 1px solid rgba(0, 174, 226, .18); padding: 22px clamp(18px, 3vw, 46px); color: #7e92ac; text-align: center; font-size: 12px; margin-top: 60px; }
   </style>
 </head>
 <body>
@@ -80,33 +112,53 @@
         <div class="brand-tag">LIVE STATISTICS</div>
       </span>
     </a>
-    <a href="index.html" class="back-btn" style="margin:0;">← Kembali ke Beranda</a>
+    <a href="index.html" class="back-btn">← Kembali ke Beranda</a>
   </header>
 
   <main>
     <div class="page-header">
-      <h1>Transparansi Performa Live Trading</h1>
-      <p>Data performa real-time yang disinkronkan langsung dari akun MT5 klien ke database aman.</p>
+      <div>
+        <h1>Transparansi Performa Live Trading</h1>
+        <p>Data real-time yang disinkronkan langsung dari Expert Advisor (EA) MT5 ke database Supabase.</p>
+      </div>
     </div>
 
-    <!-- Kotak Metrik Data Live -->
-    <div class="metrics">
-      <article class="metric">
-        <div class="metric-label">Avg. Monthly Profit</div>
-        <div class="metric-value" id="valMonthly">-</div>
-      </article>
-      <article class="metric">
-        <div class="metric-label">Win Rate</div>
-        <div class="metric-value" id="valWinRate">-</div>
-      </article>
-      <article class="metric">
-        <div class="metric-label">Profit Percentage</div>
-        <div class="metric-value" id="valTotalProfit">-</div>
-      </article>
-      <article class="metric">
-        <div class="metric-label">Total Active Accounts</div>
-        <div class="metric-value" id="valAccounts">-</div>
-      </article>
+    <!-- Ringkasan Statistik Keseluruhan -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">Rata-rata Monthly Profit</div>
+        <div class="summary-value" id="avgMonthly">-</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Rata-rata Win Rate</div>
+        <div class="summary-value" id="avgWinRate">-</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Total Akun Terhubung</div>
+        <div class="summary-value" id="totalAccounts">-</div>
+      </div>
+    </div>
+
+    <!-- Tabel Data Spesifik Akun & Posisi -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID Akun (account_id)</th>
+            <th>Total Profit (total_profit)</th>
+            <th>Avg. Monthly (monthly_profit)</th>
+            <th>Win Rate (win_rate)</th>
+            <th>Entry Posisi (entry_position)</th>
+            <th>Pair Terakhir (last_entry_pair)</th>
+            <th>Profit Terakhir (last_entry_profit)</th>
+          </tr>
+        </thead>
+        <tbody id="statsTableBody">
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--muted); padding: 30px;">Menghubungkan ke database Supabase...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </main>
 
@@ -119,48 +171,71 @@
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Konfigurasi Supabase Anda (Ganti dengan URL & Anon Key project Anda)
-    const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    // Ganti dengan URL dan Anon Key Supabase Anda
+    const SUPABASE_URL = 'https://PROJECT_REF.supabase.co';
+    const SUPABASE_ANON_KEY = 'SUPABASE_ANON_KEY';
     
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function fetchTradingStats() {
+    async function fetchLiveTradingData() {
+      const tbody = document.getElementById('statsTableBody');
       try {
-        // Mengambil data dari tabel trading_stats (bisa di-sum atau diambil rata-ratanya)
         const { data, error } = await supabaseClient
           .from('trading_stats')
-          .select('*');
+          .select('*')
+          .order('updated_at', { ascending: false });
 
         if (error) throw error;
 
-        if (data && data.length > 0) {
-          // Contoh kalkulasi sederhana atau mengambil data terbaru
-          let totalMonthly = 0;
-          let totalWinRate = 0;
-          let totalProfitPct = 0;
-          
-          data.forEach(row => {
-            totalMonthly += Number(row.monthly_profit || 0);
-            totalWinRate += Number(row.win_rate || 0);
-            totalProfitPct += Number(row.total_profit_pct || 0);
-          });
-
-          const count = data.length;
-          
-          // Tampilkan ke elemen HTML
-          document.getElementById('valMonthly').textContent = `+${(totalMonthly / count).toFixed(1)}%`;
-          document.getElementById('valWinRate').textContent = `${(totalWinRate / count).toFixed(1)}%`;
-          document.getElementById('valTotalProfit').textContent = `+${(totalProfitPct / count).toFixed(1)}%`;
-          document.getElementById('valAccounts').textContent = count;
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 30px;">Belum ada data akun MT5 yang masuk.</td></tr>`;
+          return;
         }
+
+        tbody.innerHTML = '';
+        let sumMonthly = 0;
+        let sumWinRate = 0;
+
+        data.forEach(row => {
+          sumMonthly += Number(row.monthly_profit || 0);
+          sumWinRate += Number(row.win_rate || 0);
+
+          // Badge untuk status Buy / Sell
+          let positionBadge = '-';
+          if (row.entry_position) {
+            const pos = row.entry_position.toUpperCase();
+            positionBadge = `<span class="${pos === 'BUY' ? 'badge-buy' : 'badge-sell'}">${pos}</span>`;
+          }
+
+          const totalProfitClass = Number(row.total_profit) >= 0 ? 'profit-pos' : 'profit-neg';
+          const lastProfitClass = Number(row.last_entry_profit) >= 0 ? 'profit-pos' : 'profit-neg';
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="font-weight: 700; color: var(--cyan);">${row.account_id || '-'}</td>
+            <td class="${totalProfitClass}">$${Number(row.total_profit || 0).toLocaleString()}</td>
+            <td>+${Number(row.monthly_profit || 0)}%</td>
+            <td>${Number(row.win_rate || 0)}%</td>
+            <td>${positionBadge}</td>
+            <td style="font-weight: 600;">${row.last_entry_pair || '-'}</td>
+            <td class="${lastProfitClass}">$${Number(row.last_entry_profit || 0).toLocaleString()}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Update nilai ringkasan di kartu atas
+        const count = data.length;
+        document.getElementById('avgMonthly').textContent = `+${(sumMonthly / count).toFixed(1)}%`;
+        document.getElementById('avgWinRate').textContent = `${(sumWinRate / count).toFixed(1)}%`;
+        document.getElementById('totalAccounts').textContent = count;
+
       } catch (err) {
-        console.error('Gagal mengambil data statistik:', err.message);
+        console.error('Gagal mengambil data:', err.message);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ff5c5c; padding: 30px;">Gagal memuat data dari Supabase. Periksa konfigurasi API key Anda.</td></tr>`;
       }
     }
 
-    // Jalankan saat halaman dimuat
-    fetchTradingStats();
+    fetchLiveTradingData();
   </script>
 </body>
 </html>
