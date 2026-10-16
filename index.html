@@ -443,14 +443,15 @@
           const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
           if (error) throw error;
 
-          alert('Login berhasil!');
+          const user = data.user;
+          // Ambil username dari metadata, atau gunakan bagian depan email jika kosong
+          const username = user.user_metadata?.username || user.user_metadata?.full_name || user.email.split('@')[0];
+
+          alert('Login berhasil! Mengalihkan...');
           window.closeModal();
 
-          // Perbarui UI secara instan setelah berhasil login
-          updateUIAfterLogin(data.user);
-
-          // Pilihan: Jika ingin langsung diarahkan ke halaman admin/member khusus:
-          // window.location.href = 'useradmin.html'; 
+          // Mengarahkan ke dashboard dengan format URL berparameter username
+          window.location.href = `dashboard.html?user=${encodeURIComponent(username)}`;
 
         } catch (err) {
           alert('Gagal Masuk: ' + err.message);
