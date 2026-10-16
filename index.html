@@ -311,5 +311,38 @@
 
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
+  <!-- Library Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Masukkan Project URL dan Anon Key Anda di sini:
+    const SUPABASE_URL = 'MASUKKAN_PROJECT_URL_ANDA_DI_SINI';
+    const SUPABASE_ANON_KEY = 'MASUKKAN_ANON_API_KEY_ANDA_DI_SINI';
+    
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadPerformanceData() {
+        const { data, error } = await supabaseClient
+            .from('ea_performance')
+            .select('*')
+            .eq('id', 1)
+            .single();
+
+        if (error) {
+            console.error('Gagal mengambil data:', error);
+            return;
+        }
+
+        if (data) {
+            // Mengisi data ke elemen HTML secara otomatis
+            document.getElementById('stat-monthly').innerText = data.monthly_profit;
+            document.getElementById('stat-winrate').innerText = data.win_rate;
+            document.getElementById('stat-profit').innerText = data.profit_percentage;
+            document.getElementById('stat-accounts').innerText = data.active_accounts;
+        }
+    }
+
+    // Jalankan fungsi saat halaman dibuka
+    loadPerformanceData();
+</script>
 </body>
 </html>
