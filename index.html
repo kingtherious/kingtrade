@@ -50,22 +50,55 @@
     .nav a { display: inline-flex; align-items: center; gap: 10px; color: #dce7f8; font-weight: 600; white-space: nowrap; transition: color .2s; }
     .nav a:hover { color: var(--cyan); }
     .nav svg { width: 23px; height: 23px; color: var(--cyan); }
-    .account { position: relative; }
-    .account-toggle {
+
+    /* Tombol Akses Akun */
+    .account-btn {
       display: flex; align-items: center; gap: 10px; border: 1px solid var(--cyan);
       color: var(--teal); background: rgba(0, 207, 211, .06); padding: 12px 20px;
-      border-radius: 30px; font-weight: 750; cursor: pointer;
+      border-radius: 30px; font-weight: 750; cursor: pointer; transition: all 0.2s ease;
     }
-    .account-toggle svg { width: 20px; height: 20px; }
-    .dropdown {
-      display: none; position: absolute; top: calc(100% + 8px); right: 0; min-width: 190px;
-      background: #071526; border: 1px solid rgba(0, 174, 226, .55);
-      border-radius: 15px; padding: 8px; box-shadow: 0 18px 48px rgba(0,0,0,.4);
+    .account-btn:hover { background: rgba(0, 207, 211, .15); border-color: var(--teal); }
+    .account-btn svg { width: 20px; height: 20px; }
+
+    /* Styling Popup Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(2, 8, 16, 0.82); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+      padding: 16px;
     }
-    .dropdown.open { display: block; }
-    .dropdown a { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 9px; color: #e7f0ff; }
-    .dropdown a:hover { background: rgba(0, 213, 218, .1); }
-    .dropdown svg { width: 19px; height: 19px; color: var(--cyan); }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-card {
+      background: #071526; border: 1px solid rgba(0, 190, 226, .5);
+      border-radius: 20px; width: 100%; max-width: 420px; padding: 28px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6); position: relative;
+      transform: translateY(20px); transition: transform 0.3s ease;
+    }
+    .modal-overlay.active .modal-card { transform: translateY(0); }
+    .modal-close {
+      position: absolute; top: 18px; right: 18px; background: none; border: none;
+      color: var(--muted); cursor: pointer; padding: 4px; border-radius: 50%;
+      display: grid; place-items: center;
+    }
+    .modal-close:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .modal-tabs { display: flex; border-bottom: 1px solid rgba(0, 190, 226, .2); margin-bottom: 22px; }
+    .tab-btn {
+      flex: 1; padding: 10px; background: none; border: none; color: var(--muted);
+      font-weight: 700; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s;
+    }
+    .tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    .auth-form { display: none; flex-direction: column; gap: 16px; }
+    .auth-form.active { display: flex; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 13px; font-weight: 600; color: #c4d5ee; }
+    .form-group input {
+      background: rgba(2, 15, 28, 0.9); border: 1px solid rgba(0, 190, 226, .3);
+      padding: 12px 16px; border-radius: 10px; color: var(--text); outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: var(--cyan); }
+
     main { padding: 30px clamp(18px, 2.7vw, 40px) 48px; }
     .hero {
       min-height: 650px; position: relative; overflow: hidden; isolation: isolate;
@@ -131,7 +164,7 @@
     .metric-note { font-size: 12px; color: #9db1cb; line-height: 1.5; }
     .disclaimer { color: #657992; font-size: 11px; line-height: 1.5; margin: 16px 2px 0; }
     footer { border-top: 1px solid rgba(0, 174, 226, .18); padding: 22px clamp(18px, 3vw, 46px); color: #7e92ac; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 12px; }
-    .mobile-menu { display: none; }
+    
     @media (max-width: 1100px) {
       .topbar { gap: 16px; }
       .brand { min-width: auto; }
@@ -149,8 +182,7 @@
       .nav { order: 3; display: flex; width: 100%; justify-content: flex-start; gap: 20px; overflow-x: auto; padding: 8px 0 2px; }
       .nav a { font-size: 13px; }
       .nav svg { width: 18px; height: 18px; }
-      .account-toggle { padding: 10px 12px; }
-      .account-toggle .account-word { display: none; }
+      .account-btn { padding: 8px 14px; font-size: 13px; }
       main { padding: 18px 12px 30px; }
       .hero { padding: 25px 20px; min-height: 0; border-radius: 18px; gap: 28px; }
       .version { font-size: 11px; margin-bottom: 19px; }
@@ -185,7 +217,7 @@
     </a>
 
     <nav class="nav" aria-label="Navigasi utama">
-      <a href="statistic.html">
+      <a href="#performa">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
         Performa EA
       </a>
@@ -195,26 +227,56 @@
       </a>
     </nav>
 
-    <div class="account">
-      <button class="account-toggle" id="accountToggle" type="button" aria-expanded="false" aria-controls="accountMenu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
-        <span class="account-word">Akun</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-      </button>
-      <div class="dropdown" id="accountMenu">
-        <!-- Ganti href dengan URL halaman login yang sebenarnya -->
-        <a href="auth.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5M15 12H3"/></svg>
-          Masuk
-        </a>
-        <!-- Ganti href dengan URL halaman registrasi yang sebenarnya -->
-        <a href="auth.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M19 8v6M16 11h6"/></svg>
-          Daftar
-        </a>
-      </div>
-    </div>
+    <!-- Tombol Pemicu Modal Masuk / Daftar -->
+    <button class="account-btn" id="openAuthModal" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
+      <span>Masuk / Daftar</span>
+    </button>
   </header>
+
+  <!-- Structure Popup Modal -->
+  <div class="modal-overlay" id="authModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <button class="modal-close" id="closeAuthModal" aria-label="Tutup Popup">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+
+      <div class="modal-tabs">
+        <button class="tab-btn active" id="loginTab">Masuk</button>
+        <button class="tab-btn" id="registerTab">Daftar</button>
+      </div>
+
+      <!-- Form Login -->
+      <form class="auth-form active" id="loginForm" onsubmit="event.preventDefault();">
+        <div class="form-group">
+          <label for="loginEmail">Email / Username</label>
+          <input type="text" id="loginEmail" placeholder="Masukkan email atau username" required>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Kata Sandi</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">Masuk Akun</button>
+      </form>
+
+      <!-- Form Register -->
+      <form class="auth-form" id="registerForm" onsubmit="event.preventDefault();">
+        <div class="form-group">
+          <label for="regName">Nama Lengkap</label>
+          <input type="text" id="regName" placeholder="Masukkan nama lengkap" required>
+        </div>
+        <div class="form-group">
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" placeholder="nama@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="regPassword">Kata Sandi</label>
+          <input type="password" id="regPassword" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">Buat Akun</button>
+      </form>
+    </div>
+  </div>
 
   <main>
     <section class="hero" id="performa" aria-labelledby="heroTitle">
@@ -223,15 +285,15 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m13 2-9 12h7l-1 8 10-13h-7l0-7Z"/></svg>
           Auto-Trading Algorithm v4.2
         </div>
-        <h1 id="heroTitle">Trading FX Otomatis <span class="gradient-text">Winrate Tinggi Teruji Probabilitasnya</span></h1>
+        <h1 id="heroTitle">Trading FX Otomatis Tanpa Emosi dengan <span class="gradient-text">Winrate Tinggi Teruji Probabilitasnya</span></h1>
         <p class="intro">Mulai tingkatkan portofolio trading Anda. Dapatkan akses penuh ke Expert Advisor (EA) berlisensi resmi khusus untuk akun trading Anda.</p>
         <div class="actions">
-          <a class="btn btn-primary" href="auth.html">
+          <a class="btn btn-primary" href="#" id="heroRegisterBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="5"/><path d="m11.5 11.5 8-8 2 2-2 2 2 2-3 3-2-2-3 3"/></svg>
             Registrasi Lisensi Akun
             <span aria-hidden="true">→</span>
           </a>
-          <a class="btn btn-secondary" href="statistic.html">
+          <a class="btn btn-secondary" href="#backtest">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10m5 10V4m5 16v-7m5 7V7"/></svg>
             Lihat Backtest
           </a>
@@ -244,7 +306,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 17 6-6 4 3 8-9"/><path d="M15 5h6v6"/></svg>
             Avg. Monthly Profit
           </div>
-          <div class="metric-value" id="stat-monthly">+18.4%</div>
+          <div class="metric-value">+18.4%</div>
           <div class="metric-note">Rata-rata profit bulanan</div>
         </article>
         <article class="metric">
@@ -252,15 +314,15 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 20 5v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3Z"/><path d="m8 12 3 3 5-6"/></svg>
             Win Rate
           </div>
-          <div class="metric-value" id="stat-winrate">78.2%</div>
-          <div class="metric-note">Berdasarkan 1.200+ transaksi</div>
+          <div class="metric-value">78.2%</div>
+          <div class="metric-note">Berdasarkan seluruh transaksi</div>
         </article>
         <article class="metric">
           <div class="metric-label">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v5c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 10v5c0 1.7 3.6 3 8 3s8-1.3 8-3v-5M4 15v4c0 1.7 3.6 3 8 3s8-1.3 8-3v-4"/></svg>
             Profit Percentage
           </div>
-          <div class="metric-value" id="stat-profit">+124.6%</div>
+          <div class="metric-value">+124.6%</div>
           <div class="metric-note">Persentase keuntungan total</div>
         </article>
         <article class="metric">
@@ -268,7 +330,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             Total Active Accounts
           </div>
-          <div class="metric-value" id="stat-accounts">142</div>
+          <div class="metric-value">142</div>
           <div class="metric-note">Akun MT4/MT5 terverifikasi</div>
         </article>
       </div>
@@ -285,64 +347,66 @@
   </footer>
 
   <script>
-    const toggle = document.getElementById('accountToggle');
-    const menu = document.getElementById('accountMenu');
+    // Modal Popup Script
+    const openBtn = document.getElementById('openAuthModal');
+    const closeBtn = document.getElementById('closeAuthModal');
+    const modal = document.getElementById('authModal');
+    const loginTab = document.getElementById('loginTab');
+    const registerTab = document.getElementById('registerTab');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const heroRegisterBtn = document.getElementById('heroRegisterBtn');
 
-    toggle.addEventListener('click', (event) => {
-      event.stopPropagation();
-      const isOpen = menu.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(isOpen));
-    });
+    function openModal(tab = 'login') {
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      switchTab(tab);
+    }
 
-    document.addEventListener('click', (event) => {
-      if (!menu.contains(event.target) && !toggle.contains(event.target)) {
-        menu.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
+    function closeModal() {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function switchTab(tab) {
+      if (tab === 'login') {
+        loginTab.classList.add('active');
+        registerTab.classList.remove('active');
+        loginForm.classList.add('active');
+        registerForm.classList.remove('active');
+      } else {
+        registerTab.classList.add('active');
+        loginTab.classList.remove('active');
+        registerForm.classList.add('active');
+        loginForm.classList.remove('active');
       }
+    }
+
+    openBtn.addEventListener('click', () => openModal('login'));
+    closeBtn.addEventListener('click', closeModal);
+    
+    // Klik tombol Registrasi di Hero juga langsung membuka popup tab Daftar
+    heroRegisterBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal('register');
     });
 
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        menu.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.focus();
+    loginTab.addEventListener('click', () => switchTab('login'));
+    registerTab.addEventListener('click', () => switchTab('register'));
+
+    // Tutup popup jika area di luar kartu modal diklik
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    // Tutup modal dengan tombol Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
       }
     });
 
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
-  <!-- Library Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    // Masukkan Project URL dan Anon Key Anda di sini:
-    const SUPABASE_URL = 'MASUKKAN_PROJECT_URL_ANDA_DI_SINI';
-    const SUPABASE_ANON_KEY = 'MASUKKAN_ANON_API_KEY_ANDA_DI_SINI';
-    
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    async function loadPerformanceData() {
-        const { data, error } = await supabaseClient
-            .from('ea_performance')
-            .select('*')
-            .eq('id', 1)
-            .single();
-
-        if (error) {
-            console.error('Gagal mengambil data:', error);
-            return;
-        }
-
-        if (data) {
-            // Mengisi data ke elemen HTML secara otomatis
-            document.getElementById('stat-monthly').innerText = data.monthly_profit;
-            document.getElementById('stat-winrate').innerText = data.win_rate;
-            document.getElementById('stat-profit').innerText = data.profit_percentage;
-            document.getElementById('stat-accounts').innerText = data.active_accounts;
-        }
-    }
-
-    // Jalankan fungsi saat halaman dibuka
-    loadPerformanceData();
-</script>
 </body>
 </html>
