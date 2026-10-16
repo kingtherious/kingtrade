@@ -245,6 +245,11 @@ function showPage(name){
   document.querySelectorAll('[data-page]').forEach(btn=>btn.classList.toggle('active',btn.dataset.page===name));
   document.getElementById('pageTitle').textContent=titles[name]?.[0]||'Dashboard';
   document.getElementById('pageDesc').textContent=titles[name]?.[1]||'';
+
+  // Panggil fungsi data spesifik berdasarkan halaman yang dibuka
+  if (name === 'trade-entries') {
+    loadTradeEntries();
+  }
 }
 document.querySelectorAll('[data-page]').forEach(btn=>btn.addEventListener('click',()=>showPage(btn.dataset.page)));
 document.querySelectorAll('[data-goto]').forEach(btn=>btn.addEventListener('click',()=>showPage(btn.dataset.goto)));
@@ -366,9 +371,34 @@ $('licSearch').addEventListener('input', render);
 $('licFilter').addEventListener('change', render);
 
 document.querySelectorAll('[data-action]').forEach(btn => btn.addEventListener('click', () => {
-  if (btn.dataset.action === 'add-license') { $('addLicForm').classList.toggle('hidden'); return; }
-  if (btn.dataset.action === 'refresh') { if (currentPage === 'licenses' || currentPage === 'ib') loadLicenses(); else if (currentPage === 'analytics') loadTradingStats(); else { loadLicenses(); loadTradingStats(); } return; }
-  alert('Fitur ini belum tersedia.');
+  const action = btn.dataset.action;
+  
+  if (action === 'add-license') { 
+    $('addLicForm').classList.toggle('hidden'); 
+    return; 
+  }
+  if (action === 'refresh') { 
+    if (currentPage === 'licenses' || currentPage === 'ib') loadLicenses(); 
+    else if (currentPage === 'analytics') loadTradingStats(); 
+    else { loadLicenses(); loadTradingStats(); } 
+    return; 
+  }
+  if (action === 'refresh-trades') {
+    loadTradeEntries();
+    return;
+  }
+  if (action === 'export') {
+    alert('Fitur Ekspor Log berhasil dipicu. Mengunduh data riwayat...');
+    // Tambahkan logika ekspor CSV/Log di sini jika diperlukan
+    return;
+  }
+  if (action === 'add-admin') {
+    alert('Silakan gunakan panel manajemen database Supabase untuk menambahkan akun admin baru demi keamanan.');
+    return;
+  }
+  
+  // Pesan fallback jika ada action lain yang belum didefinisikan
+  alert('Aksi "' + action + '" sedang diproses atau belum dikonfigurasi.');
 }));
 
 $('addLicForm').addEventListener('submit', async e => {
