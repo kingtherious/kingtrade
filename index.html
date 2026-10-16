@@ -36,7 +36,7 @@
       display: flex; align-items: center; gap: 28px;
       border-bottom: 1px solid rgba(0, 194, 232, .35);
       background: rgba(4, 11, 21, .94);
-      position: relative; z-index: 10;
+      position: relative; z-index: 50;
     }
     .brand { display: flex; align-items: center; gap: 15px; min-width: 320px; }
     .brand-mark {
@@ -56,9 +56,12 @@
       display: flex; align-items: center; gap: 10px; border: 1px solid var(--cyan);
       color: var(--teal); background: rgba(0, 207, 211, .06); padding: 12px 20px;
       border-radius: 30px; font-weight: 750; cursor: pointer; transition: all 0.2s ease;
+      position: relative; z-index: 999; /* Memastikan tombol paling atas dan bisa diklik */
+      pointer-events: auto !important;
     }
     .account-btn:hover { background: rgba(0, 207, 211, .15); border-color: var(--teal); }
-    .account-btn svg { width: 20px; height: 20px; }
+    .account-btn svg { width: 20px; height: 20px; pointer-events: none; }
+    .account-btn span { pointer-events: none; }
 
     /* Styling Popup Modal */
     .modal-overlay {
@@ -347,18 +350,13 @@
     <span>Automated Trading Systems · Trading involves risk.</span>
   </footer>
 
-  <!-- Integrasi Supabase JS Client & Script Fungsionalitas Login/Register & Real-time Metrics -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // =========================================================================
-    // KONFIGURASI SUPABASE (Ganti dengan URL dan Anon Key Anda)
-    // =========================================================================
     const SUPABASE_URL = 'URL_SUPABASE_ANDA';
     const SUPABASE_ANON_KEY = 'ANON_KEY_SUPABASE_ANDA';
-    
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Modal Popup Script
+    // Modal Popup Script yang Aman
     const openBtn = document.getElementById('openAuthModal');
     const closeBtn = document.getElementById('closeAuthModal');
     const modal = document.getElementById('authModal');
@@ -369,17 +367,22 @@
     const heroRegisterBtn = document.getElementById('heroRegisterBtn');
 
     function openModal(tab = 'login') {
-      modal.classList.add('active');
-      modal.setAttribute('aria-hidden', 'false');
-      switchTab(tab);
+      if (modal) {
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        switchTab(tab);
+      }
     }
 
     function closeModal() {
-      modal.classList.remove('active');
-      modal.setAttribute('aria-hidden', 'true');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+      }
     }
 
     function switchTab(tab) {
+      if (!loginTab || !registerTab || !loginForm || !registerForm) return;
       if (tab === 'login') {
         loginTab.classList.add('active');
         registerTab.classList.remove('active');
@@ -393,8 +396,16 @@
       }
     }
 
-    openBtn.addEventListener('click', () => openModal('login'));
-    closeBtn.addEventListener('click', closeModal);
+    if (openBtn) {
+      openBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal('login');
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeModal);
+    }
     
     if (heroRegisterBtn) {
       heroRegisterBtn.addEventListener('click', (e) => {
@@ -403,86 +414,68 @@
       });
     }
 
-    loginTab.addEventListener('click', () => switchTab('login'));
-    registerTab.addEventListener('click', () => switchTab('register'));
+    if (loginTab) loginTab.addEventListener('click', () => switchTab('login'));
+    if (registerTab) registerTab.addEventListener('click', () => switchTab('register'));
 
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+    }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.classList.contains('active')) {
+      if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
         closeModal();
       }
     });
 
-    document.getElementById('year').textContent = new Date().getFullYear();
+    const yearEl = document.getElementById('year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // =========================================================================
-    // HANDLE LOGIN & REGISTER DENGAN SUPABASE AUTH
-    // =========================================================================
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPassword').value;
+    // Login & Register Handler
+    if (loginForm) {
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        try {
+          const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          alert('Login berhasil!');
+          closeModal();
+        } catch (err) {
+          alert('Gagal Masuk: ' + err.message);
+        }
+      });
+    }
 
-      try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-          email: email,
-          password: password,
-        });
+    if (registerForm) {
+      registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('regName').value;
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        try {
+          const { error } = await supabaseClient.auth.signUp({
+            email, password, options: { data: { full_name: name } }
+          });
+          if (error) throw error;
+          alert('Registrasi berhasil! Silakan periksa email Anda.');
+          switchTab('login');
+        } catch (err) {
+          alert('Gagal Mendaftar: ' + err.message);
+        }
+      });
+    }
 
-        if (error) throw error;
-
-        alert('Login berhasil! Selamat datang kembali.');
-        closeModal();
-      } catch (err) {
-        alert('Gagal Masuk: ' + err.message);
-      }
-    });
-
-    registerForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = document.getElementById('regName').value;
-      const email = document.getElementById('regEmail').value;
-      const password = document.getElementById('regPassword').value;
-
-      try {
-        const { data, error } = await supabaseClient.auth.signUp({
-          email: email,
-          password: password,
-          options: {
-            data: {
-              full_name: name
-            }
-          }
-        });
-
-        if (error) throw error;
-
-        alert('Registrasi berhasil! Silakan periksa email Anda atau langsung masuk.');
-        switchTab('login');
-      } catch (err) {
-        alert('Gagal Mendaftar: ' + err.message);
-      }
-    });
-
-    // =========================================================================
-    // FETCH METRIK REAL-TIME UNTUK DASHBOARD INDEX
-    // =========================================================================
+    // Real-time Metrics
     async function fetchIndexMetrics() {
       try {
-        const { data, error } = await supabaseClient
-          .from('trading_stats')
-          .select('*');
-
+        const { data, error } = await supabaseClient.from('trading_stats').select('*');
         if (error) throw error;
         if (!data || data.length === 0) return;
 
-        let sumMonthly = 0;
-        let sumWinRate = 0;
-        let sumTotalProfit = 0;
-
+        let sumMonthly = 0, sumWinRate = 0, sumTotalProfit = 0;
         data.forEach(row => {
           sumMonthly += Number(row.monthly_profit || 0);
           sumWinRate += Number(row.win_rate || 0);
@@ -490,13 +483,10 @@
         });
 
         const count = data.length;
-
-        // Memasukkan hasil kalkulasi database ke elemen metrik beranda
-        document.getElementById('statMonthly').textContent = `+${(sumMonthly / count).toFixed(1)}%`;
-        document.getElementById('statWinRate').textContent = `${(sumWinRate / count).toFixed(1)}%`;
-        document.getElementById('statTotalProfit').textContent = `$${sumTotalProfit.toLocaleString()}`;
-        document.getElementById('statAccounts').textContent = count;
-
+        if(document.getElementById('statMonthly')) document.getElementById('statMonthly').textContent = `+${(sumMonthly / count).toFixed(1)}%`;
+        if(document.getElementById('statWinRate')) document.getElementById('statWinRate').textContent = `${(sumWinRate / count).toFixed(1)}%`;
+        if(document.getElementById('statTotalProfit')) document.getElementById('statTotalProfit').textContent = `$${sumTotalProfit.toLocaleString()}`;
+        if(document.getElementById('statAccounts')) document.getElementById('statAccounts').textContent = count;
       } catch (err) {
         console.error('Gagal memuat metrik beranda:', err.message);
       }
