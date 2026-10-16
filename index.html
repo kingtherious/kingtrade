@@ -503,10 +503,16 @@
 
     // Real-time Metrics (dari fungsi public_stats di Supabase)
     async function fetchIndexMetrics() {
-      try {
-        const { data, error } = await supabaseClient.rpc('public_stats');
-        if (error) throw error;
-        if (!data) return;
+  try {
+    const { data, error } = await supabaseClient.rpc('public_stats');
+    if (error) throw error;
+    if (!data) return;
+    // Menampilkan metrik ke elemen beranda secara otomatis[cite: 6]
+    ...
+  } catch (err) {
+    console.error('Gagal memuat metrik beranda:', err.message);
+  }
+}
 
         const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
         const num = (v) => (v === null || v === undefined) ? null : Number(v);
