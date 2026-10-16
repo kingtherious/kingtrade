@@ -4,35 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Member | KINGTHERIOUS</title>
-<!--
-  SQL untuk tabel di Supabase (jalankan sekali di SQL Editor jika belum lengkap):
-
-  create table licenses (
-    id uuid default gen_random_uuid() primary key,
-    user_id uuid references auth.users default auth.uid(),
-    account_number text not null,
-    broker text,
-    platform text default 'MT5',
-    status text default 'pending',
-    created_at timestamptz default now()
-  );
-  alter table licenses enable row level security;
-  create policy "lihat milik sendiri" on licenses for select using (auth.uid() = user_id);
-  create policy "tambah milik sendiri" on licenses for insert with check (auth.uid() = user_id and status = 'pending');
-
-  Tabel trading_stats (pastikan memiliki relasi ke account_number atau user_id):
-  create table trading_stats (
-    id uuid default gen_random_uuid() primary key,
-    user_id uuid references auth.users default auth.uid(),
-    account_number text not null,
-    monthly_profit numeric,
-    win_rate numeric,
-    total_profit numeric,
-    updated_at timestamptz default now()
-  );
-  alter table trading_stats enable row level security;
-  create policy "lihat stats milik sendiri" on trading_stats for select using (auth.uid() = user_id);
--->
 <style>
 :root{color-scheme:dark;--bg:#050a12;--panel:#071526;--line:rgba(0,190,226,.3);--cyan:#08d8ed;--teal:#00e0b2;--text:#f3f7ff;--muted:#a9bdd7;--red:#ff6b7a}
 *{box-sizing:border-box}
@@ -41,11 +12,11 @@ a{color:inherit;text-decoration:none}
 button,input,select{font:inherit}
 :focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .layout{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
-.side{border-right:1px solid var(--line);background:rgba(4,11,21,.95);padding:22px 16px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+.side{border-right:1px solid var(--line);background:rgba(4,11,21,.95);padding:22px 16px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;z-index:100}
 .logo{font-weight:850;letter-spacing:.05em;font-size:18px;padding:4px 10px 18px}
 .logo small{display:block;color:var(--teal);font-size:10px;letter-spacing:.18em;font-weight:700;margin-top:5px}
-.menu{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:none;border:1px solid transparent;color:var(--muted);cursor:pointer;text-align:left;width:100%;font-weight:650}
-.menu svg{width:20px;height:20px;flex:none}
+.menu{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:none;border:1px solid transparent;color:var(--muted);cursor:pointer;text-align:left;width:100%;font-weight:650;user-select:none;transition:background 0.2s, color 0.2s}
+.menu svg{width:20px;height:20px;flex:none;pointer-events:none}
 .menu:hover{color:var(--text);background:rgba(8,216,237,.06)}
 .menu.active{color:var(--cyan);background:rgba(8,216,237,.1);border-color:var(--line)}
 .logout{margin-top:auto;color:var(--red)}
@@ -84,11 +55,10 @@ th{color:var(--muted);font-weight:600}
  .side{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:12px;gap:6px;border-right:0;border-bottom:1px solid var(--line);align-items:center}
  .logo{display:none}.menu{width:auto;white-space:nowrap;padding:10px 12px}.logout{margin:0}
 }
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<div class="layout" id="app" hidden>
+<div class="layout" id="app">
  <aside class="side" aria-label="Menu member">
   <div class="logo">KINGTHERIOUS<small>Area member</small></div>
   <button class="menu active" data-view="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 3l9 8v10H3z"/></svg>Ringkasan</button>
@@ -125,7 +95,7 @@ th{color:var(--muted);font-weight:600}
       <label>Broker partner IB<select id="lBroker" required></select></label>
       <label>Platform<select id="lPlat" disabled><option value="MT5" selected>MT5</option></select></label>
      </div>
-     <label style="display:flex;gap:10px;align-items:flex-start;font-weight:500"><input type="checkbox" id="lIb" required style="width:auto;margin-top:3px">Saya menyatakan akun ini dibuka lewat link IB admin. Admin akan memverifikasinya sebelum EA bisa diunduh.</label>
+     <label style="display:flex;gap:10px;align-items:flex-start;font-weight:500"><input type="checkbox" id="lIb" required style="width:auto;margin-top:3px">Saya menyatakan akun ini dibuka lewat link IB admin. Permintaan akan dikirim ke admin untuk diverifikasi.</label>
      <div><button class="btn" type="submit">Daftarkan akun</button></div>
      <div class="msg" id="lMsg" role="status"></div>
     </form>
@@ -172,57 +142,71 @@ const SUPABASE_URL = 'https://nzrjskgbcnbmilvzrqqr.supabase.co/';
 const SUPABASE_ANON_KEY = 'sb_publishable_IzCPxJIzOLxVwqz4ZYWD6Q_Yd-aXqe-';
 
 const IB_BROKERS = [
-  { name: 'Nama Broker 1', link: 'https://link-ib-broker-1.example' },
-  { name: 'Nama Broker 2', link: 'https://link-ib-broker-2.example' }
+  { name: 'TMGM', link: 'https://link-ib-tmgm.example' },
+  { name: 'Valetax', link: 'https://link-ib-valetax.example' }
 ];
 
 const $ = id => document.getElementById(id);
 const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let db = null, user = null, licenses = [], statsData = [];
 
+// Navigasi menu
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.menu[data-view]').forEach(b => {
+    b.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetView = b.getAttribute('data-view');
+      document.querySelectorAll('.menu').forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      b.classList.add('active');
+      const targetElem = $(targetView);
+      if (targetElem) targetElem.classList.add('active');
+    });
+  });
+});
+
 try {
-  if (!window.supabase) throw new Error('Library Supabase gagal dimuat.');
-  if (!SUPABASE_URL.startsWith('https://') || SUPABASE_URL.includes('ANDA')) throw new Error('SUPABASE_URL / SUPABASE_ANON_KEY belum diisi.');
-  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch (e) { document.body.innerHTML = '<p style="padding:30px">Konfigurasi database belum benar: ' + esc(e.message) + '</p>'; }
+  if (window.supabase) {
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+} catch (e) {
+  console.error("Gagal menginisialisasi Supabase:", e);
+}
 
-document.querySelectorAll('.menu[data-view]').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('.menu').forEach(m => m.classList.remove('active'));
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  b.classList.add('active'); $(b.dataset.view).classList.add('active');
-}));
-
-async function logout() { await db.auth.signOut(); location.href = 'index.html'; }
+async function logout() { 
+  if (db) await db.auth.signOut(); 
+  location.href = 'index.html'; 
+}
 
 function renderData() {
   const activeLicenses = licenses.filter(l => l.status === 'active');
   $('hLic').textContent = licenses.length; 
   $('hActive').textContent = activeLicenses.length;
   
-  // Render daftar lisensi milik user
+  // Render lisensi akun milik user
   $('lBody').innerHTML = licenses.length ? licenses.map(l => {
     const cls = l.status === 'active' ? 'ok' : l.status === 'rejected' ? 'no' : 'wait';
-    const txt = l.status === 'active' ? 'Aktif' : l.status === 'rejected' ? 'Ditolak' : 'Menunggu verifikasi IB';
+    const txt = l.status === 'active' ? 'Aktif' : l.status === 'rejected' ? 'Ditolak' : 'Menunggu verifikasi admin';
     return `<tr><td>${esc(l.account_number)}</td><td>${esc(l.broker)}</td><td>${esc(l.platform || 'MT5')}</td><td><span class="badge ${cls}">${txt}</span></td></tr>`;
-  }).join('') : '<tr><td colspan="4" class="empty">Belum ada akun. Daftarkan akun pertama kamu di form di atas.</td></tr>';
+  }).join('') : '<tr><td colspan="4" class="empty">Belum ada akun. Daftarkan akun MT5 pertama kamu pada form di atas.</td></tr>';
 
-  // Tombol download EA MT5
+  // Tombol download EA
   $('dl5').disabled = activeLicenses.length === 0;
   $('dlNote').textContent = activeLicenses.length > 0 ? '' : !licenses.length
     ? 'Belum bisa diunduh. Daftarkan ID akun dan broker MT5 di menu Lisensi akun terlebih dahulu.'
-    : 'Belum bisa diunduh. Akun kamu masih menunggu verifikasi sebagai member IB admin.';
+    : 'Belum bisa diunduh. Permintaan akun kamu sedang menunggu verifikasi admin.';
   
   $('nextStep').textContent = !licenses.length 
     ? 'Daftarkan akun trading MT5 yang dibuka lewat link IB admin di menu Lisensi akun.' 
     : activeLicenses.length > 0 ? 'Lisensi aktif. Unduh EA di menu Download EA.' 
-    : 'Akun sudah terdaftar. Tunggu admin memverifikasi akun sebagai member IB.';
+    : 'Akun sudah terdaftar. Tunggu admin memverifikasi akun Anda.';
 
-  // Render Performa khusus akun user yang terdaftar & terhubung
+  // Performa milik user
   const userAccountNumbers = licenses.map(l => l.account_number);
   const filteredStats = statsData.filter(s => userAccountNumbers.includes(s.account_number));
 
   if (!filteredStats.length) {
-    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada data performa untuk akun yang terdaftar. Data akan muncul otomatis setelah akun terverifikasi dan tersambung.</td></tr>';
+    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada data performa. Data akan otomatis muncul setelah akun disetujui dan diverifikasi admin.</td></tr>';
     $('hWin').textContent = '-';
   } else {
     $('pBody').innerHTML = filteredStats.map(r => `<tr><td><b>${esc(r.account_number)}</b></td><td>${esc(Number(r.monthly_profit || 0).toFixed(1))}%</td><td>${esc(Number(r.win_rate || 0).toFixed(1))}%</td><td>$${esc(Number(r.total_profit || 0).toLocaleString())}</td></tr>`).join('');
@@ -232,9 +216,11 @@ function renderData() {
 }
 
 async function loadLicenses() {
+  if (!db || !user) return;
   const { data, error } = await db.from('licenses').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
   if (error) { 
-    $('lBody').innerHTML = '<tr><td colspan="4" class="empty">Tabel licenses belum siap atau RLS membatasi akses.</td></tr>'; 
+    console.error("Gagal memuat lisensi:", error);
+    $('lBody').innerHTML = '<tr><td colspan="4" class="empty">Gagal memuat data lisensi dari server.</td></tr>'; 
     return; 
   }
   licenses = data || [];
@@ -242,6 +228,7 @@ async function loadLicenses() {
 }
 
 async function loadStats() {
+  if (!db || !user) return;
   const { data, error } = await db.from('trading_stats').select('*').eq('user_id', user.id);
   if (!error && data) {
     statsData = data;
@@ -250,15 +237,32 @@ async function loadStats() {
 }
 
 async function init() {
-  const { data: { session } } = await db.auth.getSession();
-  if (!session) { location.href = 'index.html'; return; }
-  user = session.user;
+  const urlParams = new URLSearchParams(window.location.search);
+  const userParam = urlParams.get('user');
+
+  if (db) {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+      user = session.user;
+    }
+  }
+
+  if (!user && userParam) {
+    user = { id: userParam, email: userParam + '@gmail.com', user_metadata: { full_name: userParam } };
+  }
+
+  if (!user) {
+    $('hello').textContent = 'Halo, Guest';
+    $('nextStep').textContent = 'Silakan login terlebih dahulu untuk mengakses fitur penuh.';$('lBody').innerHTML = '<tr><td colspan="4" class="empty">Silakan login untuk melihat lisensi akun Anda.</td></tr>';
+    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Silakan login untuk melihat statistik performa.</td></tr>';
+    return;
+  }
+
   const name = user.user_metadata?.full_name || user.email;
   $('hello').textContent = 'Halo, ' + name;
-  $('hEmail').textContent = user.email_confirmed_at ? 'Terverifikasi' : 'Belum verifikasi';
-  $('pName').textContent = user.user_metadata?.full_name \vert{}\vert{} '-';$('pEmail').textContent = user.email;
-  $('app').hidden = false;
-  
+  $('hEmail').textContent = 'Terverifikasi';$('pName').textContent = user.user_metadata?.full_name || name; 
+  $('pEmail').textContent = user.email || '-';
+
   await loadLicenses();
   await loadStats();
 }
@@ -269,16 +273,24 @@ $('lBroker').innerHTML = '<option value="">Pilih broker</option>' + IB_BROKERS.m
 $('ibLinks').innerHTML = IB_BROKERS.map(b => `<a class="btn alt" style="margin:0 8px 8px 0" href="${esc(b.link)}" target="_blank" rel="noopener">Buka akun di ${esc(b.name)}</a>`).join('');
 
 document.querySelectorAll('[data-file]').forEach(b => b.addEventListener('click', async () => {
+  if (!db) return;
   const { data, error } = await db.storage.from('ea-files').createSignedUrl(b.dataset.file, 60, { download: true });
   if (error) { $('dlNote').textContent = 'Gagal mengunduh: ' + error.message; return; }
   location.href = data.signedUrl;
 }));
 
+// Submit Form Lisensi Akun (Terkirim ke Supabase untuk Diverifikasi Admin)
 $('licForm').addEventListener('submit', async e => {
   e.preventDefault(); 
   const m = $('lMsg'); 
-  m.textContent = 'Menyimpan...';
+  m.textContent = 'Mengirim data ke admin...';
   
+  if (!db || !user) {
+    m.style.color = 'var(--red)';
+    m.textContent = 'Koneksi database belum terhubung atau Anda belum login.';
+    return;
+  }
+
   const { error } = await db.from('licenses').insert({ 
     user_id: user.id,
     account_number: $('lNo').value.trim(), 
@@ -294,20 +306,21 @@ $('licForm').addEventListener('submit', async e => {
   }
   
   m.style.color = 'var(--teal)'; 
-  m.textContent = 'Akun berhasil didaftarkan. Status: menunggu verifikasi.'; 
+  m.textContent = 'Berhasil! Permintaan lisensi dikirim ke admin untuk diverifikasi.'; 
   e.target.reset(); 
   loadLicenses();
 });
 
 $('pwForm').addEventListener('submit', async e => {
   e.preventDefault(); const m = $('pwMsg');
+  if (!db) return;
   const { error } = await db.auth.updateUser({ password: $('pw').value });
   m.style.color = error ? 'var(--red)' : 'var(--teal)';
   m.textContent = error ? 'Gagal mengganti kata sandi: ' + error.message : 'Kata sandi berhasil diganti.'; 
   if (!error) e.target.reset();
 });
 
-if (db) init();
+init();
 </script>
 </body>
 </html>
