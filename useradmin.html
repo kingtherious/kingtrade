@@ -171,11 +171,13 @@
           <button class="btn teal" data-action="refresh-auth-users">Muat Ulang User</button>
         </div>
         <p class="placeholder" style="margin-bottom: 14px;">Kelola dan konfirmasi akun member yang mendaftar. Jika tautan email kedaluwarsa (otp_expired), admin dapat langsung memberikan konfirmasi manual di sini.</p>
+        <div class="toolbar" style="margin-bottom:14px;"><input id="authUserSearch" type="search" placeholder="Filter email / username / display name" aria-label="Filter user auth"></div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Email User</th>
+                <th>Username / Display Name</th>
                 <th>Provider</th>
                 <th>Terdaftar Sejak</th>
                 <th>Status Email</th>
@@ -183,7 +185,7 @@
               </tr>
             </thead>
             <tbody id="authUsersBody">
-              <tr><td colspan="5">Memuat data user auth...</td></tr>
+              <tr><td colspan="6">Memuat data user auth...</td></tr>
             </tbody>
           </table>
         </div>
@@ -228,8 +230,8 @@
     <section class="page hidden" id="page-licenses">
       <section class="panel"><div class="panel-head"><h2>Daftar Akun MT5 / Lisensi</h2><button class="btn teal" data-action="add-license">+ Tambah lisensi</button></div>
         <form id="addLicForm" class="toolbar hidden" style="margin-bottom:14px"><input id="alEmail" type="email" placeholder="Email member" aria-label="Email member" required><input id="alNo" placeholder="Nomor akun" aria-label="Nomor akun" required><input id="alBroker" placeholder="Broker" aria-label="Broker" required><select id="alPlat" aria-label="Platform"><option>MT5</option><option>MT4</option></select><select id="alStatus" aria-label="Status"><option value="active">Active</option><option value="pending">Pending</option></select><button class="btn teal" type="submit">Simpan lisensi</button></form>
-        <div class="toolbar"><input id="licSearch" placeholder="Cari nomor akun / client" aria-label="Cari akun"><select id="licFilter" aria-label="Filter status"><option value="">Semua status</option><option value="active">Active</option><option value="pending">Pending</option><option value="rejected">Rejected</option><option value="blocked">Blocked</option></select><button class="btn" data-action="refresh">Muat ulang</button></div>
-        <div class="table-wrap"><table><thead><tr><th>Nomor Akun</th><th>Client</th><th>Broker / IB</th><th>Status</th><th>Profit</th><th>Terakhir aktif</th><th>Aksi</th></tr></thead><tbody id="licBody"><tr><td colspan="7">Memuat data...</td></tr></tbody></table></div>
+        <div class="toolbar"><input id="licSearch" placeholder="Cari nomor akun / email / username" aria-label="Cari akun, email, username"><select id="licFilter" aria-label="Filter status"><option value="">Semua status</option><option value="active">Active</option><option value="pending">Pending</option><option value="rejected">Rejected</option><option value="blocked">Blocked</option></select><button class="btn" data-action="refresh">Muat ulang</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Nomor Akun</th><th>Email User</th><th>Username / Display Name</th><th>Broker / IB</th><th>Status</th><th>Profit</th><th>Terakhir aktif</th><th>Aksi</th></tr></thead><tbody id="licBody"><tr><td colspan="8">Memuat data...</td></tr></tbody></table></div>
       </section>
       <section class="panel"><h2>Riwayat Performance per Account</h2><div class="placeholder">Grafik profit, equity, drawdown, dan riwayat performa perlu dihubungkan ke sumber data trading yang tervalidasi.</div></section>
     </section>
@@ -352,13 +354,16 @@ function badge(st){
   const cls = {active:'active', pending:'pending', expired:'expired', blocked:'blocked', rejected:'blocked'}[st] || 'pending';
   return `<span class="status ${cls}">${esc(st)}</span>`;
 }
-const clientCell = r => `${esc(r.client_name || '-')}<br><small style="color:#7991ab">${esc(r.client_email)}</small>`;
+const userLabel = u => { const m = u?.raw_user_meta_data || u?.user_metadata || {}; return m.display_name || m.full_name || m.name || m.username || m.user_name || ''; };
+const userNameOf = u => { const m = u?.raw_user_meta_data || u?.user_metadata || {}; return m.username || m.user_name || m.display_name || m.full_name || m.name || ''; };
+let authUserCache = [];
+const clientCell = r => `${esc(r.client_name || r.client_email || r.user_id || '-')}<br><small style="color:#7991ab">${esc(r.client_email || '')}</small>`;
 const fmtDate = d => d ? new Date(d).toLocaleString('id-ID') : '-';
 
 function render(){
   const q = $('licSearch').value.trim().toLowerCase(), f =$('licFilter').value;
-  const list = rows.filter(r => (!f || r.status === f) && (!q || [r.account_number, r.client_name, r.client_email].join(' ').toLowerCase().includes(q)));
-  $('licBody').innerHTML = list.length ? list.map(r => `<tr><td>${esc(r.account_number)}</td><td>${clientCell(r)}</td><td>${esc(r.broker)} (${esc(r.platform)})</td><td>${badge(r.status)}</td><td>—</td><td>—</td>
+  const list = rows.filter(r => (!f || r.status === f) && (!q || [r.account_number, r.client_name, r.client_email, r.username, r.display_name, r.user_id].join(' ').toLowerCase().includes(q)));
+  $('licBody').innerHTML = list.length ? list.map(r => `<tr><td>${esc(r.account_number || r.account_id || '-')}</td><td>${esc(r.client_email || '-')}</td><td>${esc(r.username || r.display_name || r.client_name || '-')}</td><td>${esc(r.broker || '-')} (${esc(r.platform || 'MT5')})</td><td>${badge(r.status)}</td><td>—</td><td>—</td>
     <td><button class="btn teal" data-id="${esc(r.id)}" data-set="active">Aktifkan</button> <button class="btn" data-id="${esc(r.id)}" data-set="rejected">Tolak</button> <button class="btn danger" data-id="${esc(r.id)}" data-set="blocked">Blokir</button> <button class="btn danger" data-id="${esc(r.id)}" data-del="1">Hapus</button></td></tr>`).join('')
     : '<tr><td colspan="7">Tidak ada akun yang cocok.</td></tr>';
 
@@ -376,7 +381,7 @@ async function loadLicenses(){
   const { data, error } = await supabaseClient.rpc('admin_list_licenses');
 
   if (error) {
-    const msg = '<tr><td colspan="7">Gagal memuat data: '
+    const msg = '<tr><td colspan="8">Gagal memuat data: '
       + esc(error.message) + '</td></tr>';
     $('licBody').innerHTML = msg;
     $('ibBody').innerHTML = msg;
@@ -384,6 +389,12 @@ async function loadLicenses(){
   }
 
   rows = data || [];
+  try {
+    const { data: users } = await supabaseClient.rpc('admin_list_all_users');
+    authUserCache = users || [];
+    const byId = new Map(authUserCache.map(u => [String(u.id), u]));
+    rows = rows.map(r => { const u = byId.get(String(r.user_id || '')); const meta = u?.raw_user_meta_data || u?.user_metadata || {}; return { ...r, client_email: r.client_email || u?.email || '', username: r.username || meta.username || meta.user_name || '', display_name: r.display_name || meta.display_name || meta.full_name || meta.name || '' }; });
+  } catch (_) {}
   render();
 }
 
@@ -512,7 +523,7 @@ async function loadTradeEntries() {
   tbody.innerHTML = '<tr><td colspan="9">Mengambil data dari Supabase...</td></tr>';
   const { data, error } = await supabaseClient.from('trade_entries').select('*').order('time', { ascending: false });
   if (error) { tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red);">Gagal memuat data: ${error.message}</td></tr>`; return; }
-  if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Belum ada data entry posisi.</td></tr>'; return; }
+  if (!data || data.length === 0) { window._allTradeEntries = []; tbody.innerHTML = '<tr><td colspan="9">Belum ada data entry posisi.</td></tr>'; return; }
   window._allTradeEntries = data;
   renderTradeTable(data);
 }
@@ -523,6 +534,7 @@ function renderTradeTable(rows) {
   rows.forEach(row => {
     const profitColor = row.profit >= 0 ? 'color: var(--teal);' : 'color: var(--red);';
     const formattedTime = formatOpenTime(row.time);
+    const normalizedStatus = /^(close|closed|closed_position|complete|completed)$/i.test(String(row.status || '')) ? 'CLOSED' : (String(row.status || 'FLOATING').toUpperCase());
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${esc(row.account_id)}</td>
@@ -533,7 +545,7 @@ function renderTradeTable(rows) {
       <td>${esc(row.volume)}</td>
       <td>${esc(formattedTime)}</td>
       <td style="${profitColor} font-weight: bold;">$${Number(row.profit).toFixed(2)}</td>
-      <td><span class="status ${String(row.status).toLowerCase() === 'closed' ? 'expired' : 'active'}">${esc(row.status)}</span></td>
+      <td><span class="status ${normalizedStatus === 'CLOSED' ? 'expired' : 'active'}">${esc(normalizedStatus)}</span></td>
     `;
     tbody.appendChild(tr);
   });
@@ -550,7 +562,8 @@ function applyTradeFilters() {
     const matchAcc = String(item.account_id).toLowerCase().includes(accVal) || String(item.account_name).toLowerCase().includes(accVal);
     const matchSym = String(item.symbol).toLowerCase().includes(symVal);
     const matchType = typeVal === "" || String(item.type).toUpperCase() === typeVal;
-    const matchStatus = statusVal === "" || String(item.status).toUpperCase() === statusVal;
+    const itemStatus = /^(close|closed|closed_position|complete|completed)$/i.test(String(item.status || '')) ? 'CLOSED' : String(item.status || 'FLOATING').toUpperCase();
+    const matchStatus = statusVal === "" || itemStatus === statusVal;
     return matchAcc && matchSym && matchType && matchStatus;
   });
   renderTradeTable(filtered);
@@ -560,6 +573,8 @@ document.getElementById('filterAccount')?.addEventListener('input', applyTradeFi
 document.getElementById('filterSymbol')?.addEventListener('input', applyTradeFilters);
 document.getElementById('filterType')?.addEventListener('change', applyTradeFilters);
 document.getElementById('filterStatus')?.addEventListener('change', applyTradeFilters);
+// Refresh daftar tiket secara berkala. Status CLOSED hanya akan muncul setelah callback EA/backend memperbarui kolom status di Supabase.
+setInterval(() => { if (document.getElementById('page-trade-entries') && !document.getElementById('page-trade-entries').classList.contains('hidden')) loadTradeEntries(); }, 15000);
 
 async function loadVisitorLogs() {
   const tbody = document.getElementById('visitorLogsBody');
@@ -596,38 +611,39 @@ async function loadVisitorLogs() {
 async function loadAuthUsers() {
   const tbody = document.getElementById('authUsersBody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="5">Mengambil data user dari autentikasi...</td></tr>';
-
+  tbody.innerHTML = '<tr><td colspan="6">Mengambil data user dari autentikasi...</td></tr>';
   const { data, error } = await supabaseClient.rpc('admin_list_all_users');
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red);">Gagal memuat user: ${esc(error.message)}. Pastikan fungsi RPC admin_list_all_users sudah dibuat di Supabase.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--red);">Gagal memuat user: ${esc(error.message)}. Pastikan fungsi RPC admin_list_all_users mengembalikan email, id, created_at, email_confirmed_at, raw_app_meta_data, dan raw_user_meta_data.</td></tr>`;
     return;
   }
+  authUserCache = data || [];
+  renderAuthUsers();
+}
 
-  if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5">Belum ada user yang terdaftar di sistem.</td></tr>';
-    return;
-  }
-
+function renderAuthUsers() {
+  const tbody = document.getElementById('authUsersBody');
+  if (!tbody) return;
+  const q = (document.getElementById('authUserSearch')?.value || '').trim().toLowerCase();
+  const data = authUserCache.filter(u => {
+    const meta = u.raw_user_meta_data || u.user_metadata || {};
+    const username = meta.username || meta.user_name || '';
+    const displayName = meta.display_name || meta.full_name || meta.name || '';
+    return !q || [u.email, username, displayName, u.id].join(' ').toLowerCase().includes(q);
+  });
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="6">Tidak ada user yang cocok dengan filter.</td></tr>'; return; }
   tbody.innerHTML = data.map(u => {
-    const isVerified = u.email_confirmed_at !== null;
-    const statusBadge = isVerified 
-      ? '<span class="status active">Terverifikasi</span>' 
-      : '<span class="status pending">Belum Konfirmasi</span>';
-    
-    const actionBtn = isVerified 
-      ? '<span style="color:var(--muted)">Sudah Aktif</span>' 
-      : `<button class="btn teal" onclick="confirmUser('${u.id}')">Konfirmasi Manual</button>`;
-
-    return `<tr>
-      <td>${esc(u.email)}</td>
-      <td>${esc(u.raw_app_meta_data?.provider || 'email')}</td>
-      <td>${esc(fmtDate(u.created_at))}</td>
-      <td>${statusBadge}</td>
-      <td>${actionBtn}</td>
-    </tr>`;
+    const isVerified = u.email_confirmed_at !== null && u.email_confirmed_at !== undefined;
+    const meta = u.raw_user_meta_data || u.user_metadata || {};
+    const username = meta.username || meta.user_name || '-';
+    const displayName = meta.display_name || meta.full_name || meta.name || '-';
+    const nameText = username !== '-' ? username : displayName;
+    const statusBadge = isVerified ? '<span class="status active">Terverifikasi</span>' : '<span class="status pending">Belum Konfirmasi</span>';
+    const actionBtn = isVerified ? '<span style="color:var(--muted)">Sudah Aktif</span>' : `<button class="btn teal" onclick="confirmUser('${esc(u.id)}')">Konfirmasi Manual</button>`;
+    return `<tr><td>${esc(u.email || '-')}</td><td>${esc(nameText)}${displayName !== '-' && displayName !== nameText ? `<br><small style="color:#7991ab">${esc(displayName)}</small>` : ''}</td><td>${esc(u.raw_app_meta_data?.provider || 'email')}</td><td>${esc(fmtDate(u.created_at))}</td><td>${statusBadge}</td><td>${actionBtn}</td></tr>`;
   }).join('');
 }
+document.getElementById('authUserSearch')?.addEventListener('input', renderAuthUsers);
 
 // Fungsi Eksekusi Konfirmasi Manual oleh Admin
 window.confirmUser = async function(userId) {
