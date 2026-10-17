@@ -343,7 +343,12 @@ async function logout() {
 }
 
 function renderData() {
-// Tombol download EA pertama dan kedua
+  // Lisensi dianggap aktif hanya jika status database bernilai "active".
+  const activeLicenses = licenses.filter(l => String(l.status || '').toLowerCase() === 'active');
+
+  // Ringkasan dashboard dan tombol download EA
+  $('hLic').textContent = String(licenses.length);
+  $('hActive').textContent = String(activeLicenses.length);
   const isEnabled = activeLicenses.length > 0;
   $('dl1').disabled = !isEnabled;
   $('dl2').disabled = !isEnabled;
@@ -358,14 +363,7 @@ function renderData() {
     const txt = l.status === 'active' ? 'Aktif' : l.status === 'rejected' ? 'Ditolak' : 'Menunggu verifikasi admin';
     return `<tr><td>${esc(l.account_number)}</td><td>${esc(l.broker)}</td><td>${esc(l.platform || 'MT5')}</td><td><span class="badge ${cls}">${txt}</span></td></tr>`;
   }).join('') : '<tr><td colspan="4" class="empty">Belum ada akun. Daftarkan akun MT5 pertama kamu pada form di atas.</td></tr>';
-
-  // Tombol download EA
-  $('dl5').disabled = activeLicenses.length === 0;
-  $('dlNote').textContent = activeLicenses.length > 0 ? '' : !licenses.length
-    ? 'Belum bisa diunduh. Daftarkan ID akun dan broker MT5 di menu Lisensi akun terlebih dahulu.'
-    : 'Belum bisa diunduh. Permintaan akun kamu sedang menunggu verifikasi admin.';
-  
-  $('nextStep').textContent = !licenses.length 
+$('nextStep').textContent = !licenses.length 
     ? 'Daftarkan akun trading MT5 yang dibuka lewat link IB admin di menu Lisensi akun.' 
     : activeLicenses.length > 0 ? 'Lisensi aktif. Unduh EA di menu Download EA.' 
     : 'Akun sudah terdaftar. Tunggu admin memverifikasi akun Anda.';
@@ -406,18 +404,10 @@ async function loadStats() {
 }
 
 async function init() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const userParam = urlParams.get('user');
-
   if (db) {
-    const { data: { session } } = await db.auth.getSession();
-    if (session) {
-      user = session.user;
-    }
-  }
-
-  if (!user && userParam) {
-    user = { id: userParam, email: userParam + '@gmail.com', user_metadata: { full_name: userParam } };
+    const { data: { session }, error: sessionError } = await db.auth.getSession();
+    if (sessionError) console.error('Gagal memeriksa sesi login:', sessionError);
+    if (session) user = session.user;
   }
 
   if (!user) {
@@ -452,34 +442,61 @@ document.querySelectorAll('[data-file]').forEach(b => b.addEventListener('click'
 
 // Submit Form Lisensi Akun (Terkirim ke Supabase untuk Diverifikasi Admin)
 $('licForm').addEventListener('submit', async e => {
-  e.preventDefault(); 
-  const m = $('lMsg'); 
+  e.preventDefault();
+  const m = $('lMsg');
   m.textContent = 'Mengirim data ke admin...';
-  
+
   if (!db || !user) {
     m.style.color = 'var(--red)';
     m.textContent = 'Koneksi database belum terhubung atau Anda belum login.';
     return;
   }
 
-  const { error } = await db.from('licenses').insert({ 
-    user_id: user.id,
-    account_number: $('lNo').value.trim(), 
-    broker: $('lBroker').value.trim(), 
-    platform: 'MT5',
-    status: 'pending' 
-  });
-  
-  if (error) { 
-    m.style.color = 'var(--red)'; 
-    m.textContent = 'Gagal mendaftarkan akun: ' + error.message; 
-    return; 
+  const accountNumber = $('lNo').value.trim();
+  const broker = $('lBroker').value.trim();
+
+  if (!/^\\d+$/.test(accountNumber)) {
+    m.style.color = 'var(--red)';
+    m.textContent = 'Nomor akun MT5 harus berupa angka tanpa spasi atau tanda baca.';
+    $('lNo').focus();
+    return;
   }
-  
-  m.style.color = 'var(--teal)'; 
-  m.textContent = 'Berhasil! Permintaan lisensi dikirim ke admin untuk diverifikasi.'; 
-  e.target.reset(); 
-  loadLicenses();
+  if (!broker) {
+    m.style.color = 'var(--red)';
+    m.textContent = 'Pilih broker partner terlebih dahulu.';
+    $('lBroker').focus();
+    return;
+  }
+  if (!$('lIb').checked) {
+    m.style.color = 'var(--red)';
+    m.textContent = 'Konfirmasi bahwa akun dibuka melalui link IB admin terlebih dahulu.';
+    return;
+  }
+
+  // Asumsi: account_id menyimpan nomor akun MT5 (kolom numerik atau teks).
+  // Jika account_id bertipe UUID/FK, pemetaan ini harus disesuaikan dengan skema database.
+  const payload = {
+    user_id: user.id,
+    account_id: accountNumber,
+    account_number: accountNumber,
+    broker: broker,
+    platform: 'MT5',
+    status: 'pending'
+  };
+
+  const { error } = await db.from('licenses').insert(payload);
+
+  if (error) {
+    console.error('Gagal mendaftarkan lisensi:', error);
+    m.style.color = 'var(--red)';
+    m.textContent = 'Gagal mendaftarkan akun: ' + error.message;
+    return;
+  }
+
+  m.style.color = 'var(--teal)';
+  m.textContent = 'Berhasil! Permintaan lisensi dikirim ke admin untuk diverifikasi.';
+  e.target.reset();
+  await loadLicenses();
 });
 
 $('pwForm').addEventListener('submit', async e => {
