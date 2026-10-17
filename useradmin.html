@@ -41,10 +41,15 @@
       <svg class="mark" viewBox="0 0 64 64" fill="none"><path d="M8 18 23 27 31 7 40 27 56 17 51 48 33 59 14 48 8 18Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M23 27 25 46 33 52 40 27M14 31 25 39M50 30 40 39M31 7 33 25" stroke="currentColor" stroke-width="3"/></svg>
       <div><div class="brand">KINGTHERIOUS</div><div class="sub">ADMIN CONSOLE</div></div>
     </div>
-    <div><div class="nav-label">OVERVIEW</div><nav class="side-nav">
-      <button class="active" data-page="overview"><span class="ico">▦</span> Dashboard</button>
-      <button data-page="trade-entries"><span class="ico">📊</span> Statistik Entry Posisi</button>
-    </nav></div>
+    <div>
+      <div class="nav-label">OVERVIEW</div>
+      <nav class="side-nav">
+        <button class="active" data-page="overview"><span class="ico">▦</span> Dashboard</button>
+        <button data-page="trade-entries"><span class="ico">📊</span> Statistik Entry Posisi</button>
+        <button data-page="analytics"><span class="ico">▥</span> Statistik Pengguna</button>
+        <button data-page="visitor-history"><span class="ico">👁</span> Riwayat Pengunjung</button>
+      </nav>
+    </div>
     <div><div class="nav-label">LICENSE & CLIENT</div><nav class="side-nav">
       <button data-page="licenses"><span class="ico">◇</span> Akun MT5 & Lisensi</button>
       <button data-page="ib"><span class="ico">✓</span> Verifikasi IB</button>
@@ -58,7 +63,6 @@
     </nav></div>
     <div><div class="nav-label">SYSTEM</div><nav class="side-nav">
       <button data-page="logs"><span class="ico">⌁</span> Log WebRequest API</button>
-      <button data-page="analytics"><span class="ico">▥</span> Statistik Pengguna</button>
       <button data-page="settings"><span class="ico">⚙</span> API & Keamanan</button>
       <button data-page="admins"><span class="ico">♙</span> Manajemen Admin</button>
     </nav></div>
@@ -92,68 +96,53 @@
       </div>
       <div class="notice">Tampilan dashboard ini adalah kerangka UI. Data dan aksi sensitif harus berasal dari API server yang memeriksa sesi admin dan hak akses pada setiap permintaan.</div>
     </section>
+
     <section class="page hidden" id="page-trade-entries">
-  <section class="panel">
-    <div class="panel-head">
-      <h2>Statistik Entry Posisi & Riwayat Trading MT5</h2>
-      <button class="btn teal" data-action="refresh-trades">Muat Ulang Data</button>
-    </div>
-    
-    <!-- Opsi Filter di Setiap Menu / Kolom -->
-    <div class="toolbar" style="margin-bottom: 14px;">
-      <input id="filterAccount" placeholder="Filter ID / Nama Akun..." aria-label="Filter Akun">
-      <input id="filterSymbol" placeholder="Filter Symbol Pair (e.g. XAUUSD)..." aria-label="Filter Pair">
-      <select id="filterType" aria-label="Filter Tipe">
-        <option value="">Semua Tipe (Buy/Sell)</option>
-        <option value="BUY">BUY</option>
-        <option value="SELL">SELL</option>
-      </select>
-      <select id="filterStatus" aria-label="Filter Status Posisi">
-        <option value="">Semua Status (Floating/Closed)</option>
-        <option value="FLOATING">Floating</option>
-        <option value="CLOSED">Closed</option>
-      </select>
-    </div>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Statistik Entry Posisi & Riwayat Trading MT5</h2>
+          <button class="btn teal" data-action="refresh-trades">Muat Ulang Data</button>
+        </div>
+        
+        <!-- Opsi Filter di Setiap Menu / Kolom -->
+        <div class="toolbar" style="margin-bottom: 14px;">
+          <input id="filterAccount" placeholder="Filter ID / Nama Akun..." aria-label="Filter Akun">
+          <input id="filterSymbol" placeholder="Filter Symbol Pair (e.g. XAUUSD)..." aria-label="Filter Pair">
+          <select id="filterType" aria-label="Filter Tipe">
+            <option value="">Semua Tipe (Buy/Sell)</option>
+            <option value="BUY">BUY</option>
+            <option value="SELL">SELL</option>
+          </select>
+          <select id="filterStatus" aria-label="Filter Status Posisi">
+            <option value="">Semua Status (Floating/Closed)</option>
+            <option value="FLOATING">Floating</option>
+            <option value="CLOSED">Closed</option>
+          </select>
+        </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>ID Akun MT5</th>
-            <th>Nama Akun (Navigator)</th>
-            <th>Symbol Pair</th>
-            <th>Tiket</th>
-            <th>Tipe</th>
-            <th>Volume</th>
-            <th>Time (Waktu Open)</th>
-            <th>Profit ($)</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="tradeEntriesBody">
-          <tr><td colspan="9">Memuat data posisi...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-</section>
-
-    <section class="page hidden" id="page-licenses">
-      <section class="panel"><div class="panel-head"><h2>Daftar Akun MT5 / Lisensi</h2><button class="btn teal" data-action="add-license">+ Tambah lisensi</button></div>
-        <form id="addLicForm" class="toolbar hidden" style="margin-bottom:14px"><input id="alEmail" type="email" placeholder="Email member" aria-label="Email member" required><input id="alNo" placeholder="Nomor akun" aria-label="Nomor akun" required><input id="alBroker" placeholder="Broker" aria-label="Broker" required><select id="alPlat" aria-label="Platform"><option>MT5</option><option>MT4</option></select><select id="alStatus" aria-label="Status"><option value="active">Active</option><option value="pending">Pending</option></select><button class="btn teal" type="submit">Simpan lisensi</button></form>
-        <div class="toolbar"><input id="licSearch" placeholder="Cari nomor akun / client" aria-label="Cari akun"><select id="licFilter" aria-label="Filter status"><option value="">Semua status</option><option value="active">Active</option><option value="pending">Pending</option><option value="rejected">Rejected</option><option value="blocked">Blocked</option></select><button class="btn" data-action="refresh">Muat ulang</button></div>
-        <div class="table-wrap"><table><thead><tr><th>Nomor Akun</th><th>Client</th><th>Broker / IB</th><th>Status</th><th>Profit</th><th>Terakhir aktif</th><th>Aksi</th></tr></thead><tbody id="licBody"><tr><td colspan="7">Memuat data...</td></tr></tbody></table></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Akun MT5</th>
+                <th>Nama Akun (Navigator)</th>
+                <th>Symbol Pair</th>
+                <th>Tiket</th>
+                <th>Tipe</th>
+                <th>Volume</th>
+                <th>Time (Waktu Open)</th>
+                <th>Profit ($)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tradeEntriesBody">
+              <tr><td colspan="9">Memuat data posisi...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
-      <section class="panel"><h2>Riwayat Performance per Account</h2><div class="placeholder">Grafik profit, equity, drawdown, dan riwayat performa perlu dihubungkan ke sumber data trading yang tervalidasi.</div></section>
     </section>
 
-    <section class="page hidden" id="page-ib"><section class="panel"><div class="panel-head"><h2>Verifikasi IB</h2><button class="btn" data-action="refresh">Muat pengajuan</button></div><div class="table-wrap"><table><thead><tr><th>Nomor Akun</th><th>Client</th><th>Broker</th><th>Dikirim</th><th>Aksi</th></tr></thead><tbody id="ibBody"><tr><td colspan="5">Memuat data...</td></tr></tbody></table></div></section></section>
-    <section class="page hidden" id="page-history"><section class="panel"><div class="panel-head"><h2>Riwayat Aktivitas Lisensi</h2><button class="btn" data-action="export">Ekspor log</button></div><div class="placeholder">Log pembuatan, perpanjangan, pemblokiran, dan pencabutan lisensi harus dicatat di server dengan timestamp dan identitas admin.</div></section></section>
-    <section class="page hidden" id="page-cms"><section class="panel"><h2>Kelola Landing Page</h2><p>Judul, deskripsi, banner hero, logo broker, dan konten promosi.</p><div class="placeholder">Editor CMS belum tersambung ke penyimpanan backend.</div></section></section>
-    <section class="page hidden" id="page-models"><section class="panel"><h2>Model AI & Pengumuman</h2><p>Kelola daftar model yang benar-benar digunakan dan pengumuman versi EA.</p><div class="placeholder">Daftar model, status dukungan, dan banner pengumuman akan dikelola melalui API.</div></section></section>
-    <section class="page hidden" id="page-proof"><section class="panel"><h2>Testimoni & Performance</h2><div class="placeholder">Tambahkan testimoni berizin dan statistik performa yang dapat diverifikasi. Jangan tampilkan klaim tanpa bukti.</div></section></section>
-    <section class="page hidden" id="page-faq"><section class="panel"><h2>FAQ & Panduan Pemasangan</h2><div class="placeholder">Kelola FAQ, panduan instalasi MT4/MT5, dan instruksi WebRequest.</div></section></section>
-    <section class="page hidden" id="page-logs"><section class="panel"><h2>Log WebRequest API</h2><div class="toolbar"><input placeholder="Cari nomor akun"><select><option>Semua endpoint</option><option>License check</option><option>Heartbeat</option></select><button class="btn" data-action="refresh">Muat log</button></div><div class="placeholder" style="margin-top:14px">Log sebaiknya menyimpan waktu, endpoint, hasil, account ID yang diminimalkan/masking, serta IP hanya jika diperlukan. Jangan pernah mencatat secret token.</div></section></section>
     <section class="page hidden" id="page-analytics">
       <section class="panel">
         <div class="panel-head"><h2>Ringkasan Performa Trading Pengguna</h2><button class="btn" data-action="refresh">Muat ulang</button></div>
@@ -171,15 +160,66 @@
         <p id="tradeMessage" class="placeholder" style="margin-top:14px">Data ini berasal dari tabel trading_stats dan merupakan ringkasan performa, bukan riwayat setiap transaksi.</p>
       </section>
     </section>
+
+    <!-- Menu Baru: Riwayat Pengunjung -->
+    <section class="page hidden" id="page-visitor-history">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Riwayat & Metrik Pengunjung Web</h2>
+          <button class="btn teal" data-action="refresh-visitors">Muat Ulang Data</button>
+        </div>
+        <div class="grid" style="margin-bottom:18px;">
+          <article class="stat"><div class="label">Halaman Dikunjungi (Pageviews)</div><div class="num" id="visPageviews">0</div><small>Total tampilan halaman</small></article>
+          <article class="stat"><div class="label">Durasi Sesi Rata-Rata</div><div class="num" id="visAvgDuration">0m 0s</div><small>Session Duration</small></article>
+          <article class="stat"><div class="label">Rasio Pentalan (Bounce Rate)</div><div class="num" id="visBounceRate" style="color:var(--amber)">0%</div><small>Sesi tanpa interaksi</small></article>
+          <article class="stat"><div class="label">Total Interaksi / Klik</div><div class="num" id="visClicks" style="color:var(--teal)">0</div><small>Clicks & Events</small></article>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Waktu Akses</th>
+                <th>IP Address</th>
+                <th>Device Name / Browser</th>
+                <th>Halaman Dikunjungi</th>
+                <th>Durasi Sesi</th>
+                <th>Alur Pengguna (User Flow)</th>
+                <th>Klik & Interaksi</th>
+              </tr>
+            </thead>
+            <tbody id="visitorLogsBody">
+              <tr><td colspan="7">Belum ada riwayat pengunjung yang tercatat.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section class="page hidden" id="page-licenses">
+      <section class="panel"><div class="panel-head"><h2>Daftar Akun MT5 / Lisensi</h2><button class="btn teal" data-action="add-license">+ Tambah lisensi</button></div>
+        <form id="addLicForm" class="toolbar hidden" style="margin-bottom:14px"><input id="alEmail" type="email" placeholder="Email member" aria-label="Email member" required><input id="alNo" placeholder="Nomor akun" aria-label="Nomor akun" required><input id="alBroker" placeholder="Broker" aria-label="Broker" required><select id="alPlat" aria-label="Platform"><option>MT5</option><option>MT4</option></select><select id="alStatus" aria-label="Status"><option value="active">Active</option><option value="pending">Pending</option></select><button class="btn teal" type="submit">Simpan lisensi</button></form>
+        <div class="toolbar"><input id="licSearch" placeholder="Cari nomor akun / client" aria-label="Cari akun"><select id="licFilter" aria-label="Filter status"><option value="">Semua status</option><option value="active">Active</option><option value="pending">Pending</option><option value="rejected">Rejected</option><option value="blocked">Blocked</option></select><button class="btn" data-action="refresh">Muat ulang</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Nomor Akun</th><th>Client</th><th>Broker / IB</th><th>Status</th><th>Profit</th><th>Terakhir aktif</th><th>Aksi</th></tr></thead><tbody id="licBody"><tr><td colspan="7">Memuat data...</td></tr></tbody></table></div>
+      </section>
+      <section class="panel"><h2>Riwayat Performance per Account</h2><div class="placeholder">Grafik profit, equity, drawdown, dan riwayat performa perlu dihubungkan ke sumber data trading yang tervalidasi.</div></section>
+    </section>
+
+    <section class="page hidden" id="page-ib"><section class="panel"><div class="panel-head"><h2>Verifikasi IB</h2><button class="btn" data-action="refresh">Muat pengajuan</button></div><div class="table-wrap"><table><thead><tr><th>Nomor Akun</th><th>Client</th><th>Broker</th><th>Dikirim</th><th>Aksi</th></tr></thead><tbody id="ibBody"><tr><td colspan="5">Memuat data...</td></tr></tbody></table></div></section></section>
+    <section class="page hidden" id="page-history"><section class="panel"><div class="panel-head"><h2>Riwayat Aktivitas Lisensi</h2><button class="btn" data-action="export">Ekspor log</button></div><div class="placeholder">Log pembuatan, perpanjangan, pemblokiran, dan pencabutan lisensi harus dicatat di server dengan timestamp dan identitas admin.</div></section></section>
+    <section class="page hidden" id="page-cms"><section class="panel"><h2>Kelola Landing Page</h2><p>Judul, deskripsi, banner hero, logo broker, dan konten promosi.</p><div class="placeholder">Editor CMS belum tersambung ke penyimpanan backend.</div></section></section>
+    <section class="page hidden" id="page-models"><section class="panel"><h2>Model AI & Pengumuman</h2><p>Kelola daftar model yang benar-benar digunakan dan pengumuman versi EA.</p><div class="placeholder">Daftar model, status dukungan, dan banner pengumuman akan dikelola melalui API.</div></section></section>
+    <section class="page hidden" id="page-proof"><section class="panel"><h2>Testimoni & Performance</h2><div class="placeholder">Tambahkan testimoni berizin dan statistik performa yang dapat diverifikasi. Jangan tampilkan klaim tanpa bukti.</div></section></section>
+    <section class="page hidden" id="page-faq"><section class="panel"><h2>FAQ & Panduan Pemasangan</h2><div class="placeholder">Kelola FAQ, panduan instalasi MT4/MT5, dan instruksi WebRequest.</div></section></section>
+    <section class="page hidden" id="page-logs"><section class="panel"><h2>Log WebRequest API</h2><div class="toolbar"><input placeholder="Cari nomor akun"><select><option>Semua endpoint</option><option>License check</option><option>Heartbeat</option></select><button class="btn" data-action="refresh">Muat log</button></div><div class="placeholder" style="margin-top:14px">Log sebaiknya menyimpan waktu, endpoint, hasil, account ID yang diminimalkan/masking, serta IP hanya jika diperlukan. Jangan pernah mencatat secret token.</div></section></section>
     <section class="page hidden" id="page-settings"><section class="panel"><h2>API Key & Keamanan</h2><div class="placeholder">Kelola rotasi secret melalui backend/secret manager. Jangan menyimpan API secret di JavaScript publik, GitHub Pages, atau repository.</div><p>Rekomendasi: HTTPS, rate limiting, validasi payload, token bertanda tangan atau kredensial per lisensi, expiry/nonce untuk mencegah replay, dan audit log.</p></section></section>
     <section class="page hidden" id="page-admins"><section class="panel"><div class="panel-head"><h2>Manajemen Admin User</h2><button class="btn teal" data-action="add-admin">+ Tambah admin</button></div><div class="placeholder">Pembuatan admin harus dilakukan oleh admin yang sudah terautentikasi. Simpan password menggunakan Argon2id atau bcrypt di backend, bukan plaintext di file HTML.</div></section></section>
   </main>
 </section>
-<!-- Supabase JS client: publishable key is intended for browser use; protect data with RLS. -->
+
+<!-- Supabase JS client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// Isi dua nilai ini dengan Project URL dasar dan Publishable key milik project Supabase.
-// Jangan pernah memasukkan sb_secret_ atau service_role key ke file ini.
 const SUPABASE_URL = 'https://nzrjskgbcnbmilvzrqqr.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_IzCPxJIzOLxVwqz4ZYWD6Q_Yd-aXqe-';
 const supabaseClient = window.supabase?.createClient
@@ -187,7 +227,7 @@ const supabaseClient = window.supabase?.createClient
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     })
   : null;
-// Sesuaikan nama tabel ini dengan tabel yang benar-benar digunakan oleh backend/EA.
+
 const TRADING_STATS_TABLE = 'trading_stats';
 
 const loginForm = document.getElementById('loginForm');
@@ -224,6 +264,9 @@ loginForm.addEventListener('submit', async (event) => {
 
 const titles = {
  overview:['Dashboard','Ringkasan sistem lisensi KINGTHERIOUS.'],
+ 'trade-entries':['Statistik Entry Posisi','Pantau posisi trading real-time dan riwayat entry MT5.'],
+ analytics:['Statistik Pengguna','Pantau ringkasan performa trading pengguna.'],
+ 'visitor-history':['Riwayat Pengunjung','Pantau lalu lintas pengunjung, durasi sesi, dan interaksi halaman.'],
  licenses:['Akun MT5 & Lisensi','Pantau status lisensi dan riwayat performa setiap akun.'],
  ib:['Verifikasi IB','Periksa bukti dan setujui pendaftaran IB klien.'],
  history:['Riwayat Lisensi','Audit perubahan status dan masa berlaku lisensi.'],
@@ -232,10 +275,10 @@ const titles = {
  proof:['Testimoni & Performance','Kelola testimoni dan data performa yang tervalidasi.'],
  faq:['FAQ & Panduan','Kelola bantuan, instalasi EA, dan konfigurasi WebRequest.'],
  logs:['Log WebRequest API','Pantau permintaan verifikasi dari EA klien.'],
- analytics:['Statistik Pengguna','Pantau posisi trading yang sedang berjalan, trade closed, dan hasil profit/loss.'],
  settings:['API & Keamanan','Pengaturan integrasi, secret, dan kontrol keamanan.'],
  admins:['Manajemen Admin','Kelola akun admin melalui backend yang aman.']
 };
+
 let currentPage = 'overview';
 function showPage(name){
   currentPage=name;
@@ -246,14 +289,30 @@ function showPage(name){
   document.getElementById('pageTitle').textContent=titles[name]?.[0]||'Dashboard';
   document.getElementById('pageDesc').textContent=titles[name]?.[1]||'';
 
-  // Panggil fungsi data spesifik berdasarkan halaman yang dibuka
   if (name === 'trade-entries') {
     loadTradeEntries();
+  } else if (name === 'visitor-history') {
+    loadVisitorLogs();
   }
 }
 document.querySelectorAll('[data-page]').forEach(btn=>btn.addEventListener('click',()=>showPage(btn.dataset.page)));
 document.querySelectorAll('[data-goto]').forEach(btn=>btn.addEventListener('click',()=>showPage(btn.dataset.goto)));
-// ===== Data lisensi dari Supabase =====
+
+// Helper fungsi untuk merubah format waktu menjadi DD/MM/YYYY HH:MM:SS
+function formatOpenTime(dateStr) {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const pad = num => String(num).padStart(2, '0');
+  const day = pad(d.getDate());
+  const month = pad(d.getMonth() + 1);
+  const year = d.getFullYear();
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  const seconds = pad(d.getSeconds());
+  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
 const $ = id => document.getElementById(id);
 const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let rows = [];
@@ -266,7 +325,7 @@ const clientCell = r => `${esc(r.client_name || '-')}<br><small style="color:#79
 const fmtDate = d => d ? new Date(d).toLocaleString('id-ID') : '-';
 
 function render(){
-  const q = $('licSearch').value.trim().toLowerCase(), f = $('licFilter').value;
+  const q = $('licSearch').value.trim().toLowerCase(), f =$('licFilter').value;
   const list = rows.filter(r => (!f || r.status === f) && (!q || [r.account_number, r.client_name, r.client_email].join(' ').toLowerCase().includes(q)));
   $('licBody').innerHTML = list.length ? list.map(r => `<tr><td>${esc(r.account_number)}</td><td>${clientCell(r)}</td><td>${esc(r.broker)} (${esc(r.platform)})</td><td>${badge(r.status)}</td><td>—</td><td>—</td>
     <td><button class="btn teal" data-id="${esc(r.id)}" data-set="active">Aktifkan</button> <button class="btn" data-id="${esc(r.id)}" data-set="rejected">Tolak</button> <button class="btn danger" data-id="${esc(r.id)}" data-set="blocked">Blokir</button> <button class="btn danger" data-id="${esc(r.id)}" data-del="1">Hapus</button></td></tr>`).join('')
@@ -291,11 +350,10 @@ async function loadLicenses(){
   rows = data || []; render();
 }
 
-
-// ===== Statistik pengguna dari tabel trading_stats =====
 let tradingStats = [];
 const statNumber = v => Number(v ?? 0).toLocaleString('id-ID',{maximumFractionDigits:2});
 const statProfit = v => v === null || v === undefined ? '—' : statNumber(v);
+
 function renderTradingStats(){
   const q = ($('tradeSearch')?.value || '').trim().toLowerCase();
   const period = $('tradePeriod')?.value || '30d';
@@ -314,8 +372,7 @@ function renderTradingStats(){
   const rates = filtered.map(r=>r.win_rate).filter(v=>v!==null && v!==undefined && Number.isFinite(Number(v)));
   $('trOpen').textContent = filtered.length;
   $('trClosed').textContent = statProfit(sumTotal);
-  $('trProfit').textContent = statProfit(sumMonthly);
-  $('trWinRate').textContent = rates.length ? `${statNumber(rates.reduce((a,v)=>a+Number(v),0)/rates.length)}%` : '—';
+  $('trProfit').textContent = statProfit(sumMonthly);$('trWinRate').textContent = rates.length ? `${statNumber(rates.reduce((a,v)=>a+Number(v),0)/rates.length)}%` : '—';
   $('tradeBody').innerHTML = filtered.length ? filtered.map(r => `<tr>
     <td>${esc(r.account_id || '-')}</td><td>${esc(r.account_name || '-')}</td>
     <td>${esc(statProfit(r.total_profit))}</td><td>${esc(statProfit(r.monthly_profit))}</td>
@@ -329,6 +386,7 @@ function renderTradingStats(){
   $('ovWeekly').textContent = new Set(tradingStats.filter(r=>r.updated_at && new Date(r.updated_at).getTime()>=week).map(r=>r.user_id)).size;
   $('ovMonthly').textContent = new Set(tradingStats.filter(r=>r.updated_at && new Date(r.updated_at).getTime()>=month).map(r=>r.user_id)).size;
 }
+
 async function loadTradingStats(){
   if(!supabaseClient) return;
   $('tradeMessage').textContent = 'Menghubungkan ke tabel trading_stats di Supabase...';
@@ -338,17 +396,16 @@ async function loadTradingStats(){
   if(error){
     $('tradeBody').innerHTML = `<tr><td colspan="9">Gagal memuat trading_stats: ${esc(error.message)}</td></tr>`;
     $('tradeMessage').textContent = 'Periksa RLS pada tabel trading_stats dan pastikan akun admin memiliki izin SELECT. Detail error ditampilkan di tabel.';
-    ['ovWeekly','ovMonthly','ovPairs','ovTrades','trOpen','trClosed','trProfit','trWinRate'].forEach(id=>{ if($(id)) $(id).textContent='—'; });
+    ['ovWeekly','ovMonthly','ovPairs','ovTrades','trOpen','trClosed','trProfit','trWinRate'].forEach(id=>{ if($(id))$(id).textContent='—'; });
     return;
   }
   tradingStats = data || [];
   renderTradingStats();
   $('tradeMessage').textContent = tradingStats.length
-    ? `Berhasil memuat ${tradingStats.length} ringkasan performa dari trading_stats. Tabel ini belum menyimpan tiket, lot, harga entry/close, atau status open/closed setiap transaksi.`
-    : 'Koneksi berhasil, tetapi trading_stats belum memiliki baris data. Pastikan EA/backend mengirim ringkasan performa ke tabel ini.';
+    ? `Berhasil memuat ${tradingStats.length} ringkasan performa dari trading_stats.`
+    : 'Koneksi berhasil, tetapi trading_stats belum memiliki baris data.';
 }
-$('tradeSearch').addEventListener('input',renderTradingStats);
-$('tradePeriod').addEventListener('change',renderTradingStats);
+$('tradeSearch')?.addEventListener('input',renderTradingStats);$('tradePeriod')?.addEventListener('change',renderTradingStats);
 
 document.addEventListener('click', async e => {
   const b = e.target.closest('[data-set],[data-del]');
@@ -367,8 +424,7 @@ document.addEventListener('click', async e => {
   loadTradingStats();
 });
 
-$('licSearch').addEventListener('input', render);
-$('licFilter').addEventListener('change', render);
+$('licSearch')?.addEventListener('input', render);$('licFilter')?.addEventListener('change', render);
 
 document.querySelectorAll('[data-action]').forEach(btn => btn.addEventListener('click', () => {
   const action = btn.dataset.action;
@@ -387,38 +443,37 @@ document.querySelectorAll('[data-action]').forEach(btn => btn.addEventListener('
     loadTradeEntries();
     return;
   }
+  if (action === 'refresh-visitors') {
+    loadVisitorLogs();
+    return;
+  }
   if (action === 'export') {
     alert('Fitur Ekspor Log berhasil dipicu. Mengunduh data riwayat...');
-    // Tambahkan logika ekspor CSV/Log di sini jika diperlukan
     return;
   }
   if (action === 'add-admin') {
     alert('Silakan gunakan panel manajemen database Supabase untuk menambahkan akun admin baru demi keamanan.');
     return;
   }
-  
-  // Pesan fallback jika ada action lain yang belum didefinisikan
   alert('Aksi "' + action + '" sedang diproses atau belum dikonfigurasi.');
 }));
 
-$('addLicForm').addEventListener('submit', async e => {
+$('addLicForm')?.addEventListener('submit', async e => {
   e.preventDefault();
   const { error } = await supabaseClient.rpc('admin_add_license', {
-    p_email: $('alEmail').value.trim(), p_account: $('alNo').value.trim(), p_broker: $('alBroker').value.trim(),
-    p_platform: $('alPlat').value, p_status: $('alStatus').value
+    p_email: $('alEmail').value.trim(), p_account: $('alNo').value.trim(), p_broker:$('alBroker').value.trim(),
+    p_platform: $('alPlat').value, p_status:$('alStatus').value
   });
   if (error) { alert('Gagal menambah lisensi: ' + error.message); return; }
   e.target.reset(); e.target.classList.add('hidden'); loadLicenses();
 });
 
 function enterAdmin(){
-  $('loginView').style.display = 'none';
-  $('adminShell').style.display = 'block';
+  $('loginView').style.display = 'none';$('adminShell').style.display = 'block';
   loadLicenses();
   loadTradingStats();
 }
 
-// Tetap masuk setelah halaman dimuat ulang jika sesi admin masih berlaku
 (async () => {
   if (!supabaseClient) { loginError.textContent = 'Supabase JS gagal dimuat. Periksa koneksi internet/CDN.'; return; }
   const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
@@ -429,11 +484,13 @@ function enterAdmin(){
   if (ok === true) enterAdmin();
   else { await supabaseClient.auth.signOut(); loginError.textContent = 'Sesi ditemukan tetapi akun bukan admin.'; }
 })();
+
 supabaseClient?.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT' && $('adminShell').style.display === 'block') {
-    $('adminShell').style.display='none'; $('loginView').style.display='grid';
+    $('adminShell').style.display='none';$('loginView').style.display='grid';
   }
 });
+
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   await supabaseClient.auth.signOut();
   document.getElementById('adminShell').style.display='none';
@@ -441,7 +498,6 @@ document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   loginError.textContent='Kamu sudah keluar.';
 });
 
-  // Logika untuk memuat dan memfilter data Trade Entries khusus Admin
 async function loadTradeEntries() {
   const tbody = document.getElementById('tradeEntriesBody');
   if (!tbody) return;
@@ -462,7 +518,7 @@ async function loadTradeEntries() {
     return;
   }
 
-  window._allTradeEntries = data; // Simpan untuk filter lokal
+  window._allTradeEntries = data;
   renderTradeTable(data);
 }
 
@@ -472,23 +528,25 @@ function renderTradeTable(rows) {
 
   rows.forEach(row => {
     const profitColor = row.profit >= 0 ? 'color: var(--teal);' : 'color: var(--red);';
+    // Format Waktu Open diubah ke format DD/MM/YYYY HH:MM:SS
+    const formattedTime = formatOpenTime(row.time);
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${row.account_id}</td>
-      <td>${row.account_name}</td>
-      <td><strong>${row.symbol}</strong></td>
-      <td>${row.ticket}</td>
-      <td><span class="status ${row.type.toLowerCase() === 'buy' ? 'active' : 'blocked'}">${row.type}</span></td>
-      <td>${row.volume}</td>
-      <td>${row.time}</td>
+      <td>${esc(row.account_id)}</td>
+      <td>${esc(row.account_name)}</td>
+      <td><strong>${esc(row.symbol)}</strong></td>
+      <td>${esc(row.ticket)}</td>
+      <td><span class="status ${String(row.type).toLowerCase() === 'buy' ? 'active' : 'blocked'}">${esc(row.type)}</span></td>
+      <td>${esc(row.volume)}</td>
+      <td>${esc(formattedTime)}</td>
       <td style="${profitColor} font-weight: bold;">$${Number(row.profit).toFixed(2)}</td>
-      <td><span class="status ${row.status.toLowerCase() === 'closed' ? 'expired' : 'active'}">${row.status}</span></td>
+      <td><span class="status ${String(row.status).toLowerCase() === 'closed' ? 'expired' : 'active'}">${esc(row.status)}</span></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-// Event Listener untuk Filter Real-time
 function applyTradeFilters() {
   if (!window._allTradeEntries) return;
   
@@ -500,8 +558,8 @@ function applyTradeFilters() {
   const filtered = window._allTradeEntries.filter(item => {
     const matchAcc = String(item.account_id).toLowerCase().includes(accVal) || String(item.account_name).toLowerCase().includes(accVal);
     const matchSym = String(item.symbol).toLowerCase().includes(symVal);
-    const matchType = typeVal === "" || item.type.toUpperCase() === typeVal;
-    const matchStatus = statusVal === "" || item.status.toUpperCase() === statusVal;
+    const matchType = typeVal === "" || String(item.type).toUpperCase() === typeVal;
+    const matchStatus = statusVal === "" || String(item.status).toUpperCase() === statusVal;
     return matchAcc && matchSym && matchType && matchStatus;
   });
 
@@ -513,10 +571,50 @@ document.getElementById('filterSymbol')?.addEventListener('input', applyTradeFil
 document.getElementById('filterType')?.addEventListener('change', applyTradeFilters);
 document.getElementById('filterStatus')?.addEventListener('change', applyTradeFilters);
 
-// Panggil fungsi saat tab "trade-entries" dibuka
-document.querySelector('[data-page="trade-entries"]')?.addEventListener('click', () => {
-  loadTradeEntries();
-});
+// Logika untuk memuat data Riwayat Pengunjung
+async function loadVisitorLogs() {
+  const tbody = document.getElementById('visitorLogsBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7">Mengambil data riwayat pengunjung...</td></tr>';
+
+  const { data, error } = await supabaseClient
+    .from('visitor_logs')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--red);">Gagal memuat data riwayat pengunjung: ${esc(error.message)}</td></tr>`;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7">Belum ada riwayat pengunjung yang dicatat.</td></tr>';
+    return;
+  }
+
+  // Hitung Metrik
+  const pageviews = data.length;
+  const clicks = data.reduce((acc, r) => acc + (Number(r.click_count) || 0), 0);
+  const totalDurationSec = data.reduce((acc, r) => acc + (Number(r.duration_seconds) || 0), 0);
+  const avgDurationSec = Math.round(totalDurationSec / pageviews);
+  const bounces = data.filter(r => (Number(r.duration_seconds) || 0) < 10 && (Number(r.click_count) || 0) === 0).length;
+  const bounceRate = Math.round((bounces / pageviews) * 100);
+
+  $('visPageviews').textContent = pageviews;
+  $('visClicks').textContent = clicks;
+  $('visBounceRate').textContent = `${bounceRate}%`;
+  $('visAvgDuration').textContent = `${Math.floor(avgDurationSec / 60)}m ${avgDurationSec % 60}s`;
+
+  tbody.innerHTML = data.map(r => `<tr>
+    <td>${esc(formatOpenTime(r.created_at))}</td>
+    <td>${esc(r.ip_address || '-')}</td>
+    <td>${esc(r.device_name || '-')}</td>
+    <td>${esc(r.page_visited || '/')}</td>
+    <td>${esc(r.duration_seconds ? r.duration_seconds + 's' : '-')}</td>
+    <td>${esc(r.user_flow || '-')}</td>
+    <td>${esc(r.clicks_events || '-')}</td>
+  </tr>`).join('');
+}
 </script>
 </body>
 </html>
