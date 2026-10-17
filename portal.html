@@ -434,10 +434,17 @@ $('ibLinks').innerHTML = IB_BROKERS.map(b => `<a class="btn alt" style="margin:0
 
 document.querySelectorAll('[data-file]').forEach(b => b.addEventListener('click', async () => {
   if (!db) return;
-  // Perhatikan nama bucket diubah ke 'EA PUBLISH' sesuai gambar Supabase Anda
-  const { data, error } = await db.storage.from('EA PUBLISH').createSignedUrl(b.dataset.file, 60, { download: true });
-  if (error) { $('dlNote').textContent = 'Gagal mengunduh: ' + error.message; return; }
-  location.href = data.signedUrl;
+  
+  // Menggunakan getPublicUrl karena bucket sudah berstatus Public
+  const { data } = db.storage.from('EA PUBLISH').getPublicUrl(b.dataset.file);
+  
+  if (!data || !data.publicUrl) {
+    $('dlNote').textContent = 'Gagal menghasilkan link unduhan file.';
+    return;
+  }
+  
+  // Buka atau download file langsung dari URL publik
+  location.href = data.publicUrl;
 }));
 
 // Submit Form Lisensi Akun (Terkirim ke Supabase untuk Diverifikasi Admin)
