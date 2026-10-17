@@ -306,8 +306,8 @@ const SUPABASE_URL = 'https://nzrjskgbcnbmilvzrqqr.supabase.co/';
 const SUPABASE_ANON_KEY = 'sb_publishable_IzCPxJIzOLxVwqz4ZYWD6Q_Yd-aXqe-';
 
 const IB_BROKERS = [
-  { name: 'TMGM', link: 'https://link-ib-tmgm.example' },
-  { name: 'Valetax', link: 'https://link-ib-valetax.example' }
+  { name: 'BROKER A', link: 'https://link-ib-tmgm.example' },
+  { name: 'BROKER B', link: 'https://link-ib-valetax.example' }
 ];
 
 const $ = id => document.getElementById(id);
@@ -452,15 +452,15 @@ $('licForm').addEventListener('submit', async e => {
     return;
   }
 
-  const accountNumber = $('lNo').value.trim();
-  const broker = $('lBroker').value.trim();
+const accountNumber = $('lNo').value.trim();
+const broker = $('lBroker').value.trim();
 
-  if (!/^\\d+$/.test(accountNumber)) {
+if (!/^[0-9]+$/.test(accountNumber)) {
     m.style.color = 'var(--red)';
     m.textContent = 'Nomor akun MT5 harus berupa angka tanpa spasi atau tanda baca.';
     $('lNo').focus();
     return;
-  }
+}
   if (!broker) {
     m.style.color = 'var(--red)';
     m.textContent = 'Pilih broker partner terlebih dahulu.';
