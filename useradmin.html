@@ -47,13 +47,15 @@
         <button class="active" data-page="overview"><span class="ico">▦</span> Dashboard</button>
         <button data-page="trade-entries"><span class="ico">📊</span> Statistik Entry Posisi</button>
         <button data-page="analytics"><span class="ico">▥</span> Statistik Pengguna</button>
-        <button data-page="visitor-history"><span class="ico">👁</span> Riwayat Pengunjung</button>
       </nav>
     </div>
     <div><div class="nav-label">LICENSE & CLIENT</div><nav class="side-nav">
       <button data-page="licenses"><span class="ico">◇</span> Akun MT5 & Lisensi</button>
       <button data-page="ib"><span class="ico">✓</span> Verifikasi IB</button>
       <button data-page="history"><span class="ico">◷</span> Riwayat Lisensi</button>
+      <!-- Menu Konfirmasi User Auth (Diletakkan di bawah Riwayat Lisensi) -->
+      <button data-page="auth-users"><span class="ico">👤</span> Konfirmasi User Auth</button>
+      <button data-page="visitor-history"><span class="ico">👁</span> Riwayat Pengunjung</button>
     </nav></div>
     <div><div class="nav-label">WEBSITE CONTENT</div><nav class="side-nav">
       <button data-page="cms"><span class="ico">▤</span> Landing Page CMS</button>
@@ -161,7 +163,34 @@
       </section>
     </section>
 
-    <!-- Menu Baru: Riwayat Pengunjung -->
+    <!-- Menu Baru: Konfirmasi User Auth -->
+    <section class="page hidden" id="page-auth-users">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Konfirmasi & Manajemen User Auth</h2>
+          <button class="btn teal" data-action="refresh-auth-users">Muat Ulang User</button>
+        </div>
+        <p class="placeholder" style="margin-bottom: 14px;">Kelola dan konfirmasi akun member yang mendaftar. Jika tautan email kedaluwarsa (otp_expired), admin dapat langsung memberikan konfirmasi manual di sini.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Email User</th>
+                <th>Provider</th>
+                <th>Terdaftar Sejak</th>
+                <th>Status Email</th>
+                <th>Aksi Konfirmasi</th>
+              </tr>
+            </thead>
+            <tbody id="authUsersBody">
+              <tr><td colspan="5">Memuat data user auth...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <!-- Menu Riwayat Pengunjung -->
     <section class="page hidden" id="page-visitor-history">
       <section class="panel">
         <div class="panel-head">
@@ -267,6 +296,7 @@ const titles = {
  'trade-entries':['Statistik Entry Posisi','Pantau posisi trading real-time dan riwayat entry MT5.'],
  analytics:['Statistik Pengguna','Pantau ringkasan performa trading pengguna.'],
  'visitor-history':['Riwayat Pengunjung','Pantau lalu lintas pengunjung, durasi sesi, dan interaksi halaman.'],
+ 'auth-users':['Konfirmasi User Auth','Verifikasi akun member secara manual jika tautan email kedaluwarsa.'],
  licenses:['Akun MT5 & Lisensi','Pantau status lisensi dan riwayat performa setiap akun.'],
  ib:['Verifikasi IB','Periksa bukti dan setujui pendaftaran IB klien.'],
  history:['Riwayat Lisensi','Audit perubahan status dan masa berlaku lisensi.'],
@@ -293,12 +323,13 @@ function showPage(name){
     loadTradeEntries();
   } else if (name === 'visitor-history') {
     loadVisitorLogs();
+  } else if (name === 'auth-users') {
+    loadAuthUsers();
   }
 }
 document.querySelectorAll('[data-page]').forEach(btn=>btn.addEventListener('click',()=>showPage(btn.dataset.page)));
 document.querySelectorAll('[data-goto]').forEach(btn=>btn.addEventListener('click',()=>showPage(btn.dataset.goto)));
 
-// Helper fungsi untuk merubah format waktu menjadi DD/MM/YYYY HH:MM:SS
 function formatOpenTime(dateStr) {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
@@ -395,15 +426,12 @@ async function loadTradingStats(){
     .order('updated_at',{ascending:false}).limit(2000);
   if(error){
     $('tradeBody').innerHTML = `<tr><td colspan="9">Gagal memuat trading_stats: ${esc(error.message)}</td></tr>`;
-    $('tradeMessage').textContent = 'Periksa RLS pada tabel trading_stats dan pastikan akun admin memiliki izin SELECT. Detail error ditampilkan di tabel.';
+    $('tradeMessage').textContent = 'Periksa RLS pada tabel trading_stats dan pastikan akun admin memiliki izin SELECT.';
     ['ovWeekly','ovMonthly','ovPairs','ovTrades','trOpen','trClosed','trProfit','trWinRate'].forEach(id=>{ if($(id))$(id).textContent='—'; });
     return;
   }
   tradingStats = data || [];
   renderTradingStats();
-  $('tradeMessage').textContent = tradingStats.length
-    ? `Berhasil memuat ${tradingStats.length} ringkasan performa dari trading_stats.`
-    : 'Koneksi berhasil, tetapi trading_stats belum memiliki baris data.';
 }
 $('tradeSearch')?.addEventListener('input',renderTradingStats);$('tradePeriod')?.addEventListener('change',renderTradingStats);
 
@@ -419,7 +447,6 @@ document.addEventListener('click', async e => {
     res = await supabaseClient.from('licenses').update({ status: b.dataset.set }).eq('id', id).select();
   }
   if (res.error) { alert('Gagal: ' + res.error.message); return; }
-  if (!res.data || !res.data.length) { alert('Tidak ada data yang berubah. Periksa policy admin di tabel licenses.'); return; }
   loadLicenses();
   loadTradingStats();
 });
@@ -428,34 +455,18 @@ $('licSearch')?.addEventListener('input', render);$('licFilter')?.addEventListen
 
 document.querySelectorAll('[data-action]').forEach(btn => btn.addEventListener('click', () => {
   const action = btn.dataset.action;
-  
-  if (action === 'add-license') { 
-    $('addLicForm').classList.toggle('hidden'); 
-    return; 
-  }
+  if (action === 'add-license') { $('addLicForm').classList.toggle('hidden'); return; }
   if (action === 'refresh') { 
     if (currentPage === 'licenses' || currentPage === 'ib') loadLicenses(); 
     else if (currentPage === 'analytics') loadTradingStats(); 
     else { loadLicenses(); loadTradingStats(); } 
     return; 
   }
-  if (action === 'refresh-trades') {
-    loadTradeEntries();
-    return;
-  }
-  if (action === 'refresh-visitors') {
-    loadVisitorLogs();
-    return;
-  }
-  if (action === 'export') {
-    alert('Fitur Ekspor Log berhasil dipicu. Mengunduh data riwayat...');
-    return;
-  }
-  if (action === 'add-admin') {
-    alert('Silakan gunakan panel manajemen database Supabase untuk menambahkan akun admin baru demi keamanan.');
-    return;
-  }
-  alert('Aksi "' + action + '" sedang diproses atau belum dikonfigurasi.');
+  if (action === 'refresh-trades') { loadTradeEntries(); return; }
+  if (action === 'refresh-visitors') { loadVisitorLogs(); return; }
+  if (action === 'refresh-auth-users') { loadAuthUsers(); return; }
+  if (action === 'export') { alert('Fitur Ekspor Log berhasil dipicu.'); return; }
+  if (action === 'add-admin') { alert('Silakan gunakan panel Supabase untuk tambah admin.'); return; }
 }));
 
 $('addLicForm')?.addEventListener('submit', async e => {
@@ -475,49 +486,27 @@ function enterAdmin(){
 }
 
 (async () => {
-  if (!supabaseClient) { loginError.textContent = 'Supabase JS gagal dimuat. Periksa koneksi internet/CDN.'; return; }
-  const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-  if (sessionError) { loginError.textContent = `Gagal memulihkan sesi: ${sessionError.message}`; return; }
+  if (!supabaseClient) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) return;
-  const { data: ok, error: roleError } = await supabaseClient.rpc('is_kingtherious_admin');
-  if (roleError) { loginError.textContent = `Sesi ditemukan, tetapi pemeriksaan admin gagal: ${roleError.message}`; return; }
+  const { data: ok } = await supabaseClient.rpc('is_kingtherious_admin');
   if (ok === true) enterAdmin();
-  else { await supabaseClient.auth.signOut(); loginError.textContent = 'Sesi ditemukan tetapi akun bukan admin.'; }
+  else await supabaseClient.auth.signOut();
 })();
-
-supabaseClient?.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT' && $('adminShell').style.display === 'block') {
-    $('adminShell').style.display='none';$('loginView').style.display='grid';
-  }
-});
 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   await supabaseClient.auth.signOut();
   document.getElementById('adminShell').style.display='none';
   document.getElementById('loginView').style.display='grid';
-  loginError.textContent='Kamu sudah keluar.';
 });
 
 async function loadTradeEntries() {
   const tbody = document.getElementById('tradeEntriesBody');
   if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="9">Mengambil data dari Supabase...</td></tr>';
-
-  const { data, error } = await supabaseClient
-    .from('trade_entries')
-    .select('*')
-    .order('time', { ascending: false });
-
-  if (error) {
-    tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red);">Gagal memuat data: ${error.message}</td></tr>`;
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9">Belum ada data entry posisi yang dikirim oleh EA.</td></tr>';
-    return;
-  }
-
+  const { data, error } = await supabaseClient.from('trade_entries').select('*').order('time', { ascending: false });
+  if (error) { tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red);">Gagal memuat data: ${error.message}</td></tr>`; return; }
+  if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Belum ada data entry posisi.</td></tr>'; return; }
   window._allTradeEntries = data;
   renderTradeTable(data);
 }
@@ -525,12 +514,9 @@ async function loadTradeEntries() {
 function renderTradeTable(rows) {
   const tbody = document.getElementById('tradeEntriesBody');
   tbody.innerHTML = '';
-
   rows.forEach(row => {
     const profitColor = row.profit >= 0 ? 'color: var(--teal);' : 'color: var(--red);';
-    // Format Waktu Open diubah ke format DD/MM/YYYY HH:MM:SS
     const formattedTime = formatOpenTime(row.time);
-
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${esc(row.account_id)}</td>
@@ -549,7 +535,6 @@ function renderTradeTable(rows) {
 
 function applyTradeFilters() {
   if (!window._allTradeEntries) return;
-  
   const accVal = document.getElementById('filterAccount').value.toLowerCase();
   const symVal = document.getElementById('filterSymbol').value.toLowerCase();
   const typeVal = document.getElementById('filterType').value;
@@ -562,7 +547,6 @@ function applyTradeFilters() {
     const matchStatus = statusVal === "" || String(item.status).toUpperCase() === statusVal;
     return matchAcc && matchSym && matchType && matchStatus;
   });
-
   renderTradeTable(filtered);
 }
 
@@ -571,28 +555,14 @@ document.getElementById('filterSymbol')?.addEventListener('input', applyTradeFil
 document.getElementById('filterType')?.addEventListener('change', applyTradeFilters);
 document.getElementById('filterStatus')?.addEventListener('change', applyTradeFilters);
 
-// Logika untuk memuat data Riwayat Pengunjung
 async function loadVisitorLogs() {
   const tbody = document.getElementById('visitorLogsBody');
   if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="7">Mengambil data riwayat pengunjung...</td></tr>';
+  const { data, error } = await supabaseClient.from('visitor_logs').select('*').order('created_at', { ascending: false });
+  if (error) { tbody.innerHTML = `<tr><td colspan="7" style="color:var(--red);">Gagal memuat data: ${esc(error.message)}</td></tr>`; return; }
+  if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="7">Belum ada riwayat pengunjung yang dicatat.</td></tr>'; return; }
 
-  const { data, error } = await supabaseClient
-    .from('visitor_logs')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--red);">Gagal memuat data riwayat pengunjung: ${esc(error.message)}</td></tr>`;
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7">Belum ada riwayat pengunjung yang dicatat.</td></tr>';
-    return;
-  }
-
-  // Hitung Metrik
   const pageviews = data.length;
   const clicks = data.reduce((acc, r) => acc + (Number(r.click_count) || 0), 0);
   const totalDurationSec = data.reduce((acc, r) => acc + (Number(r.duration_seconds) || 0), 0);
@@ -614,6 +584,57 @@ async function loadVisitorLogs() {
     <td>${esc(r.user_flow || '-')}</td>
     <td>${esc(r.clicks_events || '-')}</td>
   </tr>`).join('');
+}
+
+// Fungsi Memuat Data User Auth untuk Konfirmasi Manual
+async function loadAuthUsers() {
+  const tbody = document.getElementById('authUsersBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5">Mengambil data user dari autentikasi...</td></tr>';
+
+  const { data, error } = await supabaseClient.rpc('admin_list_all_users');
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red);">Gagal memuat user: ${esc(error.message)}. Pastikan fungsi RPC admin_list_all_users sudah dibuat di Supabase.</td></tr>`;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5">Belum ada user yang terdaftar di sistem.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(u => {
+    const isVerified = u.email_confirmed_at !== null;
+    const statusBadge = isVerified 
+      ? '<span class="status active">Terverifikasi</span>' 
+      : '<span class="status pending">Belum Konfirmasi</span>';
+    
+    const actionBtn = isVerified 
+      ? '<span style="color:var(--muted)">Sudah Aktif</span>' 
+      : `<button class="btn teal" onclick="confirmUser('${u.id}')">Konfirmasi Manual</button>`;
+
+    return `<tr>
+      <td>${esc(u.email)}</td>
+      <td>${esc(u.raw_app_meta_data?.provider || 'email')}</td>
+      <td>${esc(fmtDate(u.created_at))}</td>
+      <td>${statusBadge}</td>
+      <td>${actionBtn}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Fungsi Eksekusi Konfirmasi Manual oleh Admin
+window.confirmUser = async function(userId) {
+  if (!confirm('Apakah Anda yakin ingin mengonfirmasi dan mengaktifkan akun member ini secara manual?')) return;
+  
+  const { error } = await supabaseClient.rpc('admin_verify_user', { p_user_id: userId });
+  if (error) {
+    alert('Gagal mengonfirmasi user: ' + error.message);
+    return;
+  }
+  
+  alert('Berhasil! Akun user telah dikonfirmasi dan diaktifkan.');
+  loadAuthUsers();
 }
 </script>
 </body>
