@@ -67,7 +67,7 @@
       letter-spacing: 0.05em; text-transform: uppercase;
     }
 
-    /* UI Live Clock Widget (Persis seperti referensi) */
+    /* UI Live Clock Widget */
     .header-clock-box {
       display: flex; flex-direction: column; gap: 2px;
       background: rgba(2, 15, 28, 0.9);
@@ -272,7 +272,7 @@
     </nav>
 
     <div class="topbar-right">
-      <!-- Live Clock Widget (Gaya Chrono Digital) -->
+      <!-- Live Clock Widget -->
       <div class="header-clock-box">
         <div class="clock-header-row">
           <span class="chrono-label">
@@ -364,7 +364,7 @@
         </div>
       </div>
 
-      <!-- Metrik Performa Real-time Bulan Berjalan dari Supabase -->
+      <!-- Metrik Performa Real-time -->
       <div class="metrics" aria-label="Metrik performa EA">
         <article class="metric">
           <div class="metric-label">
@@ -411,24 +411,24 @@
     <span>Automated Trading Systems · Trading involves risk.</span>
   </footer>
 
+  <!-- Supabase JS & UAParser JS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/UAParser.js/1.0.37/ua-parser.min.js"></script>
+  
   <script>
-    // Live Clock Functionality (Chrono Digital Style 12-hour with AM/PM & English Date)
+    // Live Clock Functionality
     function updateLiveClock() {
       const now = new Date();
-      
-      // Format 12-hour
       let hours = now.getHours();
       const ampm = hours >= 12 ? 'PM' : 'AM';
       hours = hours % 12;
-      hours = hours ? hours : 12; // the hour '0' should be '12'
+      hours = hours ? hours : 12;
       
       const hh = String(hours).padStart(2, '0');
       const min = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
       const timeStr = `${hh}:${min}:${ss}`;
 
-      // Format Date: Sunday · 11 October 2026
       const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
       
@@ -494,37 +494,18 @@
       }
     }
 
-    if (openBtn) {
-      openBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        openModal('login');
-      });
-    }
-
-    if (closeBtn) {
-      closeBtn.addEventListener('click', closeModal);
-    }
-    
-    if (heroRegisterBtn) {
-      heroRegisterBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        openModal('register');
-      });
-    }
-
+    if (openBtn) openBtn.addEventListener('click', (e) => { e.preventDefault(); openModal('login'); });
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (heroRegisterBtn) heroRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); openModal('register'); });
     if (loginTab) loginTab.addEventListener('click', () => switchTab('login'));
     if (registerTab) registerTab.addEventListener('click', () => switchTab('register'));
 
     if (modal) {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-      });
+      modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
-        closeModal();
-      }
+      if (e.key === 'Escape' && modal && modal.classList.contains('active')) closeModal();
     });
 
     const yearEl = document.getElementById('year');
@@ -546,16 +527,13 @@
 
           alert('Login berhasil! Mengalihkan...');
           closeModal();
-
           window.location.href = `portal.html?user=${encodeURIComponent(username)}`;
-
         } catch (err) {
           alert('Gagal Masuk: ' + err.message);
         }
       });
     }
 
-    // Ubah UI tombol setelah user masuk
     function updateUIAfterLogin(user) {
       const btnText = document.getElementById('authBtnText');
       if (btnText && user) {
@@ -578,11 +556,8 @@
 
     async function checkActiveSession() {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session && session.user) {
-        updateUIAfterLogin(session.user);
-      }
+      if (session && session.user) updateUIAfterLogin(session.user);
     }
-
     checkActiveSession();
 
     if (registerForm) {
@@ -604,22 +579,15 @@
       });
     }
 
-    // Real-time Metrics Khusus Bulan Berjalan (Auto-Reset saat berganti bulan)
+    // Real-time Metrics Khusus Bulan Berjalan
     async function fetchIndexMetricsCurrentMonth() {
       try {
-        const { data, error } = await supabaseClient
-          .from('trading_stats')
-          .select('*');
-
+        const { data, error } = await supabaseClient.from('trading_stats').select('*');
         if (error) throw error;
-
         const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
 
         if (!data || data.length === 0) {
-          set('statMonthly', '0%');
-          set('statWinRate', '0%');
-          set('statTotalProfit', '$0');
-          set('statAccounts', '0');
+          set('statMonthly', '0%'); set('statWinRate', '0%'); set('statTotalProfit', '$0'); set('statAccounts', '0');
           return;
         }
 
@@ -633,17 +601,11 @@
         });
 
         if (currentMonthData.length === 0) {
-          set('statMonthly', '0%');
-          set('statWinRate', '0%');
-          set('statTotalProfit', '$0');
-          set('statAccounts', '0');
+          set('statMonthly', '0%'); set('statWinRate', '0%'); set('statTotalProfit', '$0'); set('statAccounts', '0');
           return;
         }
 
-        let sumMonthly = 0;
-        let sumWinRate = 0;
-        let sumTotalProfit = 0;
-
+        let sumMonthly = 0, sumWinRate = 0, sumTotalProfit = 0;
         currentMonthData.forEach(row => {
           sumMonthly += Number(row.monthly_profit || 0);
           sumWinRate += Number(row.win_rate || 0);
@@ -651,20 +613,83 @@
         });
 
         const count = currentMonthData.length;
-        const avgMonthly = sumMonthly / count;
-        const avgWinRate = sumWinRate / count;
-
-        set('statMonthly', `${avgMonthly >= 0 ? '+' : ''}${avgMonthly.toFixed(1)}%`);
-        set('statWinRate', `${avgWinRate.toFixed(1)}%`);
+        set('statMonthly', `${(sumMonthly / count) >= 0 ? '+' : ''}${(sumMonthly / count).toFixed(1)}%`);
+        set('statWinRate', `${(sumWinRate / count).toFixed(1)}%`);
         set('statTotalProfit', `$${sumTotalProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
         set('statAccounts', count);
-
       } catch (err) {
-        console.error('Gagal memuat metrik beranda bulan berjalan:', err.message);
+        console.error('Gagal memuat metrik beranda:', err.message);
       }
     }
-
     fetchIndexMetricsCurrentMonth();
+
+    // --- Script Pelacak Pengunjung dengan UAParser yang Lengkap & Aman ---
+    (async function trackVisitorSession() {
+      try {
+        const startTime = Date.now();
+        let clickCount = 0;
+        let interactions = [];
+        const path = window.location.pathname.split('/').pop() || 'index.html';
+
+        let ip = 'Unknown';
+        try {
+          const ipRes = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipRes.json();
+          ip = ipData.ip;
+        } catch (e) {}
+
+        // Deteksi Detail Perangkat menggunakan UAParser.js
+        let deviceName = 'Desktop PC';
+        try {
+          const parser = new UAParser();
+          const result = parser.getResult();
+          const brand = result.device.vendor || ''; 
+          const model = result.device.model || '';  
+          const os = result.os.name || 'Unknown OS';   
+          const browser = result.browser.name || 'Browser'; 
+
+          if (brand || model) {
+            deviceName = `${brand} ${model}`.trim();
+          } else if (/mobile/i.test(navigator.userAgent)) {
+            deviceName = `Mobile (${os} - ${browser})`;
+          } else {
+            deviceName = `Desktop (${os} - ${browser})`;
+          }
+        } catch (err) {
+          deviceName = navigator.platform || 'Unknown Device';
+        }
+
+        document.addEventListener('click', (e) => {
+          clickCount++;
+          const targetName = e.target.innerText || e.target.tagName || 'Element';
+          if (interactions.length < 5) {
+            interactions.push(`Klik: ${targetName.trim().substring(0, 15)}`);
+          }
+        });
+
+        window.addEventListener('beforeunload', () => {
+          const durationSeconds = Math.round((Date.now() - startTime) / 1000);
+          const userFlow = `Mulai dari ${path} (${durationSeconds}s)`;
+          const clicksEvents = interactions.join(', ') || 'Tanpa klik';
+
+          supabaseClient.from('visitor_logs').insert([
+            {
+              ip_address: ip,
+              device_name: deviceName,
+              page_visited: path,
+              duration_seconds: durationSeconds,
+              user_flow: userFlow,
+              clicks_events: clicksEvents,
+              click_count: clickCount
+            }
+          ]).then(({ error }) => {
+            if (error) console.error('Gagal mencatat log pengunjung:', error.message);
+          });
+        });
+      } catch (err) {
+        console.error('Tracker error:', err);
+      }
+    })();
   </script>
 </body>
 </html>
