@@ -374,11 +374,17 @@ function render(){
 
 async function loadLicenses(){
   const { data, error } = await supabaseClient.rpc('admin_list_licenses');
+
   if (error) {
-    const msg = '<tr><td colspan="7">Gagal memuat data: ' + esc(error.message) + '</td></tr>';
-    $('licBody').innerHTML = msg; $('ibBody').innerHTML = msg; return;
+    const msg = '<tr><td colspan="7">Gagal memuat data: '
+      + esc(error.message) + '</td></tr>';
+    $('licBody').innerHTML = msg;
+    $('ibBody').innerHTML = msg;
+    return;
   }
-  rows = data || []; render();
+
+  rows = data || [];
+  render();
 }
 
 let tradingStats = [];
