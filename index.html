@@ -527,7 +527,17 @@
 
           alert('Login berhasil! Mengalihkan...');
           closeModal();
-          window.location.href = `portal.html?user=${encodeURIComponent(username)}`;
+
+          // Admin langsung diarahkan ke Admin Console, member ke portal
+          let isAdmin = false;
+          try {
+            const { data: adminFlag } = await supabaseClient.rpc('is_kingtherious_admin');
+            isAdmin = adminFlag === true;
+          } catch (_) { /* jika gagal, anggap member biasa */ }
+
+          window.location.href = isAdmin
+            ? 'useradmin.html'
+            : `portal.html?user=${encodeURIComponent(username)}`;
         } catch (err) {
           alert('Gagal Masuk: ' + err.message);
         }
