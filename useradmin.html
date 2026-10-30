@@ -12,6 +12,14 @@
 .shell{display:none;min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:250px;padding:22px 14px;background:#07111e;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:20px;overflow:auto}.side-head{display:flex;align-items:center;gap:10px;padding:4px 8px 20px;border-bottom:1px solid var(--line)}.side-head .mark{width:36px;height:36px}.side-head .brand{font-size:16px}.side-head .sub{font-size:8px}.nav-label{font-size:10px;color:#67819c;letter-spacing:.16em;padding:0 10px;margin:4px 0}.side-nav{display:grid;gap:5px}.side-nav button{width:100%;text-align:left;display:flex;align-items:center;gap:11px;border:1px solid transparent;background:transparent;color:#b7c8dd;padding:12px 11px;border-radius:10px;font-size:13px}.side-nav button:hover,.side-nav button.active{background:#0d2635;border-color:#17475a;color:#70f2e1}.side-nav .ico{width:20px;text-align:center;color:var(--cyan)}.side-bottom{margin-top:auto;border-top:1px solid var(--line);padding-top:14px}.main{margin-left:250px;padding:26px clamp(18px,3vw,42px);max-width:1600px}.topline{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:25px}.topline h1{margin:0;font-size:25px}.topline p{margin:6px 0 0;font-size:13px}.pill{border:1px solid #275044;background:#0d2825;color:#7df1cf;padding:8px 11px;border-radius:30px;font-size:12px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.stat,.panel{border:1px solid var(--line);background:linear-gradient(145deg,#0c1827,#08121f);border-radius:15px;padding:18px}.stat .label{font-size:12px;color:var(--muted)}.stat .num{font-size:28px;font-weight:850;margin:10px 0 4px}.stat small{color:#7991ab;font-size:11px}.panel{margin-top:18px}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.panel h2{font-size:16px;margin:0}.btn{border:1px solid #29445a;background:#102237;color:#e4f0ff;padding:9px 12px;border-radius:9px;font-size:12px}.btn.teal{background:#00c8a5;color:#03131b;border-color:#00c8a5;font-weight:800}.btn.danger{color:#ff9aa7;border-color:#6a2c3b;background:#28121b}.toolbar{display:flex;gap:9px;flex-wrap:wrap}.toolbar input,.toolbar select{border:1px solid #294158;background:#06101c;color:var(--text);padding:10px;border-radius:9px;min-width:150px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:700px;font-size:12px}th,td{text-align:left;padding:13px 11px;border-bottom:1px solid #1b2b3e;white-space:nowrap}th{color:#8da6c1;font-weight:650}td{color:#d4e1f0}.status{display:inline-block;padding:5px 8px;border-radius:30px;font-size:10px;font-weight:800}.active{background:#10362f;color:#70f1c8}.pending{background:#3b2d12;color:#ffd37b}.expired{background:#352b3e;color:#d8b2ff}.blocked{background:#3a1721;color:#ff9aa7}.placeholder{padding:24px;border:1px dashed #294158;border-radius:12px;color:var(--muted);font-size:13px;line-height:1.7}.hidden{display:none!important}.two{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}.notice{font-size:12px;color:#f2d38b;background:#211b10;border:1px solid #4b3c20;padding:12px;border-radius:10px;margin-top:16px}.mobile-top{display:none}
 @media(max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:1fr}}
 @media(max-width:760px){.sidebar{position:static;width:auto;height:auto;padding:12px}.side-head{padding-bottom:10px}.sidebar .nav-label,.side-bottom{display:none}.side-nav{display:flex;overflow:auto}.side-nav button{width:auto;white-space:nowrap}.shell{display:none}.main{margin:0;padding:18px 12px}.topline{align-items:flex-start}.topline h1{font-size:21px}.grid{gap:9px}.stat{padding:13px}.stat .num{font-size:23px}.stat .label{font-size:11px}.login-card{padding:24px}}
+
+.tabs{display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap}.tabs button{border:1px solid #29445a;background:#0b1523;color:#b7c8dd;padding:10px 16px;border-radius:10px;font-size:13px}.tabs button.on{background:#0d2635;border-color:#17475a;color:#70f2e1}
+.field textarea,.field select{width:100%;border:1px solid #294158;background:#06101c;color:var(--text);padding:13px 14px;border-radius:10px;outline:none;resize:vertical}.field textarea:focus,.field select:focus{border-color:var(--cyan)}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.form-grid.three{grid-template-columns:.7fr .8fr 1.5fr}
+.pill.amber{border-color:#4b3c20;background:#211b10;color:#ffd37b}
+.row-note{white-space:normal;min-width:240px;color:#9eb2cb;line-height:1.5}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;color:#cfdbeb;margin:0 0 14px}
+@media(max-width:760px){.form-grid,.form-grid.three{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -50,12 +58,15 @@
       </nav>
     </div>
     <div><div class="nav-label">LICENSE & CLIENT</div><nav class="side-nav">
-      <button data-page="licenses"><span class="ico">◇</span> Akun MT5 & Lisensi</button>
+      <button data-page="licenses"><span class="ico">◇</span> Akun MT5</button>
       <button data-page="ib"><span class="ico">✓</span> Verifikasi IB</button>
       <button data-page="history"><span class="ico">◷</span> Riwayat Lisensi</button>
       <!-- Menu Konfirmasi User Auth (Diletakkan di bawah Riwayat Lisensi) -->
       <button data-page="auth-users"><span class="ico">👤</span> Konfirmasi User Auth</button>
       <button data-page="visitor-history"><span class="ico">👁</span> Riwayat Pengunjung</button>
+    </nav></div>
+    <div><div class="nav-label">EA MANAGEMENT</div><nav class="side-nav">
+      <button data-page="ea-manage"><span class="ico">◈</span> Management EA</button>
     </nav></div>
     <div><div class="nav-label">WEBSITE CONTENT</div><nav class="side-nav">
       <button data-page="cms"><span class="ico">▤</span> Landing Page CMS</button>
@@ -170,8 +181,8 @@
           <h2>Konfirmasi & Manajemen User Auth</h2>
           <button class="btn teal" data-action="refresh-auth-users">Muat Ulang User</button>
         </div>
-        <p class="placeholder" style="margin-bottom: 14px;">Kelola dan konfirmasi akun member yang mendaftar. Jika tautan email kedaluwarsa (otp_expired), admin dapat langsung memberikan konfirmasi manual di sini.</p>
-        <div class="toolbar" style="margin-bottom:14px;"><input id="authUserSearch" type="search" placeholder="Filter email / username / display name" aria-label="Filter user auth"></div>
+        <p class="placeholder" style="margin-bottom: 14px;">Kelola akun member yang mendaftar. <b>Aktifkan</b> mengonfirmasi email secara manual (berguna jika tautan kedaluwarsa), <b>Tolak</b> menolak pendaftaran, <b>Blokir</b> mencegah user login dan menonaktifkan lisensinya, <b>Hapus</b> menghapus akun permanen.</p>
+        <div class="toolbar" style="margin-bottom:14px;"><input id="authUserSearch" type="search" placeholder="Filter email / username / display name" aria-label="Filter user auth"><select id="authStatusFilter" aria-label="Filter status user"><option value="">Semua status</option><option value="pending">Menunggu</option><option value="active">Aktif</option><option value="rejected">Ditolak</option><option value="blocked">Diblokir</option></select></div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -181,7 +192,7 @@
                 <th>Provider</th>
                 <th>Terdaftar Sejak</th>
                 <th>Status Email</th>
-                <th>Aksi Konfirmasi</th>
+                <th>Aksi</th>
               </tr>
             </thead>
             <tbody id="authUsersBody">
@@ -228,12 +239,65 @@
     </section>
 
     <section class="page hidden" id="page-licenses">
-      <section class="panel"><div class="panel-head"><h2>Daftar Akun MT5 / Lisensi</h2><button class="btn teal" data-action="add-license">+ Tambah lisensi</button></div>
-        <form id="addLicForm" class="toolbar hidden" style="margin-bottom:14px"><input id="alEmail" type="email" placeholder="Email member" aria-label="Email member" required><input id="alNo" placeholder="Nomor akun" aria-label="Nomor akun" required><input id="alBroker" placeholder="Broker" aria-label="Broker" required><select id="alPlat" aria-label="Platform"><option>MT5</option><option>MT4</option></select><select id="alStatus" aria-label="Status"><option value="active">Active</option><option value="pending">Pending</option></select><button class="btn teal" type="submit">Simpan lisensi</button></form>
-        <div class="toolbar"><input id="licSearch" placeholder="Cari nomor akun / email / username" aria-label="Cari akun, email, username"><select id="licFilter" aria-label="Filter status"><option value="">Semua status</option><option value="active">Active</option><option value="pending">Pending</option><option value="rejected">Rejected</option><option value="blocked">Blocked</option></select><button class="btn" data-action="refresh">Muat ulang</button></div>
-        <div class="table-wrap"><table><thead><tr><th>Nomor Akun</th><th>Email User</th><th>Username / Display Name</th><th>Broker / IB</th><th>Status</th><th>Profit</th><th>Terakhir aktif</th><th>Aksi</th></tr></thead><tbody id="licBody"><tr><td colspan="8">Memuat data...</td></tr></tbody></table></div>
+      <div class="tabs"><button class="on" data-tab="accounts">Kelola Akun MT5</button><button data-tab="usage">Riwayat Penggunaan EA</button></div>
+
+      <div id="licTabAccounts">
+        <section class="panel"><div class="panel-head"><h2>Daftar Akun MT5</h2><button class="btn teal" data-action="add-license">+ Tambah akun</button></div>
+          <form id="addLicForm" class="toolbar hidden" style="margin-bottom:14px"><input id="alEmail" type="email" placeholder="Email member" aria-label="Email member" required><input id="alNo" placeholder="Nomor akun" aria-label="Nomor akun" required><input id="alBroker" placeholder="Broker" aria-label="Broker" required><select id="alPlat" aria-label="Platform"><option>MT5</option><option>MT4</option></select><select id="alStatus" aria-label="Status"><option value="active">Active</option><option value="pending">Pending</option></select><button class="btn teal" type="submit">Simpan akun</button></form>
+          <div class="toolbar"><input id="licSearch" placeholder="Cari nomor akun / email / username" aria-label="Cari akun, email, username"><select id="licFilter" aria-label="Filter status"><option value="">Semua status</option><option value="active">Active</option><option value="pending">Pending</option><option value="rejected">Rejected</option><option value="blocked">Blocked</option></select><button class="btn" data-action="refresh">Muat ulang</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Nomor Akun</th><th>Email User</th><th>Username / Display Name</th><th>Broker / IB</th><th>Status</th><th>Profit</th><th>Terakhir Aktif</th><th>Aksi</th></tr></thead><tbody id="licBody"><tr><td colspan="8">Memuat data...</td></tr></tbody></table></div>
+        </section>
+      </div>
+
+      <div id="licTabUsage" class="hidden">
+        <section class="panel">
+          <div class="panel-head"><h2>Riwayat Penggunaan EA</h2><button class="btn teal" id="eaUsageRefresh" type="button">Muat Ulang Data</button></div>
+          <div class="grid" style="margin-bottom:16px">
+            <article class="stat"><div class="label">Event 24 jam terakhir</div><div class="num" id="eaStEvents">—</div><small>Start, heartbeat, stop, cek lisensi</small></article>
+            <article class="stat"><div class="label">Akun aktif 24 jam</div><div class="num" id="eaStAccounts" style="color:var(--teal)">—</div><small>Akun MT5 yang memakai EA</small></article>
+            <article class="stat"><div class="label">Ditolak / Error 24 jam</div><div class="num" id="eaStDenied" style="color:var(--red)">—</div><small>Lisensi ditolak atau EA error</small></article>
+            <article class="stat"><div class="label">Versi EA terakhir terlihat</div><div class="num" id="eaStVersion" style="color:var(--cyan)">—</div><small>Dari log terbaru</small></article>
+          </div>
+          <div class="toolbar" style="margin-bottom:14px">
+            <input id="eaUsageSearch" placeholder="Cari akun / nama / pair / versi..." aria-label="Cari riwayat EA">
+            <select id="eaUsageEvent" aria-label="Filter event"><option value="">Semua event</option><option value="start">Start</option><option value="heartbeat">Heartbeat</option><option value="stop">Stop</option><option value="license_check">Cek lisensi</option><option value="denied">Ditolak</option><option value="error">Error</option></select>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>Waktu</th><th>Akun MT5</th><th>Nama Akun</th><th>Event</th><th>Versi EA</th><th>Pair / TF</th><th>Hasil</th><th>Keterangan</th></tr></thead><tbody id="eaUsageBody"><tr><td colspan="8">Memuat riwayat penggunaan EA...</td></tr></tbody></table></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="page hidden" id="page-ea-manage">
+      <section class="panel">
+        <div class="panel-head"><h2>Status & Versi EA</h2><span class="pill" id="eaStatusPill">● Online</span></div>
+        <div class="form-grid">
+          <div class="field"><label for="eaVerLatest">Versi terbaru</label><input id="eaVerLatest" placeholder="mis. 2.4.0"></div>
+          <div class="field"><label for="eaVerMin">Versi minimum yang diizinkan</label><input id="eaVerMin" placeholder="mis. 2.2.0"></div>
+        </div>
+        <div class="field"><label for="eaMaintMsg">Pesan maintenance / pengumuman untuk pengguna</label><textarea id="eaMaintMsg" rows="3" placeholder="mis. EA sedang update fitur news filter, kembali normal pukul 20.00 WIB."></textarea></div>
+        <div class="toolbar">
+          <button class="btn teal" id="eaSaveBtn" type="button">Simpan perubahan</button>
+          <button class="btn danger" id="eaMaintOn" type="button">Aktifkan maintenance</button>
+          <button class="btn" id="eaMaintOff" type="button">Kembalikan ke online</button>
+        </div>
+        <p id="eaCfgMsg" class="placeholder" style="margin-top:14px">Memuat konfigurasi EA...</p>
+        <div class="notice">Status maintenance baru berlaku di EA jika EA membaca tabel <b>ea_config</b> (lewat WebRequest) dan menghentikan entry saat status = maintenance.</div>
       </section>
-      <section class="panel"><h2>Riwayat Performance per Account</h2><div class="placeholder">Grafik profit, equity, drawdown, dan riwayat performa perlu dihubungkan ke sumber data trading yang tervalidasi.</div></section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Changelog & Fitur Baru</h2><button class="btn" id="eaChangelogRefresh" type="button">Muat ulang</button></div>
+        <form id="eaChangelogForm">
+          <div class="form-grid three">
+            <div class="field"><label for="clVersion">Versi</label><input id="clVersion" placeholder="2.4.0" required></div>
+            <div class="field"><label for="clKind">Tipe</label><select id="clKind"><option value="feature">Fitur baru</option><option value="fix">Perbaikan</option><option value="maintenance">Maintenance</option></select></div>
+            <div class="field"><label for="clTitle">Judul</label><input id="clTitle" placeholder="mis. Filter news high impact" required></div>
+          </div>
+          <div class="field" style="margin-top:0"><label for="clNotes">Catatan (opsional)</label><textarea id="clNotes" rows="2" placeholder="Detail perubahan untuk pengguna"></textarea></div>
+          <label class="check"><input type="checkbox" id="clPublish"> Langsung publikasikan</label>
+          <button class="btn teal" type="submit">Tambah catatan</button>
+        </form>
+        <div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Versi</th><th>Tipe</th><th>Judul & Catatan</th><th>Status</th><th>Dibuat</th><th>Aksi</th></tr></thead><tbody id="eaChangelogBody"><tr><td colspan="6">Memuat changelog...</td></tr></tbody></table></div>
+      </section>
     </section>
 
     <section class="page hidden" id="page-ib"><section class="panel"><div class="panel-head"><h2>Verifikasi IB</h2><button class="btn" data-action="refresh">Muat pengajuan</button></div><div class="table-wrap"><table><thead><tr><th>Nomor Akun</th><th>Client</th><th>Broker</th><th>Dikirim</th><th>Aksi</th></tr></thead><tbody id="ibBody"><tr><td colspan="5">Memuat data...</td></tr></tbody></table></div></section></section>
@@ -259,7 +323,7 @@ const supabaseClient = window.supabase?.createClient
     })
   : null;
 
-const TRADING_STATS_TABLE = 'trading_stats';
+	const TRADING_STATS_TABLE = 'trading_stats';
 
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
@@ -298,8 +362,9 @@ const titles = {
  'trade-entries':['Statistik Entry Posisi','Pantau posisi trading real-time dan riwayat entry MT5.'],
  analytics:['Statistik Pengguna','Pantau ringkasan performa trading pengguna.'],
  'visitor-history':['Riwayat Pengunjung','Pantau lalu lintas pengunjung, durasi sesi, dan interaksi halaman.'],
- 'auth-users':['Konfirmasi User Auth','Verifikasi akun member secara manual jika tautan email kedaluwarsa.'],
- licenses:['Akun MT5 & Lisensi','Pantau status lisensi dan riwayat performa setiap akun.'],
+ 'auth-users':['Konfirmasi User Auth','Aktifkan, tolak, blokir, atau hapus akun member.'],
+ licenses:['Akun MT5','Kelola akun MT5 member dan pantau riwayat penggunaan EA.'],
+ 'ea-manage':['Management EA','Atur status maintenance, versi, dan catatan fitur EA.'],
  ib:['Verifikasi IB','Periksa bukti dan setujui pendaftaran IB klien.'],
  history:['Riwayat Lisensi','Audit perubahan status dan masa berlaku lisensi.'],
  cms:['Landing Page CMS','Kelola konten publik tanpa mengubah source code.'],
@@ -327,6 +392,10 @@ function showPage(name){
     loadVisitorLogs();
   } else if (name === 'auth-users') {
     loadAuthUsers();
+  } else if (name === 'ea-manage') {
+    loadEaManage();
+  } else if (name === 'licenses') {
+    loadEaUsage();
   }
 }
 document.querySelectorAll('[data-page]').forEach(btn=>btn.addEventListener('click',()=>showPage(btn.dataset.page)));
@@ -363,9 +432,9 @@ const fmtDate = d => d ? new Date(d).toLocaleString('id-ID') : '-';
 function render(){
   const q = $('licSearch').value.trim().toLowerCase(), f =$('licFilter').value;
   const list = rows.filter(r => (!f || r.status === f) && (!q || [r.account_number, r.client_name, r.client_email, r.username, r.display_name, r.user_id].join(' ').toLowerCase().includes(q)));
-  $('licBody').innerHTML = list.length ? list.map(r => `<tr><td>${esc(r.account_number || r.account_id || '-')}</td><td>${esc(r.client_email || '-')}</td><td>${esc(r.username || r.display_name || r.client_name || '-')}</td><td>${esc(r.broker || '-')} (${esc(r.platform || 'MT5')})</td><td>${badge(r.status)}</td><td>—</td><td>—</td>
-    <td><button class="btn teal" data-id="${esc(r.id)}" data-set="active">Aktifkan</button> <button class="btn" data-id="${esc(r.id)}" data-set="rejected">Tolak</button> <button class="btn danger" data-id="${esc(r.id)}" data-set="blocked">Blokir</button> <button class="btn danger" data-id="${esc(r.id)}" data-del="1">Hapus</button></td></tr>`).join('')
-    : '<tr><td colspan="7">Tidak ada akun yang cocok.</td></tr>';
+  $('licBody').innerHTML = list.length ? list.map(r => { const acc = r.account_number || r.account_id || '-'; return `<tr><td>${esc(acc)}</td><td>${esc(r.client_email || '-')}</td><td>${esc(r.username || r.display_name || r.client_name || '-')}</td><td>${esc(r.broker || '-')} (${esc(r.platform || 'MT5')})</td><td>${badge(r.status)}</td><td>${esc(statProfit(accStat(acc)?.total_profit))}</td><td>${esc(eaLastSeenText(acc))}</td>
+    <td><button class="btn teal" data-id="${esc(r.id)}" data-set="active">Aktifkan</button> <button class="btn" data-id="${esc(r.id)}" data-set="rejected">Tolak</button> <button class="btn danger" data-id="${esc(r.id)}" data-set="blocked">Blokir</button> <button class="btn danger" data-id="${esc(r.id)}" data-del="1">Hapus</button></td></tr>`; }).join('')
+    : '<tr><td colspan="8">Tidak ada akun yang cocok.</td></tr>';
 
   const pend = rows.filter(r => r.status === 'pending');
   $('ibBody').innerHTML = pend.length ? pend.map(r => `<tr><td>${esc(r.account_number)}</td><td>${clientCell(r)}</td><td>${esc(r.broker)} (${esc(r.platform)})</td><td>${esc(fmtDate(r.created_at))}</td>
@@ -433,9 +502,10 @@ function renderTradingStats(){
   const week = Date.now()-7*86400000, month = Date.now()-30*86400000;
   $('ovWeekly').textContent = new Set(tradingStats.filter(r=>r.updated_at && new Date(r.updated_at).getTime()>=week).map(r=>r.user_id)).size;
   $('ovMonthly').textContent = new Set(tradingStats.filter(r=>r.updated_at && new Date(r.updated_at).getTime()>=month).map(r=>r.user_id)).size;
-}
+  if (rows.length) render();
+	}
 
-async function loadTradingStats(){
+	async function loadTradingStats(){
   if(!supabaseClient) return;
   $('tradeMessage').textContent = 'Menghubungkan ke tabel trading_stats di Supabase...';
   const {data,error} = await supabaseClient.from(TRADING_STATS_TABLE)
@@ -500,6 +570,8 @@ function enterAdmin(){
   $('loginView').style.display = 'none';$('adminShell').style.display = 'block';
   loadLicenses();
   loadTradingStats();
+  loadEaUsage();
+  supabaseClient.auth.getSession().then(({ data }) => { myUserId = data?.session?.user?.id || null; });
 }
 
 (async () => {
@@ -621,43 +693,215 @@ async function loadAuthUsers() {
   renderAuthUsers();
 }
 
+	// ===== Konfirmasi User Auth: aktifkan / tolak / blokir / hapus =====
+let myUserId = null;
+const AU_STATUS = { active:['Aktif','active'], pending:['Menunggu','pending'], rejected:['Ditolak','expired'], blocked:['Diblokir','blocked'] };
+function authStatusOf(u) {
+  const s = u.raw_app_meta_data?.admin_status;
+  if (s === 'blocked' || s === 'rejected') return s;
+  if (u.banned_until && new Date(u.banned_until) > new Date()) return 'blocked';
+  return (u.email_confirmed_at !== null && u.email_confirmed_at !== undefined) ? 'active' : 'pending';
+}
 function renderAuthUsers() {
   const tbody = document.getElementById('authUsersBody');
   if (!tbody) return;
   const q = (document.getElementById('authUserSearch')?.value || '').trim().toLowerCase();
+  const sf = document.getElementById('authStatusFilter')?.value || '';
   const data = authUserCache.filter(u => {
     const meta = u.raw_user_meta_data || u.user_metadata || {};
     const username = meta.username || meta.user_name || '';
     const displayName = meta.display_name || meta.full_name || meta.name || '';
-    return !q || [u.email, username, displayName, u.id].join(' ').toLowerCase().includes(q);
+    return (!sf || authStatusOf(u) === sf) && (!q || [u.email, username, displayName, u.id].join(' ').toLowerCase().includes(q));
   });
   if (!data.length) { tbody.innerHTML = '<tr><td colspan="6">Tidak ada user yang cocok dengan filter.</td></tr>'; return; }
   tbody.innerHTML = data.map(u => {
-    const isVerified = u.email_confirmed_at !== null && u.email_confirmed_at !== undefined;
     const meta = u.raw_user_meta_data || u.user_metadata || {};
     const username = meta.username || meta.user_name || '-';
     const displayName = meta.display_name || meta.full_name || meta.name || '-';
     const nameText = username !== '-' ? username : displayName;
-    const statusBadge = isVerified ? '<span class="status active">Terverifikasi</span>' : '<span class="status pending">Belum Konfirmasi</span>';
-    const actionBtn = isVerified ? '<span style="color:var(--muted)">Sudah Aktif</span>' : `<button class="btn teal" onclick="confirmUser('${esc(u.id)}')">Konfirmasi Manual</button>`;
-    return `<tr><td>${esc(u.email || '-')}</td><td>${esc(nameText)}${displayName !== '-' && displayName !== nameText ? `<br><small style="color:#7991ab">${esc(displayName)}</small>` : ''}</td><td>${esc(u.raw_app_meta_data?.provider || 'email')}</td><td>${esc(fmtDate(u.created_at))}</td><td>${statusBadge}</td><td>${actionBtn}</td></tr>`;
+    const st = authStatusOf(u);
+    const [label, cls] = AU_STATUS[st];
+    const id = esc(u.id);
+    const actions = String(u.id) === String(myUserId)
+      ? '<span style="color:var(--muted)">Akun Anda</span>'
+      : [
+          st !== 'active' ? `<button class="btn teal" data-au="activate" data-uid="${id}">Aktifkan</button>` : '',
+          st === 'pending' ? `<button class="btn" data-au="reject" data-uid="${id}">Tolak</button>` : '',
+          st !== 'blocked' ? `<button class="btn danger" data-au="block" data-uid="${id}">Blokir</button>` : '',
+          `<button class="btn danger" data-au="delete" data-uid="${id}">Hapus</button>`
+        ].filter(Boolean).join(' ');
+    return `<tr><td>${esc(u.email || '-')}</td><td>${esc(nameText)}${displayName !== '-' && displayName !== nameText ? `<br><small style="color:#7991ab">${esc(displayName)}</small>` : ''}</td><td>${esc(u.raw_app_meta_data?.provider || 'email')}</td><td>${esc(fmtDate(u.created_at))}</td><td><span class="status ${cls}">${label}</span></td><td>${actions}</td></tr>`;
   }).join('');
 }
 document.getElementById('authUserSearch')?.addEventListener('input', renderAuthUsers);
+document.getElementById('authStatusFilter')?.addEventListener('change', renderAuthUsers);
 
-// Fungsi Eksekusi Konfirmasi Manual oleh Admin
-window.confirmUser = async function(userId) {
-  if (!confirm('Apakah Anda yakin ingin mengonfirmasi dan mengaktifkan akun member ini secara manual?')) return;
-  
-  const { error } = await supabaseClient.rpc('admin_verify_user', { p_user_id: userId });
+const AU_CONFIRM = {
+  activate: 'Aktifkan akun member ini? Email akan dikonfirmasi dan user bisa login.',
+  reject: 'Tolak pendaftaran akun ini? User tidak akan bisa login.',
+  block: 'Blokir akun ini? User tidak bisa login dan lisensi MT5-nya ikut diblokir.',
+  delete: 'Hapus akun ini secara PERMANEN beserta lisensi MT5-nya? Tindakan ini tidak bisa dibatalkan.'
+};
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-au]');
+  if (!b) return;
+  const action = b.dataset.au, uid = b.dataset.uid;
+  if (!confirm(AU_CONFIRM[action] || 'Lanjutkan?')) return;
+  b.disabled = true;
+  let { error } = await supabaseClient.rpc('admin_set_user_status', { p_user_id: uid, p_action: action });
+  // Cadangan: jika fungsi baru belum dibuat, aktifkan memakai fungsi lama
+  if (error && action === 'activate' && /admin_set_user_status|schema cache|PGRST202/i.test(String(error.message) + String(error.code || ''))) {
+    ({ error } = await supabaseClient.rpc('admin_verify_user', { p_user_id: uid }));
+  }
+  if (error) { alert('Gagal: ' + error.message); b.disabled = false; return; }
+  await loadAuthUsers();
+  loadLicenses();
+});
+
+// ===== Akun MT5: tab & riwayat penggunaan EA =====
+let eaLogs = [];
+let eaLastSeen = new Map();
+const accStat = acc => tradingStats.find(x => String(x.account_id) === String(acc));
+const eaLastSeenText = acc => {
+  const k = String(acc);
+  const times = [eaLastSeen.get(k), accStat(acc)?.updated_at].filter(Boolean).map(x => new Date(x).getTime()).filter(Number.isFinite);
+  return times.length ? fmtDate(new Date(Math.max(...times)).toISOString()) : '—';
+};
+const EA_EVENT_CLS = { start:'active', heartbeat:'expired', stop:'pending', license_check:'expired', denied:'blocked', error:'blocked' };
+
+document.querySelectorAll('[data-tab]').forEach(btn => btn.addEventListener('click', () => {
+  const t = btn.dataset.tab;
+  document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('on', x === btn));
+  $('licTabAccounts').classList.toggle('hidden', t !== 'accounts');
+  $('licTabUsage').classList.toggle('hidden', t !== 'usage');
+  if (t === 'usage') loadEaUsage();
+}));
+
+async function loadEaUsage() {
+  if (!supabaseClient) return;
+  const tbody = $('eaUsageBody');
+  const { data, error } = await supabaseClient.from('ea_usage_logs').select('*').order('created_at', { ascending: false }).limit(1000);
   if (error) {
-    alert('Gagal mengonfirmasi user: ' + error.message);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red)">Gagal memuat ea_usage_logs: ${esc(error.message)}. Pastikan file useradmin_update.sql sudah dijalankan di Supabase.</td></tr>`;
     return;
   }
-  
-  alert('Berhasil! Akun user telah dikonfirmasi dan diaktifkan.');
-  loadAuthUsers();
+  eaLogs = data || [];
+  eaLastSeen = new Map();
+  eaLogs.forEach(r => { const k = String(r.account_id); if (!eaLastSeen.has(k)) eaLastSeen.set(k, r.created_at); });
+  renderEaUsage();
+  if (rows.length) render();
 }
+
+function renderEaUsage() {
+  const tbody = $('eaUsageBody');
+  if (!tbody) return;
+  const q = ($('eaUsageSearch').value || '').trim().toLowerCase();
+  const ev = $('eaUsageEvent').value;
+  const list = eaLogs.filter(r => (!ev || r.event === ev) && (!q || [r.account_id, r.account_name, r.symbol, r.ea_version, r.broker].join(' ').toLowerCase().includes(q)));
+  const since = Date.now() - 86400000;
+  const last24 = eaLogs.filter(r => new Date(r.created_at).getTime() >= since);
+  $('eaStEvents').textContent = last24.length;
+  $('eaStAccounts').textContent = new Set(last24.map(r => r.account_id)).size;
+  $('eaStDenied').textContent = last24.filter(r => r.event === 'denied' || r.event === 'error').length;
+  $('eaStVersion').textContent = eaLogs.find(r => r.ea_version)?.ea_version || '—';
+  tbody.innerHTML = list.length ? list.map(r => `<tr>
+    <td>${esc(formatOpenTime(r.created_at))}</td><td>${esc(r.account_id || '-')}</td><td>${esc(r.account_name || '-')}</td>
+    <td><span class="status ${EA_EVENT_CLS[r.event] || 'pending'}">${esc(r.event)}</span></td>
+    <td>${esc(r.ea_version || '-')}</td><td>${esc([r.symbol, r.timeframe].filter(Boolean).join(' / ') || '-')}</td>
+    <td>${esc(r.result || '-')}</td><td class="row-note">${esc(r.message || '-')}</td></tr>`).join('')
+    : '<tr><td colspan="8">Belum ada riwayat penggunaan EA yang cocok.</td></tr>';
+}
+$('eaUsageSearch')?.addEventListener('input', renderEaUsage);
+$('eaUsageEvent')?.addEventListener('change', renderEaUsage);
+$('eaUsageRefresh')?.addEventListener('click', loadEaUsage);
+
+// ===== Management EA =====
+let eaCfg = null;
+const EA_KIND = { feature:['Fitur baru','active'], fix:['Perbaikan','expired'], maintenance:['Maintenance','pending'] };
+
+function paintEaStatus() {
+  const st = eaCfg?.status || 'online';
+  const pill = $('eaStatusPill');
+  pill.textContent = st === 'maintenance' ? '● Maintenance' : '● Online';
+  pill.className = 'pill' + (st === 'maintenance' ? ' amber' : '');
+  $('eaMaintOn').classList.toggle('hidden', st === 'maintenance');
+  $('eaMaintOff').classList.toggle('hidden', st !== 'maintenance');
+}
+
+async function loadEaManage() {
+  const msg = $('eaCfgMsg');
+  msg.textContent = 'Memuat konfigurasi EA...';
+  const { data, error } = await supabaseClient.from('ea_config').select('*').eq('id', 1).maybeSingle();
+  if (error) { msg.textContent = 'Gagal memuat ea_config: ' + error.message + '. Pastikan useradmin_update.sql sudah dijalankan.'; return; }
+  eaCfg = data;
+  $('eaVerLatest').value = data?.latest_version || '';
+  $('eaVerMin').value = data?.min_version || '';
+  $('eaMaintMsg').value = data?.maintenance_message || '';
+  paintEaStatus();
+  msg.textContent = data?.updated_at ? 'Terakhir diperbarui: ' + fmtDate(data.updated_at) : 'Belum ada konfigurasi tersimpan.';
+  loadEaChangelog();
+}
+
+async function saveEaCfg(status) {
+  const payload = {
+    id: 1, status,
+    latest_version: $('eaVerLatest').value.trim() || null,
+    min_version: $('eaVerMin').value.trim() || null,
+    maintenance_message: $('eaMaintMsg').value.trim() || null,
+    updated_at: new Date().toISOString(), updated_by: myUserId
+  };
+  if (status === 'maintenance' && !payload.maintenance_message) { alert('Isi pesan maintenance terlebih dahulu agar pengguna tahu alasannya.'); return; }
+  const { error } = await supabaseClient.from('ea_config').upsert(payload);
+  if (error) { alert('Gagal menyimpan: ' + error.message); return; }
+  loadEaManage();
+}
+$('eaSaveBtn')?.addEventListener('click', () => saveEaCfg(eaCfg?.status || 'online'));
+$('eaMaintOn')?.addEventListener('click', () => { if (confirm('Aktifkan mode maintenance? EA yang membaca ea_config akan berhenti membuka posisi baru.')) saveEaCfg('maintenance'); });
+$('eaMaintOff')?.addEventListener('click', () => { if (confirm('Kembalikan EA ke status online?')) saveEaCfg('online'); });
+
+async function loadEaChangelog() {
+  const tbody = $('eaChangelogBody');
+  const { data, error } = await supabaseClient.from('ea_changelog').select('*').order('created_at', { ascending: false });
+  if (error) { tbody.innerHTML = `<tr><td colspan="6" style="color:var(--red)">Gagal memuat changelog: ${esc(error.message)}</td></tr>`; return; }
+  if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="6">Belum ada catatan. Tambahkan fitur baru atau jadwal maintenance di atas.</td></tr>'; return; }
+  tbody.innerHTML = data.map(r => {
+    const [kl, kc] = EA_KIND[r.kind] || [r.kind, 'pending'];
+    const id = esc(r.id);
+    return `<tr><td><strong>${esc(r.version)}</strong></td><td><span class="status ${kc}">${esc(kl)}</span></td>
+      <td class="row-note"><b style="color:var(--text)">${esc(r.title)}</b>${r.notes ? '<br>' + esc(r.notes) : ''}</td>
+      <td><span class="status ${r.published ? 'active' : 'pending'}">${r.published ? 'Dipublikasi' : 'Draft'}</span></td>
+      <td>${esc(fmtDate(r.created_at))}</td>
+      <td><button class="btn ${r.published ? '' : 'teal'}" data-cl="toggle" data-id="${id}" data-pub="${r.published ? '1' : '0'}">${r.published ? 'Tarik' : 'Publikasikan'}</button> <button class="btn danger" data-cl="del" data-id="${id}">Hapus</button></td></tr>`;
+  }).join('');
+}
+$('eaChangelogRefresh')?.addEventListener('click', loadEaChangelog);
+
+$('eaChangelogForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const pub = $('clPublish').checked;
+  const { error } = await supabaseClient.from('ea_changelog').insert({
+    version: $('clVersion').value.trim(), kind: $('clKind').value, title: $('clTitle').value.trim(),
+    notes: $('clNotes').value.trim() || null, published: pub, published_at: pub ? new Date().toISOString() : null
+  });
+  if (error) { alert('Gagal menambah catatan: ' + error.message); return; }
+  e.target.reset();
+  loadEaChangelog();
+});
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-cl]');
+  if (!b) return;
+  let error;
+  if (b.dataset.cl === 'del') {
+    if (!confirm('Hapus catatan ini?')) return;
+    ({ error } = await supabaseClient.from('ea_changelog').delete().eq('id', b.dataset.id));
+  } else {
+    const publish = b.dataset.pub !== '1';
+    ({ error } = await supabaseClient.from('ea_changelog').update({ published: publish, published_at: publish ? new Date().toISOString() : null }).eq('id', b.dataset.id));
+  }
+  if (error) { alert('Gagal: ' + error.message); return; }
+  loadEaChangelog();
+});
 </script>
 </body>
 </html>
