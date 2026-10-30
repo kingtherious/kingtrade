@@ -269,7 +269,12 @@
 
     <section class="page hidden" id="page-ea-manage">
       <section class="panel">
-        <div class="panel-head"><h2>Status & Versi EA</h2><span class="pill" id="eaStatusPill">● Online</span></div>
+        <div class="panel-head"><h2>Pilih EA</h2><button class="btn" id="eaListRefresh" type="button">Muat ulang daftar</button></div>
+        <div class="field" style="margin-top:0"><label for="eaSelect">EA yang tersimpan di Supabase Storage</label><select id="eaSelect"><option value="">Memuat daftar EA...</option></select></div>
+        <div id="eaFileInfo" class="row-note" style="min-width:0">Pilih EA untuk mengelola status, versi, dan changelog-nya.</div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Status & Versi: <span id="eaSelName">belum dipilih</span></h2><span class="pill" id="eaStatusPill">● Online</span></div>
         <div class="form-grid">
           <div class="field"><label for="eaVerLatest">Versi terbaru</label><input id="eaVerLatest" placeholder="mis. 2.4.0"></div>
           <div class="field"><label for="eaVerMin">Versi minimum yang diizinkan</label><input id="eaVerMin" placeholder="mis. 2.2.0"></div>
@@ -281,7 +286,7 @@
           <button class="btn" id="eaMaintOff" type="button">Kembalikan ke online</button>
         </div>
         <p id="eaCfgMsg" class="placeholder" style="margin-top:14px">Memuat konfigurasi EA...</p>
-        <div class="notice">Status maintenance baru berlaku di EA jika EA membaca tabel <b>ea_config</b> (lewat WebRequest) dan menghentikan entry saat status = maintenance.</div>
+        <div class="notice">Status maintenance baru berlaku di EA jika EA membaca tabel <b>ea_config</b> (lewat WebRequest, filter <b>ea_name</b> = nama EA di atas) dan menghentikan entry saat status = maintenance.</div>
       </section>
 
       <section class="panel">
@@ -323,7 +328,7 @@ const supabaseClient = window.supabase?.createClient
     })
   : null;
 
-	const TRADING_STATS_TABLE = 'trading_stats';
+const TRADING_STATS_TABLE = 'trading_stats';
 
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
@@ -353,7 +358,7 @@ loginForm.addEventListener('submit', async (event) => {
     return;
   }
 
-  enterAdmin();
+enterAdmin();
   loginError.textContent = '';
 });
 
@@ -393,7 +398,7 @@ function showPage(name){
   } else if (name === 'auth-users') {
     loadAuthUsers();
   } else if (name === 'ea-manage') {
-    loadEaManage();
+    loadEaList();
   } else if (name === 'licenses') {
     loadEaUsage();
   }
@@ -503,9 +508,9 @@ function renderTradingStats(){
   $('ovWeekly').textContent = new Set(tradingStats.filter(r=>r.updated_at && new Date(r.updated_at).getTime()>=week).map(r=>r.user_id)).size;
   $('ovMonthly').textContent = new Set(tradingStats.filter(r=>r.updated_at && new Date(r.updated_at).getTime()>=month).map(r=>r.user_id)).size;
   if (rows.length) render();
-	}
+}
 
-	async function loadTradingStats(){
+async function loadTradingStats(){
   if(!supabaseClient) return;
   $('tradeMessage').textContent = 'Menghubungkan ke tabel trading_stats di Supabase...';
   const {data,error} = await supabaseClient.from(TRADING_STATS_TABLE)
@@ -693,7 +698,7 @@ async function loadAuthUsers() {
   renderAuthUsers();
 }
 
-	// ===== Konfirmasi User Auth: aktifkan / tolak / blokir / hapus =====
+// ===== Konfirmasi User Auth: aktifkan / tolak / blokir / hapus =====
 let myUserId = null;
 const AU_STATUS = { active:['Aktif','active'], pending:['Menunggu','pending'], rejected:['Ditolak','expired'], blocked:['Diblokir','blocked'] };
 function authStatusOf(u) {
@@ -735,7 +740,7 @@ function renderAuthUsers() {
 }
 document.getElementById('authUserSearch')?.addEventListener('input', renderAuthUsers);
 document.getElementById('authStatusFilter')?.addEventListener('change', renderAuthUsers);
-
+	
 const AU_CONFIRM = {
   activate: 'Aktifkan akun member ini? Email akan dikonfirmasi dan user bisa login.',
   reject: 'Tolak pendaftaran akun ini? User tidak akan bisa login.',
@@ -815,13 +820,56 @@ $('eaUsageSearch')?.addEventListener('input', renderEaUsage);
 $('eaUsageEvent')?.addEventListener('change', renderEaUsage);
 $('eaUsageRefresh')?.addEventListener('click', loadEaUsage);
 
-// ===== Management EA =====
+// ===== Management EA (per EA, daftar diambil dari Supabase Storage) =====
+const EA_BUCKET = 'ea-files';   // GANTI: nama bucket Supabase Storage tempat file EA disimpan
+const EA_FOLDER = '';           // isi jika EA berada di dalam folder, mis. 'ea'
+const EA_EXT = /\.(ex5|ex4|mq5|mq4)$/i;
 let eaCfg = null;
+let eaCurrent = '';
+let eaGroups = new Map();       // nama EA -> daftar file
 const EA_KIND = { feature:['Fitur baru','active'], fix:['Perbaikan','expired'], maintenance:['Maintenance','pending'] };
+const EA_FORM_IDS = ['eaVerLatest','eaVerMin','eaMaintMsg','eaSaveBtn','eaMaintOn','eaMaintOff','clVersion','clKind','clTitle','clNotes','clPublish'];
+
+async function loadEaList() {
+  const sel = $('eaSelect'), info = $('eaFileInfo');
+  sel.innerHTML = '<option value="">Memuat daftar EA...</option>';
+  const { data, error } = await supabaseClient.storage.from(EA_BUCKET).list(EA_FOLDER, { limit: 200, sortBy: { column: 'name', order: 'asc' } });
+  eaGroups = new Map();
+  if (error) {
+    sel.innerHTML = '<option value="">Gagal memuat daftar EA</option>';
+    info.textContent = `Gagal membaca bucket "${EA_BUCKET}": ${error.message}. Periksa nilai EA_BUCKET di script dan policy SELECT pada storage.objects untuk admin (lihat useradmin_update_v2.sql).`;
+    eaCurrent = ''; loadEaManage(); return;
+  }
+  (data || []).filter(f => f.id && EA_EXT.test(f.name)).forEach(f => {
+    const k = f.name.replace(EA_EXT, '');
+    if (!eaGroups.has(k)) eaGroups.set(k, []);
+    eaGroups.get(k).push(f);
+  });
+  const names = [...eaGroups.keys()];
+  if (!names.length) {
+    sel.innerHTML = '<option value="">Belum ada file EA di bucket</option>';
+    info.textContent = `Tidak ada file .ex5/.ex4/.mq5/.mq4 di bucket "${EA_BUCKET}".`;
+    eaCurrent = ''; loadEaManage(); return;
+  }
+  if (!names.includes(eaCurrent)) eaCurrent = names.length === 1 ? names[0] : '';
+  sel.innerHTML = '<option value="">— Pilih EA —</option>' + names.map(n => `<option value="${esc(n)}"${n === eaCurrent ? ' selected' : ''}>${esc(n)}</option>`).join('');
+  paintEaFiles();
+  loadEaManage();
+}
+
+function paintEaFiles() {
+  const files = eaGroups.get(eaCurrent) || [];
+  $('eaFileInfo').innerHTML = files.length
+    ? files.map(f => `${esc(f.name)} · ${f.metadata?.size ? Math.round(f.metadata.size / 1024) + ' KB' : '-'} · diperbarui ${esc(fmtDate(f.updated_at || f.created_at))}`).join('<br>')
+    : 'Pilih EA untuk mengelola status, versi, dan changelog-nya.';
+}
+$('eaSelect')?.addEventListener('change', e => { eaCurrent = e.target.value; paintEaFiles(); loadEaManage(); });
+$('eaListRefresh')?.addEventListener('click', loadEaList);
 
 function paintEaStatus() {
-  const st = eaCfg?.status || 'online';
   const pill = $('eaStatusPill');
+  if (!eaCurrent) { pill.textContent = '● —'; pill.className = 'pill'; return; }
+  const st = eaCfg?.status || 'online';
   pill.textContent = st === 'maintenance' ? '● Maintenance' : '● Online';
   pill.className = 'pill' + (st === 'maintenance' ? ' amber' : '');
   $('eaMaintOn').classList.toggle('hidden', st === 'maintenance');
@@ -830,40 +878,56 @@ function paintEaStatus() {
 
 async function loadEaManage() {
   const msg = $('eaCfgMsg');
+  const name = eaCurrent;
+  EA_FORM_IDS.forEach(id => { if ($(id)) $(id).disabled = !name; });
+  $('eaSelName').textContent = name || 'belum dipilih';
+  if (!name) {
+    eaCfg = null;
+    $('eaVerLatest').value = ''; $('eaVerMin').value = ''; $('eaMaintMsg').value = '';
+    paintEaStatus();
+    msg.textContent = 'Pilih EA terlebih dahulu.';
+    $('eaChangelogBody').innerHTML = '<tr><td colspan="6">Pilih EA untuk melihat changelog.</td></tr>';
+    return;
+  }
   msg.textContent = 'Memuat konfigurasi EA...';
-  const { data, error } = await supabaseClient.from('ea_config').select('*').eq('id', 1).maybeSingle();
-  if (error) { msg.textContent = 'Gagal memuat ea_config: ' + error.message + '. Pastikan useradmin_update.sql sudah dijalankan.'; return; }
+  const { data, error } = await supabaseClient.from('ea_config').select('*').eq('ea_name', name).maybeSingle();
+  if (name !== eaCurrent) return;   // pilihan sudah berganti
+  if (error) { msg.textContent = 'Gagal memuat ea_config: ' + error.message + '. Pastikan useradmin_update_v2.sql sudah dijalankan.'; return; }
   eaCfg = data;
   $('eaVerLatest').value = data?.latest_version || '';
   $('eaVerMin').value = data?.min_version || '';
   $('eaMaintMsg').value = data?.maintenance_message || '';
   paintEaStatus();
-  msg.textContent = data?.updated_at ? 'Terakhir diperbarui: ' + fmtDate(data.updated_at) : 'Belum ada konfigurasi tersimpan.';
+  msg.textContent = data?.updated_at ? 'Terakhir diperbarui: ' + fmtDate(data.updated_at) : 'Belum ada konfigurasi tersimpan untuk EA ini.';
   loadEaChangelog();
 }
 
 async function saveEaCfg(status) {
+  if (!eaCurrent) { alert('Pilih EA terlebih dahulu.'); return; }
   const payload = {
-    id: 1, status,
+    ea_name: eaCurrent, status,
     latest_version: $('eaVerLatest').value.trim() || null,
     min_version: $('eaVerMin').value.trim() || null,
     maintenance_message: $('eaMaintMsg').value.trim() || null,
     updated_at: new Date().toISOString(), updated_by: myUserId
   };
   if (status === 'maintenance' && !payload.maintenance_message) { alert('Isi pesan maintenance terlebih dahulu agar pengguna tahu alasannya.'); return; }
-  const { error } = await supabaseClient.from('ea_config').upsert(payload);
+  const { error } = await supabaseClient.from('ea_config').upsert(payload, { onConflict: 'ea_name' });
   if (error) { alert('Gagal menyimpan: ' + error.message); return; }
   loadEaManage();
 }
 $('eaSaveBtn')?.addEventListener('click', () => saveEaCfg(eaCfg?.status || 'online'));
-$('eaMaintOn')?.addEventListener('click', () => { if (confirm('Aktifkan mode maintenance? EA yang membaca ea_config akan berhenti membuka posisi baru.')) saveEaCfg('maintenance'); });
-$('eaMaintOff')?.addEventListener('click', () => { if (confirm('Kembalikan EA ke status online?')) saveEaCfg('online'); });
+$('eaMaintOn')?.addEventListener('click', () => { if (confirm(`Aktifkan mode maintenance untuk ${eaCurrent}? EA yang membaca ea_config akan berhenti membuka posisi baru.`)) saveEaCfg('maintenance'); });
+$('eaMaintOff')?.addEventListener('click', () => { if (confirm(`Kembalikan ${eaCurrent} ke status online?`)) saveEaCfg('online'); });
 
 async function loadEaChangelog() {
   const tbody = $('eaChangelogBody');
-  const { data, error } = await supabaseClient.from('ea_changelog').select('*').order('created_at', { ascending: false });
+  const name = eaCurrent;
+  if (!name) return;
+  const { data, error } = await supabaseClient.from('ea_changelog').select('*').eq('ea_name', name).order('created_at', { ascending: false });
+  if (name !== eaCurrent) return;
   if (error) { tbody.innerHTML = `<tr><td colspan="6" style="color:var(--red)">Gagal memuat changelog: ${esc(error.message)}</td></tr>`; return; }
-  if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="6">Belum ada catatan. Tambahkan fitur baru atau jadwal maintenance di atas.</td></tr>'; return; }
+  if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="6">Belum ada catatan untuk EA ini. Tambahkan fitur baru atau jadwal maintenance di atas.</td></tr>'; return; }
   tbody.innerHTML = data.map(r => {
     const [kl, kc] = EA_KIND[r.kind] || [r.kind, 'pending'];
     const id = esc(r.id);
@@ -878,9 +942,10 @@ $('eaChangelogRefresh')?.addEventListener('click', loadEaChangelog);
 
 $('eaChangelogForm')?.addEventListener('submit', async e => {
   e.preventDefault();
+  if (!eaCurrent) { alert('Pilih EA terlebih dahulu.'); return; }
   const pub = $('clPublish').checked;
   const { error } = await supabaseClient.from('ea_changelog').insert({
-    version: $('clVersion').value.trim(), kind: $('clKind').value, title: $('clTitle').value.trim(),
+    ea_name: eaCurrent, version: $('clVersion').value.trim(), kind: $('clKind').value, title: $('clTitle').value.trim(),
     notes: $('clNotes').value.trim() || null, published: pub, published_at: pub ? new Date().toISOString() : null
   });
   if (error) { alert('Gagal menambah catatan: ' + error.message); return; }
@@ -905,3 +970,5 @@ document.addEventListener('click', async e => {
 </script>
 </body>
 </html>
+
+						   
