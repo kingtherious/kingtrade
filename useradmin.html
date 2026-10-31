@@ -223,7 +223,7 @@
               <tr>
                 <th>Waktu Akses</th>
                 <th>IP Address</th>
-                <th>Device Name / Browser</th>
+				<th>Device Name / Browser</th>
                 <th>Halaman Dikunjungi</th>
                 <th>Durasi Sesi</th>
                 <th>Alur Pengguna (User Flow)</th>
@@ -358,11 +358,11 @@ loginForm.addEventListener('submit', async (event) => {
     return;
   }
 
-enterAdmin();
+  enterAdmin();
   loginError.textContent = '';
 });
 
-const titles = {
+	const titles = {
  overview:['Dashboard','Ringkasan sistem lisensi KINGTHERIOUS.'],
  'trade-entries':['Statistik Entry Posisi','Pantau posisi trading real-time dan riwayat entry MT5.'],
  analytics:['Statistik Pengguna','Pantau ringkasan performa trading pengguna.'],
@@ -527,7 +527,7 @@ async function loadTradingStats(){
 }
 $('tradeSearch')?.addEventListener('input',renderTradingStats);$('tradePeriod')?.addEventListener('change',renderTradingStats);
 
-document.addEventListener('click', async e => {
+	document.addEventListener('click', async e => {
   const b = e.target.closest('[data-set],[data-del]');
   if (!b) return;
   const id = b.dataset.id;
@@ -698,7 +698,7 @@ async function loadAuthUsers() {
   renderAuthUsers();
 }
 
-// ===== Konfirmasi User Auth: aktifkan / tolak / blokir / hapus =====
+	// ===== Konfirmasi User Auth: aktifkan / tolak / blokir / hapus =====
 let myUserId = null;
 const AU_STATUS = { active:['Aktif','active'], pending:['Menunggu','pending'], rejected:['Ditolak','expired'], blocked:['Diblokir','blocked'] };
 function authStatusOf(u) {
@@ -740,7 +740,7 @@ function renderAuthUsers() {
 }
 document.getElementById('authUserSearch')?.addEventListener('input', renderAuthUsers);
 document.getElementById('authStatusFilter')?.addEventListener('change', renderAuthUsers);
-	
+
 const AU_CONFIRM = {
   activate: 'Aktifkan akun member ini? Email akan dikonfirmasi dan user bisa login.',
   reject: 'Tolak pendaftaran akun ini? User tidak akan bisa login.',
@@ -821,7 +821,7 @@ $('eaUsageEvent')?.addEventListener('change', renderEaUsage);
 $('eaUsageRefresh')?.addEventListener('click', loadEaUsage);
 
 // ===== Management EA (per EA, daftar diambil dari Supabase Storage) =====
-const EA_BUCKET = 'ea-files';   // GANTI: nama bucket Supabase Storage tempat file EA disimpan
+const EA_BUCKET = 'EA PUBLISH'; // nama bucket Supabase Storage tempat file EA disimpan (harus persis sama)
 const EA_FOLDER = '';           // isi jika EA berada di dalam folder, mis. 'ea'
 const EA_EXT = /\.(ex5|ex4|mq5|mq4)$/i;
 let eaCfg = null;
@@ -970,5 +970,3 @@ document.addEventListener('click', async e => {
 </script>
 </body>
 </html>
-
-						   
