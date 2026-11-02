@@ -436,15 +436,48 @@ async function loadLicenses() {
 
 async function loadStats() {
   if (!db || !user) return;
-  
-  // Ambil data statistik trading dari Supabase
-  const { data, error } = await db.from('trading_stats').select('*').eq('user_id', user.id);
-  
-  console.log("Debug Stats:", data, "Error:", error); // Cek konsol browser F12
 
-  if (!error && data) {
-    statsData = data;
+  // Ambil nomor-nomor akun milik user yang sudah aktif/terdaftar
+  const userAccountNumbers = licenses.map(l => l.account_number);
+  if (!userAccountNumbers.length) return;
+
+  // Ambil data transaksi dari tabel database Anda (ganti 'trading_stats' jika nama tabelnya berbeda)
+  const { data, error } = await db.from('trading_stats') // Sesuaikan nama tabel jika perlu
+    .select('*')
+    .in('account_id', userAccountNumbers);
+
+  if (error) {
+    console.error("Gagal memuat data transaksi:", error);
+    return;
+  }
+
+  if (data && data.length > 0) {
+    // Kelompokkan data transaksi berdasarkan account_id untuk menghitung statistik
+    const grouped = {};
+    data.forEach(row => {
+      const acc = row.account_id;
+      if (!grouped[acc]) {
+        grouped[acc] = { account_number: acc, total_profit: 0, wins: 0, total_trades: 0 };
+      }
+      const profit = Number(row.profit || 0);
+      grouped[acc].total_profit += profit;
+      grouped[acc].total_trades += 1;
+      if (profit > 0) {
+        grouped[acc].wins += 1;
+      }
+    });
+
+    // Format ke dalam bentuk array statsData yang dibaca oleh renderData()
+    statsData = Object.values(grouped).map(item => ({
+      account_number: item.account_number,
+      monthly_profit: 0, // Bisa disesuaikan jika ada kolom bulanan
+      win_rate: item.total_trades > 0 ? (item.wins / item.total_trades) * 100 : 0,
+      total_profit: item.total_profit
+    }));
+
     renderData();
+  } else {
+    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada riwayat transaksi untuk akun ini.</td></tr>';
   }
 }
 
