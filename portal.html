@@ -436,7 +436,12 @@ async function loadLicenses() {
 
 async function loadStats() {
   if (!db || !user) return;
+  
+  // Ambil data statistik trading dari Supabase
   const { data, error } = await db.from('trading_stats').select('*').eq('user_id', user.id);
+  
+  console.log("Debug Stats:", data, "Error:", error); // Cek konsol browser F12
+
   if (!error && data) {
     statsData = data;
     renderData();
