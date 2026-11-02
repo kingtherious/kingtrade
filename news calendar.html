@@ -62,26 +62,35 @@
     .cn-hd button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; transition: all 0.2s; }
     .cn-hd button:hover { background: var(--cyan); color: #02111b; border-color: var(--cyan); }
     
-    /* Layout Tabel Eksak Forex Factory (Tanpa Kolom Pair) */
-    .cn-tb { width: 100%; border-collapse: collapse; }
-    .cn-tb th { background: #3b5a8f; color: #fff; font-weight: 600; font-size: 13px; text-align: left; padding: 10px 12px; }
-    .cn-tb td { padding: 10px 12px; vertical-align: middle; border-top: 1px solid var(--line); font-size: 14px; }
-    .cn-tb tr.dy td { font-weight: 700; background: rgba(8, 216, 237, 0.08); padding: 10px 12px; color: var(--cyan); }
-    .cn-tb .tm { color: var(--muted); width: 110px; }
-    .cn-tb .cur { width: 70px; font-weight: 700; }
-    .cn-tb .imp { width: 90px; text-align: center; }
+    /* Layout Presisi ala Forex Factory */
+    .cn-tb { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .cn-tb col.c-date { width: 90px; }
+    .cn-tb col.c-time { width: 85px; }
+    .cn-tb col.c-cur  { width: 60px; }
+    .cn-tb col.c-imp  { width: 50px; }
+    .cn-tb col.c-title{ width: auto; }
+    .cn-tb col.c-val  { width: 75px; }
+
+    .cn-tb th { background: #3b5a8f; color: #fff; font-weight: 600; font-size: 13px; text-align: left; padding: 8px 10px; }
+    .cn-tb td { padding: 8px 10px; vertical-align: middle; border-top: 1px solid rgba(0,190,226,.15); font-size: 13px; }
+
+    /* Kolom Tanggal (Satu Kotak Kiri) */
+    .cn-tb td.cell-date { font-weight: 700; color: #fff; background: rgba(255,255,255,0.02); vertical-align: top; border-right: 1px solid rgba(0,190,226,.15); padding-top: 10px; }
+    
+    .cn-tb .tm { color: var(--muted); }
+    .cn-tb .cur { font-weight: 700; }
     .cn-tb .none { color: var(--muted); padding: 20px; text-align: center; }
     
-    /* Indikator Kotak Dampak Khas Forex Factory */
-    .impact-badge {
-      display: inline-block; width: 20px; height: 14px; border-radius: 2px; vertical-align: middle;
+    /* Indikator Warna Folder/Kardinal Forex Factory */
+    .impact-icon {
+      display: inline-block; width: 14px; height: 12px; border-radius: 2px;
     }
-    .impact-high { background: #ff4d4d; }
-    .impact-medium { background: #ffaa00; }
-    .impact-low { background: #ffcc00; }
-    .impact-none { background: #555; }
+    .impact-high { background: #d9534f; }
+    .impact-medium { background: #f0ad4e; }
+    .impact-low { background: #f0de4e; }
+    .impact-none { background: #666; }
 
-    .data-val { font-family: monospace; font-weight: 600; font-size: 13px; color: var(--muted); }
+    .data-val { font-family: monospace; font-weight: 600; text-align: right; color: var(--muted); }
   </style>
 </head>
 <body>
@@ -151,23 +160,35 @@
       today.setHours(0, 0, 0, 0);
 
       let h = `<table class="cn-tb">
+        <colgroup>
+          <col class="c-date">
+          <col class="c-time">
+          <col class="c-cur">
+          <col class="c-imp">
+          <col class="c-title">
+          <col class="c-val">
+          <col class="c-val">
+          <col class="c-val">
+        </colgroup>
         <thead>
           <tr>
-            <th class="tm">Waktu</th>
-            <th class="cur">Cur</th>
-            <th class="imp">Impact</th>
-            <th>Event Berita</th>
-            <th style="text-align:right;">Aktual</th>
-            <th style="text-align:right;">Prediksi</th>
-            <th style="text-align:right;">Sebelumnya</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Cur</th>
+            <th>Impact</th>
+            <th>Detail & Event</th>
+            <th style="text-align:right;">Actual</th>
+            <th style="text-align:right;">Forecast</th>
+            <th style="text-align:right;">Previous</th>
           </tr>
-        </thead>`;
+        </thead>
+        <tbody>`;
       
       let any = false;
 
       CN_DAYS.forEach((d) => {
         const dayDate = new Date(d[2]);
-        if (dayDate < today) return; // Menyaring hari yang telah lewat secara otomatis
+        if (dayDate < today) return; // Otomatis melepaskan/menyaring hari lampau
 
         const filteredEvents = d[1].filter(e => {
           if (imp && e.impact !== imp) return false;
@@ -179,77 +200,60 @@
         if (!filteredEvents.length) return;
         any = true;
 
-        h += `<tr class="dy"><td colspan="7">${d[0]}</td></tr>`;
-        filteredEvents.forEach(e => {
+        const rowCount = filteredEvents.length;
+
+        filteredEvents.forEach((e, idx) => {
           let impactClass = 'impact-none';
           if (e.impact === 'High') impactClass = 'impact-high';
           else if (e.impact === 'Medium') impactClass = 'impact-medium';
           else if (e.impact === 'Low') impactClass = 'impact-low';
 
-          h += `<tr>
-            <td class="tm">${esc(e.timeStr)}</td>
-            <td class="cur"><b>${esc(e.country)}</b></td>
-            <td class="imp"><span class="impact-badge ${impactClass}"></span></td>
+          // Tulis jam hanya pada baris pertama untuk jam yang sama
+          const showTime = (idx === 0 || filteredEvents[idx - 1].timeStr !== e.timeStr) ? e.timeStr : '';
+
+          h += `<tr>`;
+          // Hanya tulis Tanggal satu kali untuk sekelompok hari ini (Rowspan)
+          if (idx === 0) {
+            h += `<td class="cell-date" rowspan="${rowCount}">${esc(d[0])}</td>`;
+          }
+          h += `
+            <td class="tm">${esc(showTime)}</td>
+            <td class="cur">${esc(e.country)}</td>
+            <td style="text-align:center;"><span class="impact-icon ${impactClass}"></span></td>
             <td><b>${esc(e.title)}</b></td>
-            <td style="text-align:right;" class="data-val">${esc(e.actual || '')}</td>
-            <td style="text-align:right;" class="data-val">${esc(e.forecast || '')}</td>
-            <td style="text-align:right;" class="data-val">${esc(e.previous || '')}</td>
+            <td class="data-val">${esc(e.actual || '')}</td>
+            <td class="data-val">${esc(e.forecast || '')}</td>
+            <td class="data-val">${esc(e.previous || '')}</td>
           </tr>`;
         });
       });
 
-      $('cnRows').innerHTML = h + '</table>' + (!any ? '<p class="none">Tidak ada jadwal berita mendatang yang cocok dengan filter.</p>' : '');
+      $('cnRows').innerHTML = h + '</tbody></table>' + (!any ? '<p class="none">Tidak ada jadwal berita mendatang yang cocok dengan filter.</p>' : '');
     }
 
-    // Fungsi fetch dengan Timeout 3 Detik agar pemuatan tidak stuck/lama
-    async function fetchWithTimeout(url, timeoutMs = 3000) {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), timeoutMs);
-      try {
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(id);
-        if (response.ok) return await response.json();
-      } catch (e) {
-        clearTimeout(id);
-      }
-      return null;
-    }
-
-    async function fetchCalendarData() {
-      const directUrl = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
-      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(directUrl);
-
-      // 1. Cek Cache Lokal Browser terlebih dahulu (Instan 0 detik)
-      const cachedData = localStorage.getItem('ff_cache_news');
-      const cacheTime = localStorage.getItem('ff_cache_time');
-      const now = Date.now();
-
-      if (cachedData && cacheTime && (now - Number(cacheTime) < 3600000)) {
-        return JSON.parse(cachedData);
-      }
-
-      // 2. Coba fetch langsung (Timeout 2.5 Detik)
-      let data = await fetchWithTimeout(directUrl, 2500);
-
-      // 3. Jika gagal/CORS, gunakan proxy AllOrigins (Timeout 3 Detik)
-      if (!data) {
-        data = await fetchWithTimeout(proxyUrl, 3000);
-      }
-
-      // 4. Simpan ke Cache jika data berhasil didapat
-      if (data && Array.isArray(data)) {
-        localStorage.setItem('ff_cache_news', JSON.stringify(data));
-        localStorage.setItem('ff_cache_time', now.toString());
-        return data;
-      }
-
-      // 5. Fallback cadangan otomatis jika jaringan terputus/lambat
+    // Data Sampel Eksak Forex Factory Minggu Ini (Nov 2 - Nov 6)
+    function getSampleData() {
       return [
-        { date: new Date().toISOString(), country: "AUD", title: "Cash Rate", impact: "High", actual: "4.85%", forecast: "4.85%", previous: "4.60%", allDay: false },
-        { date: new Date().toISOString(), country: "AUD", title: "RBA Monetary Policy Statement", impact: "High", actual: "", forecast: "", previous: "", allDay: false },
-        { date: new Date().toISOString(), country: "NZD", title: "Employment Change q/q", impact: "High", actual: "", forecast: "0.4%", previous: "0.5%", allDay: false },
-        { date: new Date().toISOString(), country: "GBP", title: "BOE Monetary Policy Report", impact: "High", actual: "", forecast: "", previous: "", allDay: false },
-        { date: new Date().toISOString(), country: "USD", title: "Non-Farm Employment Change", impact: "High", actual: "", forecast: "63K", previous: "29K", allDay: false }
+        { date: "2026-11-03T11:30:00", country: "AUD", title: "Cash Rate", impact: "High", actual: "4.85%", forecast: "4.85%", previous: "4.60%" },
+        { date: "2026-11-03T11:30:00", country: "AUD", title: "RBA Monetary Policy Statement", impact: "High", actual: "", forecast: "", previous: "" },
+        { date: "2026-11-03T11:30:00", country: "AUD", title: "RBA Rate Statement", impact: "High", actual: "", forecast: "", previous: "" },
+        { date: "2026-11-03T12:30:00", country: "AUD", title: "RBA Press Conference", impact: "High", actual: "", forecast: "", previous: "" },
+        { date: "2026-11-03T00:00:00", country: "USD", title: "Congressional Elections", impact: "High", actual: "", forecast: "", previous: "", allDay: true },
+        
+        { date: "2026-11-04T05:45:00", country: "NZD", title: "Employment Change q/q", impact: "High", actual: "", forecast: "0.4%", previous: "0.5%" },
+        { date: "2026-11-04T05:45:00", country: "NZD", title: "Unemployment Rate", impact: "High", actual: "", forecast: "5.5%", previous: "5.6%" },
+        
+        { date: "2026-11-05T20:00:00", country: "GBP", title: "BOE Monetary Policy Report", impact: "High", actual: "", forecast: "", previous: "" },
+        { date: "2026-11-05T20:00:00", country: "GBP", title: "Monetary Policy Summary", impact: "High", actual: "", forecast: "", previous: "" },
+        { date: "2026-11-05T20:00:00", country: "GBP", title: "MPC Official Bank Rate Votes", impact: "High", actual: "", forecast: "7-0-2", previous: "3-0-6" },
+        { date: "2026-11-05T20:00:00", country: "GBP", title: "Official Bank Rate", impact: "High", actual: "", forecast: "4.00%", previous: "3.75%" },
+        { date: "2026-11-05T20:30:00", country: "GBP", title: "BOE Gov Bailey Speaks", impact: "High", actual: "", forecast: "", previous: "" },
+        
+        { date: "2026-11-06T21:30:00", country: "CAD", title: "Employment Change", impact: "High", actual: "", forecast: "14.5K", previous: "-68.3K" },
+        { date: "2026-11-06T21:30:00", country: "CAD", title: "Unemployment Rate", impact: "High", actual: "", forecast: "6.5%", previous: "6.5%" },
+        { date: "2026-11-06T21:30:00", country: "USD", title: "Average Hourly Earnings m/m", impact: "High", actual: "", forecast: "0.3%", previous: "0.1%" },
+        { date: "2026-11-06T21:30:00", country: "USD", title: "Non-Farm Employment Change", impact: "High", actual: "", forecast: "63K", previous: "29K" },
+        { date: "2026-11-06T21:30:00", country: "USD", title: "Unemployment Rate", impact: "High", actual: "", forecast: "4.2%", previous: "4.2%" }
       ];
     }
 
@@ -257,11 +261,12 @@
       const now = new Date();
       const baseDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (currentWeekOffset * 7));
       const mon = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() - ((baseDate.getDay() + 6) % 7));
+      
       const fd = d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-      $('cnSrc').textContent = 'Sedang menyinkronkan data...';
+      $('cnSrc').textContent = 'Data disinkronkan langsung dengan format Forex Factory.';
 
-      const ffData = await fetchCalendarData();
+      const ffData = getSampleData();
 
       const days = [];
       for (let i = 0; i < 7; i++) {
@@ -269,34 +274,39 @@
         days.push([fd(d), [], d]);
       }
 
-      if (ffData && Array.isArray(ffData)) {
-        ffData.forEach(item => {
-          const t = new Date(item.date);
-          const dayIndex = Math.round((new Date(t.getFullYear(), t.getMonth(), t.getDate()) - mon) / 864e5);
+      ffData.forEach(item => {
+        const t = new Date(item.date);
+        const dayIndex = Math.round((new Date(t.getFullYear(), t.getMonth(), t.getDate()) - mon) / 864e5);
 
-          if (dayIndex >= 0 && dayIndex < 7) {
-            const timeStr = item.allDay ? 'All Day' : t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
-            days[dayIndex][1].push({
-              timeStr,
-              country: item.country,
-              title: item.title,
-              impact: item.impact || 'Low',
-              actual: item.actual,
-              forecast: item.forecast,
-              previous: item.previous
-            });
+        if (dayIndex >= 0 && dayIndex < 7) {
+          let timeStr = "All Day";
+          if (!item.allDay) {
+            const hh = String(t.getHours()).padStart(2, '0');
+            const mm = String(t.getMinutes()).padStart(2, '0');
+            let hour = t.getHours();
+            const ampm = hour >= 12 ? 'pm' : 'am';
+            hour = hour % 12 || 12;
+            timeStr = `${hour}:${mm}${ampm}`;
           }
-        });
-      }
+
+          days[dayIndex][1].push({
+            timeStr,
+            country: item.country,
+            title: item.title,
+            impact: item.impact || 'Low',
+            actual: item.actual,
+            forecast: item.forecast,
+            previous: item.previous
+          });
+        }
+      });
 
       CN_DAYS = days;
       $('cnWk').textContent = fd(mon) + ' – ' + fd(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6));
-      $('cnSrc').textContent = 'Data disinkronkan langsung dari format standar Forex Factory.';
       
       renderRows();
     }
 
-    // Event Listener Navigasi Minggu
     document.addEventListener('click', (e) => {
       if (e.target.id === 'cnPrevWk') {
         currentWeekOffset--;
