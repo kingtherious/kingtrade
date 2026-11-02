@@ -437,7 +437,7 @@ async function loadLicenses() {
 async function loadStats() {
   if (!db || !user) return;
 
-  // 1. Ambil daftar nomor akun milik user dari array licenses yang sudah dimuat
+  // 1. Ambil daftar nomor akun aktif milik user
   const userAccountNumbers = licenses.map(l => String(l.account_number));
   
   if (!userAccountNumbers.length) {
@@ -445,37 +445,40 @@ async function loadStats() {
     return;
   }
 
-  // 2. Ambil data langsung dari tabel trading_stats berdasarkan nomor akun (account_id)
+  // 2. Ambil data dari tabel trading_stats berdasarkan nomor akun
   const { data, error } = await db.from('trading_stats')
     .select('*')
     .in('account_id', userAccountNumbers);
 
   if (error) {
     console.error("Gagal memuat data trading_stats:", error);
-    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Gagal memuat data dari server.</td></tr>';
     return;
   }
 
   if (data && data.length > 0) {
-    // 3. Kelompokkan data transaksi dan hitung statistik performanya
+    console.log("Data mentah trading_stats ditemukan:", data); // Untuk debugging di F12
+
     const grouped = {};
     data.forEach(row => {
       const acc = String(row.account_id || '');
       if (!grouped[acc]) {
         grouped[acc] = { account_number: acc, total_profit: 0, wins: 0, total_trades: 0 };
       }
-      const profit = Number(row.profit || 0);
+      
+      // Ambil nilai profit dari kolom 'profit' di database
+      const profit = parseFloat(row.profit || 0);
       grouped[acc].total_profit += profit;
       grouped[acc].total_trades += 1;
+      
       if (profit > 0) {
         grouped[acc].wins += 1;
       }
     });
 
-    // 4. Masukkan ke variabel global statsData untuk dirender ke tabel HTML
+    // Petakan hasil perhitungan ke variabel statsData
     statsData = Object.values(grouped).map(item => ({
       account_number: item.account_number,
-      monthly_profit: 0,
+      monthly_profit: 0, // Bisa disesuaikan jika ingin dihitung
       win_rate: item.total_trades > 0 ? (item.wins / item.total_trades) * 100 : 0,
       total_profit: item.total_profit
     }));
@@ -485,7 +488,7 @@ async function loadStats() {
     $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada riwayat transaksi untuk nomor akun ini.</td></tr>';
     $('hWin').textContent = '-';
   }
-}
+} 
   
   async function init() {
   if (db) {
