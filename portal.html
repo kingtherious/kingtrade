@@ -437,7 +437,6 @@ async function loadLicenses() {
 async function loadStats() {
   if (!db || !user) return;
 
-  // 1. Ambil daftar nomor akun aktif milik user
   const userAccountNumbers = licenses.map(l => String(l.account_number));
   
   if (!userAccountNumbers.length) {
@@ -445,7 +444,6 @@ async function loadStats() {
     return;
   }
 
-  // 2. Ambil data dari tabel trading_stats berdasarkan nomor akun
   const { data, error } = await db.from('trading_stats')
     .select('*')
     .in('account_id', userAccountNumbers);
@@ -456,17 +454,19 @@ async function loadStats() {
   }
 
   if (data && data.length > 0) {
-    console.log("Data mentah trading_stats ditemukan:", data); // Untuk debugging di F12
+    console.log("Data mentah trading_stats ditemukan:", data);
 
     const grouped = {};
     data.forEach(row => {
-      const acc = String(row.account_id || '');
+      const acc = String(row.account_id || row.account_number || '');
       if (!grouped[acc]) {
         grouped[acc] = { account_number: acc, total_profit: 0, wins: 0, total_trades: 0 };
       }
       
-      // Ambil nilai profit dari kolom 'profit' di database
-      const profit = parseFloat(row.profit || 0);
+      // Ambil nilai profit (mengatasi berbagai kemungkinan nama properti)
+      const rawProfit = row.profit !== undefined ? row.profit : (row.PROFIT !== undefined ? row.PROFIT : 0);
+      const profit = parseFloat(rawProfit) || 0;
+      
       grouped[acc].total_profit += profit;
       grouped[acc].total_trades += 1;
       
@@ -475,10 +475,9 @@ async function loadStats() {
       }
     });
 
-    // Petakan hasil perhitungan ke variabel statsData
     statsData = Object.values(grouped).map(item => ({
       account_number: item.account_number,
-      monthly_profit: 0, // Bisa disesuaikan jika ingin dihitung
+      monthly_profit: 0,
       win_rate: item.total_trades > 0 ? (item.wins / item.total_trades) * 100 : 0,
       total_profit: item.total_profit
     }));
@@ -488,7 +487,7 @@ async function loadStats() {
     $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada riwayat transaksi untuk nomor akun ini.</td></tr>';
     $('hWin').textContent = '-';
   }
-} 
+}
   
   async function init() {
   if (db) {
