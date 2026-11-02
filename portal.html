@@ -437,25 +437,30 @@ async function loadLicenses() {
 async function loadStats() {
   if (!db || !user) return;
 
-  // Ambil nomor-nomor akun milik user yang sudah aktif/terdaftar
-  const userAccountNumbers = licenses.map(l => l.account_number);
-  if (!userAccountNumbers.length) return;
+  // 1. Ambil daftar nomor akun milik user dari array licenses yang sudah dimuat
+  const userAccountNumbers = licenses.map(l => String(l.account_number));
+  
+  if (!userAccountNumbers.length) {
+    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada akun lisensi terdaftar.</td></tr>';
+    return;
+  }
 
-  // Ambil data transaksi dari tabel database Anda (ganti 'trading_stats' jika nama tabelnya berbeda)
-  const { data, error } = await db.from('trading_stats') // Sesuaikan nama tabel jika perlu
+  // 2. Ambil data langsung dari tabel trading_stats berdasarkan nomor akun (account_id)
+  const { data, error } = await db.from('trading_stats')
     .select('*')
     .in('account_id', userAccountNumbers);
 
   if (error) {
-    console.error("Gagal memuat data transaksi:", error);
+    console.error("Gagal memuat data trading_stats:", error);
+    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Gagal memuat data dari server.</td></tr>';
     return;
   }
 
   if (data && data.length > 0) {
-    // Kelompokkan data transaksi berdasarkan account_id untuk menghitung statistik
+    // 3. Kelompokkan data transaksi dan hitung statistik performanya
     const grouped = {};
     data.forEach(row => {
-      const acc = row.account_id;
+      const acc = String(row.account_id || '');
       if (!grouped[acc]) {
         grouped[acc] = { account_number: acc, total_profit: 0, wins: 0, total_trades: 0 };
       }
@@ -467,20 +472,22 @@ async function loadStats() {
       }
     });
 
-    // Format ke dalam bentuk array statsData yang dibaca oleh renderData()
+    // 4. Masukkan ke variabel global statsData untuk dirender ke tabel HTML
     statsData = Object.values(grouped).map(item => ({
       account_number: item.account_number,
-      monthly_profit: 0, // Bisa disesuaikan jika ada kolom bulanan
+      monthly_profit: 0,
       win_rate: item.total_trades > 0 ? (item.wins / item.total_trades) * 100 : 0,
       total_profit: item.total_profit
     }));
 
     renderData();
   } else {
-    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada riwayat transaksi untuk akun ini.</td></tr>';
+    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada riwayat transaksi untuk nomor akun ini.</td></tr>';
+    $('hWin').textContent = '-';
   }
 }
-async function init() {
+  
+  async function init() {
   if (db) {
     const { data: { session }, error: sessionError } = await db.auth.getSession();
     if (sessionError) console.error('Gagal memeriksa sesi login:', sessionError);
