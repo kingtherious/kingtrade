@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>News Calendar | KINGTHERIOUS</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050a12;
+      --panel: #071526;
+      --line: rgba(0,190,226,.3);
+      --cyan: #08d8ed;
+      --teal: #00e0b2;
+      --text: #f3f7ff;
+      --muted: #a9bdd7;
+      --red: #ff6b7a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(ellipse at 80% 0, rgba(0,96,135,.16), transparent 40%), var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+
+    /* Header Navigasi */
+    .topbar {
+      min-height: 70px;
+      padding: 14px clamp(18px, 3vw, 46px);
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(4, 11, 21, .95);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-name { font-size: 18px; font-weight: 850; letter-spacing: .05em; }
+    .brand-tag { color: var(--teal); font-size: 10px; font-weight: 700; letter-spacing: .18em; }
+
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 10px;
+      background: rgba(16,34,54,.85); border: 1px solid rgba(71,131,178,.65);
+      color: var(--text); font-size: 13px; font-weight: 650; transition: all 0.2s;
+    }
+    .btn-back:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    main { padding: 30px clamp(18px, 3vw, 46px) 50px; max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: clamp(24px, 2.6vw, 34px); margin: 0 0 6px; letter-spacing: -.02em; }
+    .sub { color: var(--muted); margin: 0 0 26px; }
+
+    /* Styling Component Calendar News */
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; margin-bottom: 22px; }
+    .cn label.f { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: #c4d5ee; }
+    .cn-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    input, select { background: rgba(2,15,28,.9); border: 1px solid var(--line); color: var(--text); padding: 10px 12px; border-radius: 10px; width: 100%; }
+    .cn-note { font-size: 13px; color: var(--muted); margin: 12px 0 0; padding-left: 10px; border-left: 3px solid var(--cyan); }
+    
+    .cn-cal { border: 1px solid var(--line); border-radius: 16px; background: var(--panel); margin-bottom: 22px; overflow: hidden; }
+    .cn-hd { display: flex; align-items: center; justify-content: space-between; background: #2d4a7c; padding: 12px 16px; font-weight: 650; }
+    
+    .cn-tb { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .cn-tb col.c0 { width: 80px; } .cn-tb col.c1 { width: 60px; } .cn-tb col.c2 { width: 120px; }
+    .cn-tb th { background: #3b5a8f; color: #fff; font-weight: 600; font-size: 13px; text-align: left; padding: 8px 10px; }
+    .cn-tb td { padding: 10px; vertical-align: middle; border-top: 1px solid var(--line); font-size: 14px; overflow-wrap: anywhere; }
+    .cn-tb td.k { border-left: 4px solid var(--red); }
+    .cn-tb td.k.iM { border-left-color: #ff9f43; }
+    .cn-tb td.k.iL { border-left-color: #ffd84d; }
+    .cn-tb tbody.d1 td { background: rgba(255,255,255,.03); }
+    .cn-tb tr.dy td { font-weight: 700; background: rgba(8, 216, 237, 0.05); padding: 10px 12px; }
+    .cn-tb .tm { color: var(--muted); }
+    .cn-tb .none { color: var(--muted); padding: 16px; text-align: center; }
+    .cn-ap { color: var(--cyan); font-weight: 650; font-size: 14px; }
+    
+    @media (max-width: 720px) {
+      .cn-tb col.c0 { width: 65px; }
+      .cn-tb col.c2 { width: 90px; }
+      .cn-tb td, .cn-tb th { font-size: 12px; padding: 6px 4px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <div>
+        <div class="brand-name">KINGTHERIOUS</div>
+        <div class="brand-tag">NEWS CALENDAR</div>
+      </div>
+    </a>
+    <a href="index.html" class="btn-back">← Kembali ke Beranda</a>
+  </header>
+
+  <main class="cn">
+    <h1>Kalender Ekonomi Forex</h1>
+    <p class="sub">Jadwal berita fundamental high-impact real-time terhubung langsung dari Forex Factory.</p>
+
+    <div class="card">
+      <div class="cn-filters">
+        <label class="f">Impact
+          <select id="cnImp">
+            <option value="">Semua Impact</option>
+            <option value="H" selected>Tinggi (High Impact)</option>
+            <option value="M">Sedang (Medium Impact)</option>
+            <option value="L">Rendah (Low Impact)</option>
+          </select>
+        </label>
+        <label class="f">Mata Uang
+          <select id="cnCur"></select>
+        </label>
+        <label class="f">Cari Event
+          <input type="search" id="cnQ" placeholder="misal: CPI, NFP, Rate...">
+        </label>
+      </div>
+      <p class="cn-note" id="cnSrc">Memuat sumber data...</p>
+    </div>
+
+    <div class="cn-cal">
+      <div class="cn-hd">
+        <span id="cnWk">Memuat kalender minggu ini...</span>
+      </div>
+      <div id="cnRows"></div>
+    </div>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    const CN_PAIRS_AUTO = { AUD:"AUDUSD", NZD:"NZDUSD", GBP:"GBPUSD", EUR:"EURUSD", CAD:"USDCAD", CHF:"USDCHF", JPY:"USDJPY", USD:"XAUUSD / USD Pairs" };
+    let CN_DAYS = [];
+
+    // Filter Mata Uang
+    $('cnCur').innerHTML = '<option value="">Semua Mata Uang</option>' + 
+      ['USD', 'AUD', 'NZD', 'EUR', 'GBP', 'CAD', 'CHF', 'JPY'].map(x => `<option value="${x}">${x}</option>`).join('');
+
+    function renderRows() {
+      const imp = $('cnImp').value;
+      const cur = $('cnCur').value;
+      const q = $('cnQ').value.toLowerCase();
+
+      let h = `<table class="cn-tb">
+        <colgroup><col class="c0"><col class="c1"><col class="c2"><col></colgroup>
+        <thead><tr><th>Waktu</th><th>Cur</th><th>Pair Terkait</th><th>Event Berita</th></tr></thead>`;
+      
+      let any = false;
+
+      CN_DAYS.forEach((d, di) => {
+        const filteredEvents = d[1].filter(e => {
+          if (imp && e[3] !== imp) return false;
+          if (cur && e[1] !== cur) return false;
+          if (q && !e[2].toLowerCase().includes(q)) return false;
+          return true;
+        });
+
+        if (!filteredEvents.length) return;
+        any = true;
+
+        h += `<tbody class="d${di % 2}"><tr class="dy"><td colspan="4">${d[0]}</td></tr>`;
+        filteredEvents.forEach(e => {
+          const pairText = CN_PAIRS_AUTO[e[1]] || '-';
+          h += `<tr>
+            <td class="k i${e[3] || 'H'} tm">${esc(e[0])}</td>
+            <td><b>${esc(e[1])}</b></td>
+            <td><span class="cn-ap">${esc(pairText)}</span></td>
+            <td>${esc(e[2])}</td>
+          </tr>`;
+        });
+        h += '</tbody>';
+      });
+
+      $('cnRows').innerHTML = h + '</table>' + (!any ? '<p class="none">Tidak ada berita yang cocok dengan filter.</p>' : '');
+    }
+
+    async function loadForexFactoryData() {
+      const now = new Date();
+      const mon = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
+      const fd = d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+      try {
+        const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json');
+        if (!response.ok) throw new Error('HTTP error ' + response.status);
+        
+        const ffData = await response.json();
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i);
+          days.push([fd(d), []]);
+        }
+
+        const IM = { high: 'H', medium: 'M', low: 'L' };
+
+        ffData.forEach(item => {
+          const impactKey = IM[item.impact ? item.impact.toLowerCase() : 'low'] || 'L';
+          const t = new Date(item.date);
+          const dayIndex = Math.round((new Date(t.getFullYear(), t.getMonth(), t.getDate()) - mon) / 864e5);
+
+          if (dayIndex >= 0 && dayIndex < 7) {
+            const timeStr = item.allDay ? 'All Day' : t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+            days[dayIndex][1].push([timeStr, item.country, item.title, impactKey]);
+          }
+        });
+
+        CN_DAYS = days.filter(d => d[1].length > 0);
+        $('cnWk').textContent = fd(mon) + ' - ' + fd(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 4));
+        $('cnSrc').textContent = 'Data terhubung langsung dari Forex Factory. Jam disesuaikan dengan zona waktu perangkat Anda.';
+      } catch (err) {
+        console.error(err);
+        $('cnSrc').textContent = 'Gagal memuat data live Forex Factory secara langsung.';
+        $('cnRows').innerHTML = '<p class="none">Gagal mengambil data kalender. Silakan periksa koneksi internet Anda.</p>';
+        return;
+      }
+
+      renderRows();
+    }
+
+    ['cnImp', 'cnCur', 'cnQ'].forEach(id => $(id).addEventListener('input', renderRows));
+
+    loadForexFactoryData();
+  </script>
+</body>
+</html>
