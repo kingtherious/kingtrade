@@ -684,25 +684,77 @@ $('cnAcc').addEventListener('change',()=>{cnInit();cnRows();cnSettings()});
 $('cnKeyBtn').onclick=async()=>{const a=$('cnAcc').value;if(!a)return;if(!confirm('Kunci lama akan berhenti berlaku. Lanjutkan?'))return;
 const{data,error}=await db.rpc('rotate_ea_key',{p_account:a}),n=$('cnKey');n.style.display='block';
 n.textContent=error?'Gagal membuat kunci: '+error.message:'Kunci EA: '+data+' (salin sekarang, tidak ditampilkan lagi). Isi pada input LicenseKey di EA.'};
-async function cnLoad(){
-const now=new Date(),mon=new Date(now.getFullYear(),now.getMonth(),now.getDate()-((now.getDay()+6)%7)),end=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+7);
-let rows=null;
-if(db){const{data,error}=await db.from('news_events').select('event_time,is_all_day,currency,title,impact').gte('event_time',mon.toISOString()).lt('event_time',end.toISOString()).order('event_time');
-if(!error&&data&&data.length)rows=data}
-const fd=d=>d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-if(rows){const days=[];for(let i=0;i<7;i++){const d=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i);days.push([fd(d),[],''])}
-const IM={high:'H',medium:'M',low:'L'};
-rows.forEach(r=>{if(!IM[r.impact]||(r.currency!=='USD'&&!CN_AUTO[r.currency]))return;
-const t=new Date(r.event_time),i=Math.round((new Date(t.getFullYear(),t.getMonth(),t.getDate())-mon)/864e5);if(i<0||i>6)return;
-const tx=r.is_all_day?'All Day':t.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}).replace(' ','').toLowerCase();
-days[i][1].push([days[i][2]===tx?'':tx,r.currency,r.title,IM[r.impact]]);days[i][2]=tx});
-CN_DAYS=days.filter((d,i)=>i<5||d[1].length);cnDemo=false;
-$('cnWk').textContent=fd(mon)+', '+mon.getFullYear()+' – '+fd(new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+4))+', '+mon.getFullYear();
-$('cnSrc').textContent='Data dari kalender Forex Factory, diperbarui otomatis. Jam tampil sesuai zona waktu perangkat.'}
-else{CN_DAYS=CN_SAMPLE;cnDemo=true;$('cnWk').textContent='Nov 2, 2026 – Nov 6, 2026 (contoh)';$('cnSrc').textContent='Kalender Forex Factory belum terisi di server, jadi yang tampil adalah data contoh.'}
-if(!cnApplied)cnInit();cnRows()}
-cnLoad();
+async function cnLoad() {
+  const now = new Date();
+  const mon = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
+  const end = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 7);
+  let rows = null;
 
+  // Mengambil data real-time langsung dari feed JSON Forex Factory
+  try {
+    const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json');
+    if (response.ok) {
+      const ffData = await response.json();
+      // Mapping data dari Forex Factory ke format struktur EA
+      rows = ffData.map(item => ({
+        event_time: item.date,
+        is_all_day: item.allDay || false,
+        currency: item.country,
+        title: item.title,
+        impact: item.impact ? item.impact.toLowerCase() : 'low'
+      }));
+    }
+  } catch (err) {
+    console.warn("Gagal memuat langsung dari Forex Factory, mencoba database...", err);
+  }
+
+  // Fallback ke Supabase jika fetch publik diblokir CORS
+  if (!rows && db) {
+    const { data, error } = await db.from('news_events')
+      .select('event_time,is_all_day,currency,title,impact')
+      .gte('event_time', mon.toISOString())
+      .lt('event_time', end.toISOString())
+      .order('event_time');
+    if (!error && data && data.length) rows = data;
+  }
+
+  const fd = d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  
+  if (rows) {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i);
+      days.push([fd(d), [], '']);
+    }
+    const IM = { high: 'H', medium: 'M', low: 'L', 'high impact': 'H', 'medium impact': 'M', 'low impact': 'L' };
+    
+    rows.forEach(r => {
+      const impactKey = (r.impact || '').toLowerCase();
+      if (!IM[impactKey] || (r.currency !== 'USD' && !CN_AUTO[r.currency])) return;
+      
+      const t = new Date(r.event_time);
+      const i = Math.round((new Date(t.getFullYear(), t.getMonth(), t.getDate()) - mon) / 864e5);
+      if (i < 0 || i > 6) return;
+      
+      const tx = r.is_all_day ? 'All Day' : t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).replace(' ', '').toLowerCase();
+      days[i][1].push([days[i][2] === tx ? '' : tx, r.currency, r.title, IM[impactKey]]);
+      days[i][2] = tx;
+    });
+    
+    CN_DAYS = days.filter((d, i) => i < 5 || d[1].length);
+    cnDemo = false;
+    $('cnWk').textContent = fd(mon) + ', ' + mon.getFullYear() + ' – ' + fd(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 4)) + ', ' + mon.getFullYear();
+    $('cnSrc').textContent = 'Data terhubung langsung dari Kalender Forex Factory.';
+  } else {
+    CN_DAYS = CN_SAMPLE;
+    cnDemo = true;
+    $('cnWk').textContent = 'Nov 2, 2026 – Nov 6, 2026 (contoh)';
+    $('cnSrc').textContent = 'Kalender offline aktif (Gagal mengambil data live Forex Factory).';
+  }
+  
+  if (!cnApplied) cnInit();
+  cnRows();
+}
 init();
 </script>
 </body>
