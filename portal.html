@@ -180,7 +180,7 @@ table.ff tr.g1 td{background:#16263f}
 table.ff td.day{text-align:center;color:#e8f0ff;font-weight:600;line-height:1.35;border-right:1px solid rgba(255,255,255,.08)}
 table.ff td.tm{color:#aab8d3;white-space:nowrap}
 table.ff td.cur{font-weight:700;text-align:center}
-table.ff td.pair{background:#fff!important;color:#111;text-align:center;font-size:17px;font-weight:600;border-left:2px solid #7c3aed;border-right:1px solid #ddd;min-width:150px}
+table.ff td.pair{background:#fff!important;color:#111;text-align:center;font-size:15px;font-weight:600;border-left:2px solid #7c3aed;border-right:1px solid #ddd;min-width:150px}
 table.ff td.pair select{background:#fff;color:#111;border:1px solid #bbb;border-radius:8px;padding:8px 10px;width:100%;font-weight:600}
 table.ff td.pair .pv{font-size:17px}
 table.ff td.num{white-space:nowrap}
@@ -334,16 +334,16 @@ table.ff td.num{white-space:nowrap}
   <!-- News Calendar -->
   <section class="view" id="news">
    <h1>News Calendar</h1>
-   <p class="sub">Berita High Impact dari Forex Factory. Pilih <b>PAIR ENTRY</b> untuk tiap rilis &mdash; pilihan ini menjadi konfigurasi EA kamu.</p>
+   <p class="sub">Berita High Impact dari Forex Factory. Pilih <b>Pair Entry</b> untuk setiap berita &mdash; pilihan ini menjadi konfigurasi EA kamu.</p>
    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
      <button class="btn alt" id="ffDefaultBtn" type="button">Isi pair default</button>
      <button class="btn alt" id="ffReloadBtn" type="button">Muat ulang</button>
      <span class="msg" id="ffMsg" role="status"></span>
    </div>
    <div class="ffwrap"><table class="ff"><thead><tr>
-     <th>Date</th><th id="ffTz">Time</th><th>Currency</th><th>Impact</th><th class="pairh">PAIR ENTRY</th><th>Event</th><th>Actual</th><th>Forecast</th><th>Previous</th>
+     <th>Date</th><th id="ffTz">Time</th><th>Currency</th><th>Impact</th><th class="pairh">Pair Entry</th><th>Event</th><th>Actual</th><th>Forecast</th><th>Previous</th>
    </tr></thead><tbody id="ffBody"><tr><td colspan="9" class="empty">Memuat...</td></tr></tbody></table></div>
-   <p class="ffnote">Pilih &ldquo;OFF&rdquo; agar EA tidak entry pada rilis tersebut. Perubahan tersimpan otomatis. Jam ditampilkan sesuai zona waktu perangkat kamu.</p>
+   <p class="ffnote">Pilih &ldquo;OFF&rdquo; agar EA tidak entry pada berita tersebut. Perubahan tersimpan otomatis. Jam ditampilkan sesuai zona waktu perangkat kamu.</p>
   </section>
 
   <!-- Profil -->
@@ -657,12 +657,12 @@ async function ffLoadCfg(){
   const {data}=await db.from('news_pair_config').select('slot_key,pair');
   (data||[]).forEach(r=>ffCfg[r.slot_key]=r.pair);
 }
-async function ffSave(slot,pair){
+async function ffSave(ev,pair){
   const m=document.getElementById('ffMsg');
   if(!db||!user){m.textContent='Login dulu untuk menyimpan config.';return;}
   let res;
-  if(!pair){ res=await db.from('news_pair_config').delete().eq('user_id',user.id).eq('slot_key',slot.key); delete ffCfg[slot.key]; }
-  else { res=await db.from('news_pair_config').upsert({user_id:user.id,slot_key:slot.key,event_time:slot.time,currency:slot.cur,pair,updated_at:new Date().toISOString()},{onConflict:'user_id,slot_key'}); ffCfg[slot.key]=pair; }
+  if(!pair){ res=await db.from('news_pair_config').delete().eq('user_id',user.id).eq('slot_key',ev.id); delete ffCfg[ev.id]; }
+  else { res=await db.from('news_pair_config').upsert({user_id:user.id,slot_key:ev.id,event_time:ev.event_time,currency:ev.currency,pair,updated_at:new Date().toISOString()},{onConflict:'user_id,slot_key'}); ffCfg[ev.id]=pair; }
   m.style.color=res.error?'var(--red)':'var(--teal)';
   m.textContent=res.error?('Gagal simpan: '+res.error.message):'Tersimpan ✓';
 }
@@ -670,26 +670,25 @@ function ffRender(){
   const body=document.getElementById('ffBody');
   if(!ffDays.length){body.innerHTML='<tr><td colspan="9" class="empty">Belum ada berita High Impact. Pastikan sinkronisasi Forex Factory sudah berjalan.</td></tr>';return;}
   let html='',g=0;
+  const evs={};
   ffDays.forEach(day=>{
     let firstDay=true;
     day.slots.forEach(s=>{
       const cls='g'+(g%2); g++;
-      const sel=ffCfg[s.key]||'';
-      const opts='<option value="">— pilih —</option>'+FF_PAIRS.map(x=>`<option${sel===x?' selected':''}>${x}</option>`).join('')+`<option${sel==='OFF'?' selected':''}>OFF</option>`;
       s.items.forEach((e,i)=>{
+        evs[e.id]=e;
+        const sel=ffCfg[e.id]||'';
+        const opts='<option value="">— pilih —</option>'+FF_PAIRS.map(x=>`<option${sel===x?' selected':''}>${x}</option>`).join('')+`<option${sel==='OFF'?' selected':''}>OFF</option>`;
         html+=`<tr class="${cls}">`;
         if(firstDay){html+=`<td class="day" rowspan="${day.n}">${ffEsc(day.label)}</td>`;firstDay=false;}
-        if(i===0){
-          html+=`<td class="tm" rowspan="${s.items.length}">${ffEsc(s.tm)}</td><td class="cur" rowspan="${s.items.length}">${ffEsc(s.cur)}</td><td rowspan="${s.items.length}"><span class="imp"></span></td>`;
-          html+=`<td class="pair" rowspan="${s.items.length}"><select data-slot="${ffEsc(s.key)}">${opts}</select></td>`;
-        }
+        if(i===0) html+=`<td class="tm" rowspan="${s.items.length}">${ffEsc(s.tm)}</td><td class="cur" rowspan="${s.items.length}">${ffEsc(s.cur)}</td><td rowspan="${s.items.length}"><span class="imp"></span></td>`;
+        html+=`<td class="pair"><select data-ev="${ffEsc(e.id)}">${opts}</select></td>`;
         html+=`<td>${ffEsc(e.title)}</td><td class="num">${ffEsc(e.actual||'')}</td><td class="num">${ffEsc(e.forecast||'')}</td><td class="num">${ffEsc(e.previous||'')}</td></tr>`;
       });
     });
   });
   body.innerHTML=html;
-  const slots={}; ffDays.forEach(d=>d.slots.forEach(s=>slots[s.key]=s));
-  body.querySelectorAll('select[data-slot]').forEach(el=>el.addEventListener('change',()=>ffSave(slots[el.dataset.slot],el.value)));
+  body.querySelectorAll('select[data-ev]').forEach(el=>el.addEventListener('change',()=>ffSave(evs[el.dataset.ev],el.value)));
 }
 async function ffInit(force){
   if(ffLoaded&&!force) return;
@@ -704,9 +703,9 @@ document.getElementById('ffReloadBtn').addEventListener('click',()=>ffInit(true)
 document.getElementById('ffDefaultBtn').addEventListener('click',async()=>{
   if(!db||!user) return;
   const rows=[];
-  ffDays.forEach(d=>d.slots.forEach(s=>{ if(!ffCfg[s.key]&&FF_DEFAULT_PAIR[s.cur]){rows.push({user_id:user.id,slot_key:s.key,event_time:s.time,currency:s.cur,pair:FF_DEFAULT_PAIR[s.cur]});ffCfg[s.key]=FF_DEFAULT_PAIR[s.cur];}}));
+  ffDays.forEach(d=>d.slots.forEach(s=>s.items.forEach(e=>{ if(!ffCfg[e.id]&&FF_DEFAULT_PAIR[e.currency]){rows.push({user_id:user.id,slot_key:e.id,event_time:e.event_time,currency:e.currency,pair:FF_DEFAULT_PAIR[e.currency]});ffCfg[e.id]=FF_DEFAULT_PAIR[e.currency];}})));
   if(rows.length) await db.from('news_pair_config').upsert(rows,{onConflict:'user_id,slot_key'});
-  ffRender(); const m=document.getElementById('ffMsg'); m.style.color='var(--teal)'; m.textContent=rows.length+' slot diisi default ✓';
+  ffRender(); const m=document.getElementById('ffMsg'); m.style.color='var(--teal)'; m.textContent=rows.length+' berita diisi default ✓';
 });
 document.querySelector('.menu[data-view="news"]').addEventListener('click',()=>{ setTimeout(()=>ffInit(true),400); });
 </script>
