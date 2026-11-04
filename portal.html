@@ -168,6 +168,24 @@ th{color:var(--muted);font-weight:600}
  .side{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:12px;gap:6px;border-right:0;border-bottom:1px solid var(--line);align-items:center}
  .logo{display:none}.menu{width:auto;white-space:nowrap;padding:10px 12px}.logout{margin:0}
 }
+
+/* ===== News Calendar (gaya Forex Factory) ===== */
+.ffwrap{overflow-x:auto;border:1px solid rgba(0,190,226,.3);border-radius:12px;background:#0b1626}
+table.ff{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
+table.ff th{background:#6f84b3;color:#e9eefc;font-weight:600;padding:9px 10px;text-align:left;white-space:nowrap}
+table.ff th.pairh{background:#7287b8;font-size:17px;text-align:center;letter-spacing:.02em}
+table.ff td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:middle}
+table.ff tr.g0 td{background:#0f1d31}
+table.ff tr.g1 td{background:#16263f}
+table.ff td.day{text-align:center;color:#e8f0ff;font-weight:600;line-height:1.35;border-right:1px solid rgba(255,255,255,.08)}
+table.ff td.tm{color:#aab8d3;white-space:nowrap}
+table.ff td.cur{font-weight:700;text-align:center}
+table.ff td.pair{background:#fff!important;color:#111;text-align:center;font-size:17px;font-weight:600;border-left:2px solid #7c3aed;border-right:1px solid #ddd;min-width:150px}
+table.ff td.pair select{background:#fff;color:#111;border:1px solid #bbb;border-radius:8px;padding:8px 10px;width:100%;font-weight:600}
+table.ff td.pair .pv{font-size:17px}
+table.ff td.num{white-space:nowrap}
+.imp{display:inline-block;width:20px;height:16px;border-radius:3px;background:#e60000}
+.ffnote{color:#a9bdd7;font-size:12.5px;margin:10px 2px 0}
 </style>
 </head>
 <body>
@@ -178,7 +196,7 @@ th{color:var(--muted);font-weight:600}
   <button class="menu" data-view="license"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="5"/><path d="m11.5 11.5 8-8 2 2-2 2 2 2-3 3-2-2-3 3"/></svg>Lisensi akun</button>
   <button class="menu" data-view="download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m-5-5 5 5 5-5"/><path d="M5 17v4h14v-4"/></svg>Download EA</button>
   <button class="menu" data-view="perf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10m5 10V4m5 16v-7m5 7V7"/></svg>Performa</button>
-  <button class="menu" data-view="news"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>News Calendar <span class="badge-soon">SOON</span></button>
+  <button class="menu" data-view="news"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>News Calendar</button>
   <button class="menu" data-view="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>Profil</button>
   <button class="menu logout" id="logoutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5V3h4M16 17l5-5-5-5M21 12H9"/></svg>Keluar</button>
  </aside>
@@ -313,15 +331,19 @@ th{color:var(--muted);font-weight:600}
    <div class="card"><div class="wrap"><table><thead><tr><th>Nomor Akun</th><th>Profit Bulanan</th><th>Win Rate</th><th>Total Profit</th></tr></thead><tbody id="pBody"><tr><td colspan="4" class="empty">Memuat...</td></tr></tbody></table></div></div>
   </section>
 
-  <!-- News Calendar (Coming Soon) -->
+  <!-- News Calendar -->
   <section class="view" id="news">
    <h1>News Calendar</h1>
-   <p class="sub">Jadwal rilis data ekonomi penting dan event fundamental real-time.</p>
-   <div class="coming-soon-box">
-     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-     <h2>Fitur Segera Hadir (Coming Soon)</h2>
-     <p>Integrasi jadwal berita ekonomi real-time (Forex Factory API) sedang dalam tahap pengembangan. Fitur ini akan membantu Anda memantau rilis data high-impact langsung dari dashboard member.</p>
+   <p class="sub">Berita High Impact dari Forex Factory. Pilih <b>PAIR ENTRY</b> untuk tiap rilis &mdash; pilihan ini menjadi konfigurasi EA kamu.</p>
+   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+     <button class="btn alt" id="ffDefaultBtn" type="button">Isi pair default</button>
+     <button class="btn alt" id="ffReloadBtn" type="button">Muat ulang</button>
+     <span class="msg" id="ffMsg" role="status"></span>
    </div>
+   <div class="ffwrap"><table class="ff"><thead><tr>
+     <th>Date</th><th id="ffTz">Time</th><th>Currency</th><th>Impact</th><th class="pairh">PAIR ENTRY</th><th>Event</th><th>Actual</th><th>Forecast</th><th>Previous</th>
+   </tr></thead><tbody id="ffBody"><tr><td colspan="9" class="empty">Memuat...</td></tr></tbody></table></div>
+   <p class="ffnote">Pilih &ldquo;OFF&rdquo; agar EA tidak entry pada rilis tersebut. Perubahan tersimpan otomatis. Jam ditampilkan sesuai zona waktu perangkat kamu.</p>
   </section>
 
   <!-- Profil -->
@@ -595,6 +617,98 @@ $('pwForm').addEventListener('submit', async e => {
 });
 
 init();
+</script>
+<script>
+
+const FF_DEFAULT_PAIR={USD:'XAUUSD',GBP:'GBPUSD',AUD:'AUDUSD',NZD:'NZDUSD',EUR:'EURUSD',CAD:'USDCAD',JPY:'USDJPY',CHF:'USDCHF'};
+function ffEsc(t){return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function ffFmt(iso){
+  const d=new Date(iso);
+  const day=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  const tm=d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}).replace(' ','').toLowerCase();
+  return {dayKey:d.toDateString(),day,tm};
+}
+async function ffLoadEvents(client){
+  const start=new Date(); start.setHours(0,0,0,0);
+  const {data,error}=await client.from('news_calendar').select('*')
+    .eq('impact','High').gte('event_time',start.toISOString()).order('event_time',{ascending:true}).limit(200);
+  if(error) throw error;
+  return data||[];
+}
+// Kelompokkan: hari -> slot (waktu+mata uang) -> daftar event
+function ffGroup(events){
+  const days=[]; const dmap={};
+  events.forEach(e=>{
+    const f=ffFmt(e.event_time);
+    let day=dmap[f.dayKey]; if(!day){day=dmap[f.dayKey]={label:f.day,slots:[],smap:{},n:0};days.push(day);}
+    const sk=e.event_time+'|'+e.currency;
+    let s=day.smap[sk]; if(!s){s=day.smap[sk]={key:sk,time:e.event_time,tm:f.tm,cur:e.currency,items:[]};day.slots.push(s);}
+    s.items.push(e); day.n++;
+  });
+  return days;
+}
+
+const FF_PAIRS=['XAUUSD','EURUSD','GBPUSD','USDJPY','AUDUSD','NZDUSD','USDCAD','USDCHF'];
+let ffCfg={}, ffDays=[], ffLoaded=false;
+
+async function ffLoadCfg(){
+  ffCfg={};
+  if(!db||!user) return;
+  const {data}=await db.from('news_pair_config').select('slot_key,pair');
+  (data||[]).forEach(r=>ffCfg[r.slot_key]=r.pair);
+}
+async function ffSave(slot,pair){
+  const m=document.getElementById('ffMsg');
+  if(!db||!user){m.textContent='Login dulu untuk menyimpan config.';return;}
+  let res;
+  if(!pair){ res=await db.from('news_pair_config').delete().eq('user_id',user.id).eq('slot_key',slot.key); delete ffCfg[slot.key]; }
+  else { res=await db.from('news_pair_config').upsert({user_id:user.id,slot_key:slot.key,event_time:slot.time,currency:slot.cur,pair,updated_at:new Date().toISOString()},{onConflict:'user_id,slot_key'}); ffCfg[slot.key]=pair; }
+  m.style.color=res.error?'var(--red)':'var(--teal)';
+  m.textContent=res.error?('Gagal simpan: '+res.error.message):'Tersimpan ✓';
+}
+function ffRender(){
+  const body=document.getElementById('ffBody');
+  if(!ffDays.length){body.innerHTML='<tr><td colspan="9" class="empty">Belum ada berita High Impact. Pastikan sinkronisasi Forex Factory sudah berjalan.</td></tr>';return;}
+  let html='',g=0;
+  ffDays.forEach(day=>{
+    let firstDay=true;
+    day.slots.forEach(s=>{
+      const cls='g'+(g%2); g++;
+      const sel=ffCfg[s.key]||'';
+      const opts='<option value="">— pilih —</option>'+FF_PAIRS.map(x=>`<option${sel===x?' selected':''}>${x}</option>`).join('')+`<option${sel==='OFF'?' selected':''}>OFF</option>`;
+      s.items.forEach((e,i)=>{
+        html+=`<tr class="${cls}">`;
+        if(firstDay){html+=`<td class="day" rowspan="${day.n}">${ffEsc(day.label)}</td>`;firstDay=false;}
+        if(i===0){
+          html+=`<td class="tm" rowspan="${s.items.length}">${ffEsc(s.tm)}</td><td class="cur" rowspan="${s.items.length}">${ffEsc(s.cur)}</td><td rowspan="${s.items.length}"><span class="imp"></span></td>`;
+          html+=`<td class="pair" rowspan="${s.items.length}"><select data-slot="${ffEsc(s.key)}">${opts}</select></td>`;
+        }
+        html+=`<td>${ffEsc(e.title)}</td><td class="num">${ffEsc(e.actual||'')}</td><td class="num">${ffEsc(e.forecast||'')}</td><td class="num">${ffEsc(e.previous||'')}</td></tr>`;
+      });
+    });
+  });
+  body.innerHTML=html;
+  const slots={}; ffDays.forEach(d=>d.slots.forEach(s=>slots[s.key]=s));
+  body.querySelectorAll('select[data-slot]').forEach(el=>el.addEventListener('change',()=>ffSave(slots[el.dataset.slot],el.value)));
+}
+async function ffInit(force){
+  if(ffLoaded&&!force) return;
+  const m=document.getElementById('ffMsg'); m.style.color='var(--muted)'; m.textContent='Memuat...';
+  try{
+    document.getElementById('ffTz').textContent='Time ('+(Intl.DateTimeFormat().resolvedOptions().timeZone||'local')+')';
+    const ev=await ffLoadEvents(db); await ffLoadCfg();
+    ffDays=ffGroup(ev); ffRender(); ffLoaded=true; m.textContent='';
+  }catch(e){ m.style.color='var(--red)'; m.textContent='Gagal memuat kalender: '+e.message; }
+}
+document.getElementById('ffReloadBtn').addEventListener('click',()=>ffInit(true));
+document.getElementById('ffDefaultBtn').addEventListener('click',async()=>{
+  if(!db||!user) return;
+  const rows=[];
+  ffDays.forEach(d=>d.slots.forEach(s=>{ if(!ffCfg[s.key]&&FF_DEFAULT_PAIR[s.cur]){rows.push({user_id:user.id,slot_key:s.key,event_time:s.time,currency:s.cur,pair:FF_DEFAULT_PAIR[s.cur]});ffCfg[s.key]=FF_DEFAULT_PAIR[s.cur];}}));
+  if(rows.length) await db.from('news_pair_config').upsert(rows,{onConflict:'user_id,slot_key'});
+  ffRender(); const m=document.getElementById('ffMsg'); m.style.color='var(--teal)'; m.textContent=rows.length+' slot diisi default ✓';
+});
+document.querySelector('.menu[data-view="news"]').addEventListener('click',()=>{ setTimeout(()=>ffInit(true),400); });
 </script>
 </body>
 </html>
