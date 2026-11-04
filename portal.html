@@ -171,7 +171,7 @@ th{color:var(--muted);font-weight:600}
 
 /* ===== News Calendar (gaya Forex Factory) ===== */
 .ffwrap{overflow-x:auto;border:1px solid rgba(0,190,226,.3);border-radius:12px;background:#0b1626}
-table.ff{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
+table.ff{width:100%;border-collapse:collapse;font-size:14px;min-width:960px}
 table.ff th{background:#6f84b3;color:#e9eefc;font-weight:600;padding:9px 10px;text-align:left;white-space:nowrap}
 table.ff th.pairh{background:#7287b8;font-size:17px;text-align:center;letter-spacing:.02em}
 table.ff td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:middle}
@@ -186,12 +186,26 @@ table.ff td.pair .pv{font-size:17px}
 table.ff td.num{white-space:nowrap}
 .imp{display:inline-block;width:20px;height:16px;border-radius:3px;background:#e60000}
 .ffnote{color:#a9bdd7;font-size:12.5px;margin:10px 2px 0}
+
+/* Jam sidebar */
+.side-clock{margin:2px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(2,15,28,.9);text-align:center}
+.side-clock .scl-top{display:flex;justify-content:space-between;font-size:9px;font-weight:750;letter-spacing:.1em;color:var(--muted);border-bottom:1px solid rgba(0,190,226,.15);padding-bottom:3px;margin-bottom:4px}
+.side-clock .scl-live{color:var(--teal)}
+.side-clock .scl-time{font-family:monospace;font-size:20px;font-weight:850;color:var(--cyan);letter-spacing:.03em}
+.side-clock .scl-date{font-size:10.5px;color:#b6cbe5;margin-top:2px}
+/* Countdown */
+table.ff td.cd{white-space:nowrap;text-align:center}
+.cdv{font-family:monospace;font-size:14px;font-weight:700;color:#cfe0f7}
+.cdv.soon{color:#ffbd26}
+.cdv.now{color:#ff6b7a}
+.cdv.past{color:#7f8da6;font-weight:600}
 </style>
 </head>
 <body>
 <div class="layout" id="app">
  <aside class="side" aria-label="Menu member">
   <div class="logo">KINGTHERIOUS<small>Area member</small></div>
+  <div class="side-clock" aria-label="Jam"><div class="scl-top"><span>TIME</span><span class="scl-live">● LIVE</span></div><div class="scl-time" id="scTime">00:00:00</div><div class="scl-date" id="scDate"></div></div>
   <button class="menu active" data-view="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 3l9 8v10H3z"/></svg>Ringkasan</button>
   <button class="menu" data-view="license"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="5"/><path d="m11.5 11.5 8-8 2 2-2 2 2 2-3 3-2-2-3 3"/></svg>Lisensi akun</button>
   <button class="menu" data-view="download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m-5-5 5 5 5-5"/><path d="M5 17v4h14v-4"/></svg>Download EA</button>
@@ -334,15 +348,15 @@ table.ff td.num{white-space:nowrap}
   <!-- News Calendar -->
   <section class="view" id="news">
    <h1>News Calendar</h1>
-   <p class="sub">Berita High Impact dari Forex Factory. Pilih <b>Pair Entry</b> untuk setiap berita &mdash; pilihan ini menjadi konfigurasi EA kamu.</p>
+   <p class="sub">Berita High Impact dari Forex Factory. Pilih <b>PAIR ENTRY</b> untuk setiap berita &mdash; pilihan ini menjadi konfigurasi EA kamu.</p>
    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
      <button class="btn alt" id="ffDefaultBtn" type="button">Isi pair default</button>
      <button class="btn alt" id="ffReloadBtn" type="button">Muat ulang</button>
      <span class="msg" id="ffMsg" role="status"></span>
    </div>
    <div class="ffwrap"><table class="ff"><thead><tr>
-     <th>Date</th><th id="ffTz">Time</th><th>Currency</th><th>Impact</th><th class="pairh">Pair Entry</th><th>Event</th><th>Actual</th><th>Forecast</th><th>Previous</th>
-   </tr></thead><tbody id="ffBody"><tr><td colspan="9" class="empty">Memuat...</td></tr></tbody></table></div>
+     <th>Date</th><th id="ffTz">Time</th><th>Countdown</th><th>Currency</th><th>Impact</th><th class="pairh">PAIR ENTRY</th><th>Event</th><th>Actual</th><th>Forecast</th><th>Previous</th>
+   </tr></thead><tbody id="ffBody"><tr><td colspan="10" class="empty">Memuat...</td></tr></tbody></table></div>
    <p class="ffnote">Pilih &ldquo;OFF&rdquo; agar EA tidak entry pada berita tersebut. Perubahan tersimpan otomatis. Jam ditampilkan sesuai zona waktu perangkat kamu.</p>
   </section>
 
@@ -668,7 +682,7 @@ async function ffSave(ev,pair){
 }
 function ffRender(){
   const body=document.getElementById('ffBody');
-  if(!ffDays.length){body.innerHTML='<tr><td colspan="9" class="empty">Belum ada berita High Impact. Pastikan sinkronisasi Forex Factory sudah berjalan.</td></tr>';return;}
+  if(!ffDays.length){body.innerHTML='<tr><td colspan="10" class="empty">Belum ada berita High Impact. Pastikan sinkronisasi Forex Factory sudah berjalan.</td></tr>';return;}
   let html='',g=0;
   const evs={};
   ffDays.forEach(day=>{
@@ -681,7 +695,7 @@ function ffRender(){
         const opts='<option value="">— pilih —</option>'+FF_PAIRS.map(x=>`<option${sel===x?' selected':''}>${x}</option>`).join('')+`<option${sel==='OFF'?' selected':''}>OFF</option>`;
         html+=`<tr class="${cls}">`;
         if(firstDay){html+=`<td class="day" rowspan="${day.n}">${ffEsc(day.label)}</td>`;firstDay=false;}
-        if(i===0) html+=`<td class="tm" rowspan="${s.items.length}">${ffEsc(s.tm)}</td><td class="cur" rowspan="${s.items.length}">${ffEsc(s.cur)}</td><td rowspan="${s.items.length}"><span class="imp"></span></td>`;
+        if(i===0) html+=`<td class="tm" rowspan="${s.items.length}">${ffEsc(s.tm)}</td><td class="cd" rowspan="${s.items.length}"><span class="cdv" data-t="${ffEsc(e.event_time)}">--:--:--</span></td><td class="cur" rowspan="${s.items.length}">${ffEsc(s.cur)}</td><td rowspan="${s.items.length}"><span class="imp"></span></td>`;
         html+=`<td class="pair"><select data-ev="${ffEsc(e.id)}">${opts}</select></td>`;
         html+=`<td>${ffEsc(e.title)}</td><td class="num">${ffEsc(e.actual||'')}</td><td class="num">${ffEsc(e.forecast||'')}</td><td class="num">${ffEsc(e.previous||'')}</td></tr>`;
       });
@@ -708,6 +722,32 @@ document.getElementById('ffDefaultBtn').addEventListener('click',async()=>{
   ffRender(); const m=document.getElementById('ffMsg'); m.style.color='var(--teal)'; m.textContent=rows.length+' berita diisi default ✓';
 });
 document.querySelector('.menu[data-view="news"]').addEventListener('click',()=>{ setTimeout(()=>ffInit(true),400); });
+</script>
+<script>
+// Jam 24 jam (sidebar)
+function scTick(){
+  const n=new Date(), pad=v=>String(v).padStart(2,'0');
+  const tz=(new Intl.DateTimeFormat('en',{timeZoneName:'short'}).formatToParts(n).find(x=>x.type==='timeZoneName')||{}).value||'';
+  const t=document.getElementById('scTime'), d=document.getElementById('scDate');
+  if(t) t.textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+  if(d) d.textContent=n.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+' · '+tz;
+}
+// Countdown berita (diperbarui tiap detik)
+function cdTick(){
+  const now=Date.now(), pad=v=>String(v).padStart(2,'0');
+  document.querySelectorAll('.cdv[data-t]').forEach(el=>{
+    const diff=Math.floor((new Date(el.dataset.t).getTime()-now)/1000);
+    let txt, cls='cdv';
+    if(diff<=0){ txt=diff>-300?'RILIS':'Selesai'; cls+=diff>-300?' now':' past'; }
+    else{
+      const dd=Math.floor(diff/86400), h=Math.floor(diff%86400/3600), m=Math.floor(diff%3600/60), s=diff%60;
+      txt=(dd>0?dd+'d ':'')+pad(h)+':'+pad(m)+':'+pad(s);
+      if(diff<=120) cls+=' now'; else if(diff<=3600) cls+=' soon';
+    }
+    el.textContent=txt; el.className=cls;
+  });
+}
+setInterval(()=>{scTick();cdTick();},1000); scTick(); cdTick();
 </script>
 </body>
 </html>
