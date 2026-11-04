@@ -265,7 +265,7 @@
 <!-- Menu Navigasi -->
 <nav class="nav-menu">
   <a href="statistic.html" class="nav-item">Live Statistic</a>
-  <a href="news calendar.html" class="nav-item">News Calendar</a>
+  <a href="news.html" class="nav-item">News Calendar</a>
 </nav>
 
     <div class="topbar-right">
@@ -282,7 +282,7 @@
         </div>
         <div class="clock-main-row">
           <div class="clock-time" id="liveClockTime">00:00:00</div>
-          <div class="clock-ampm" id="liveClockAmPm">AM</div>
+          <div class="clock-ampm" id="liveClockAmPm"></div>
         </div>
         <div class="clock-date" id="liveClockDate">Sunday · 11 October 2026</div>
       </div>
@@ -416,12 +416,9 @@
     // Live Clock Functionality
     function updateLiveClock() {
       const now = new Date();
-      let hours = now.getHours();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12;
-      
-      const hh = String(hours).padStart(2, '0');
+      const tzPart = new Intl.DateTimeFormat('en', { timeZoneName: 'short' }).formatToParts(now).find(p => p.type === 'timeZoneName');
+      const ampm = tzPart ? tzPart.value : '';          // zona waktu (mis. GMT+7), bukan AM/PM
+      const hh = String(now.getHours()).padStart(2, '0'); // format 24 jam
       const min = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
       const timeStr = `${hh}:${min}:${ss}`;
