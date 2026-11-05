@@ -180,8 +180,12 @@ table.ff tr.g1 td{background:#16263f}
 table.ff td.day{text-align:center;color:#e8f0ff;font-weight:600;line-height:1.35;border-right:1px solid rgba(255,255,255,.08)}
 table.ff td.tm{color:#aab8d3;white-space:nowrap}
 table.ff td.cur{font-weight:700;text-align:center}
-table.ff td.pair{background:#fff!important;color:#111;text-align:center;font-size:15px;font-weight:600;border-left:2px solid #7c3aed;border-right:1px solid #ddd;min-width:150px}
-table.ff td.pair select{background:#fff;color:#111;border:1px solid #bbb;border-radius:8px;padding:8px 10px;width:100%;font-weight:600}
+
+/* Perbaikan Warna Sepadan pada Pair Entry (Menyesuaikan Dark Mode) */
+table.ff td.pair{background:inherit !important;color:var(--text);text-align:center;font-size:15px;font-weight:600;border-left:2px solid rgba(0,190,226,.3);border-right:1px solid rgba(255,255,255,.08);min-width:150px}
+table.ff td.pair select{background:rgba(2,15,28,.9);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;font-weight:600}
+table.ff td.pair select option{background:#071526;color:var(--text)}
+
 table.ff td.pair .pv{font-size:17px}
 table.ff td.num{white-space:nowrap}
 .imp{display:inline-block;width:20px;height:16px;border-radius:3px;background:#e60000}
@@ -419,10 +423,8 @@ async function logout() {
 }
 
 function renderData() {
-  // Lisensi dianggap aktif hanya jika status database bernilai "active".
   const activeLicenses = licenses.filter(l => String(l.status || '').toLowerCase() === 'active');
 
-  // Ringkasan dashboard dan tombol download EA
   $('hLic').textContent = String(licenses.length);
   $('hActive').textContent = String(activeLicenses.length);
   const isEnabled = activeLicenses.length > 0;
@@ -433,18 +435,17 @@ function renderData() {
     ? 'Belum bisa diunduh. Daftarkan ID akun dan broker MT5 di menu Lisensi akun terlebih dahulu.'
     : 'Belum bisa diunduh. Permintaan akun kamu sedang menunggu verifikasi admin.';
   
-  // Render lisensi akun milik user
   $('lBody').innerHTML = licenses.length ? licenses.map(l => {
     const cls = l.status === 'active' ? 'ok' : l.status === 'rejected' ? 'no' : 'wait';
     const txt = l.status === 'active' ? 'Aktif' : l.status === 'rejected' ? 'Ditolak' : 'Menunggu verifikasi admin';
     return `<tr><td>${esc(l.account_number)}</td><td>${esc(l.broker)}</td><td>${esc(l.platform || 'MT5')}</td><td><span class="badge ${cls}">${txt}</span></td></tr>`;
   }).join('') : '<tr><td colspan="4" class="empty">Belum ada akun. Daftarkan akun MT5 pertama kamu pada form di atas.</td></tr>';
-$('nextStep').textContent = !licenses.length 
+  
+  $('nextStep').textContent = !licenses.length 
     ? 'Daftarkan akun trading MT5 yang dibuka lewat link IB admin di menu Lisensi akun.' 
     : activeLicenses.length > 0 ? 'Lisensi aktif. Unduh EA di menu Download EA.' 
     : 'Akun sudah terdaftar. Tunggu admin memverifikasi akun Anda.';
 
-  // Performa milik user
   const userAccountNumbers = licenses.map(l => l.account_number);
   const filteredStats = statsData.filter(s => userAccountNumbers.includes(s.account_number));
 
@@ -472,7 +473,6 @@ async function loadLicenses() {
 
 async function loadStats() {
   if (!db || !user) return;
-
   const userAccountNumbers = licenses.map(l => String(l.account_number));
   
   if (!userAccountNumbers.length) {
@@ -480,9 +480,7 @@ async function loadStats() {
     return;
   }
 
-  const { data, error } = await db.from('trading_stats')
-    .select('*')
-    .in('account_id', userAccountNumbers);
+  const { data, error } = await db.from('trading_stats').select('*').in('account_id', userAccountNumbers);
 
   if (error) {
     console.error("Gagal memuat data trading_stats:", error);
@@ -490,16 +488,12 @@ async function loadStats() {
   }
 
   if (data && data.length > 0) {
-    console.log("Data mentah trading_stats ditemukan:", data);
-
     const grouped = {};
     data.forEach(row => {
       const acc = String(row.account_id || row.account_number || '');
       if (!grouped[acc]) {
         grouped[acc] = { account_number: acc, total_profit: 0, wins: 0, total_trades: 0 };
       }
-      
-      // Ambil nilai profit (mengatasi berbagai kemungkinan nama properti)
       const rawProfit = row.profit !== undefined ? row.profit : (row.PROFIT !== undefined ? row.PROFIT : 0);
       const profit = parseFloat(rawProfit) || 0;
       
@@ -525,7 +519,7 @@ async function loadStats() {
   }
 }
   
-  async function init() {
+async function init() {
   if (db) {
     const { data: { session }, error: sessionError } = await db.auth.getSession();
     if (sessionError) console.error('Gagal memeriksa sesi login:', sessionError);
@@ -534,7 +528,8 @@ async function loadStats() {
 
   if (!user) {
     $('hello').textContent = 'Halo, Guest';
-    $('nextStep').textContent = 'Silakan login terlebih dahulu untuk mengakses fitur penuh.';$('lBody').innerHTML = '<tr><td colspan="4" class="empty">Silakan login untuk melihat lisensi akun Anda.</td></tr>';
+    $('nextStep').textContent = 'Silakan login terlebih dahulu untuk mengakses fitur penuh.';
+    $('lBody').innerHTML = '<tr><td colspan="4" class="empty">Silakan login untuk melihat lisensi akun Anda.</td></tr>';
     $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Silakan login untuk melihat statistik performa.</td></tr>';
     return;
   }
@@ -556,13 +551,12 @@ $('ibLinks').innerHTML = IB_BROKERS.map(b => `<a class="btn alt" style="margin:0
 
 document.querySelectorAll('[data-file]').forEach(b => b.addEventListener('click', async () => {
   if (!db) return;
-  // Perhatikan nama bucket diubah ke 'EA PUBLISH' sesuai gambar Supabase Anda
-  const { data, error } = await db.storage.from('EA PUBLISH').createSignedUrl(b.dataset.file, 60, { download: true });
+  // Perbaikan nama bucket tanpa spasi (atau ubah sesuai nama bucket asli di Supabase tanpa spasi, misal: 'ea-publish')
+  const { data, error } = await db.storage.from('ea-publish').createSignedUrl(b.dataset.file, 60, { download: true });
   if (error) { $('dlNote').textContent = 'Gagal mengunduh: ' + error.message; return; }
   location.href = data.signedUrl;
 }));
 
-// Submit Form Lisensi Akun (Terkirim ke Supabase untuk Diverifikasi Admin)
 $('licForm').addEventListener('submit', async e => {
   e.preventDefault();
   const m = $('lMsg');
@@ -574,15 +568,15 @@ $('licForm').addEventListener('submit', async e => {
     return;
   }
 
-const accountNumber = $('lNo').value.trim();
-const broker = $('lBroker').value.trim();
+  const accountNumber = $('lNo').value.trim();
+  const broker = $('lBroker').value.trim();
 
-if (!/^[0-9]+$/.test(accountNumber)) {
+  if (!/^[0-9]+$/.test(accountNumber)) {
     m.style.color = 'var(--red)';
     m.textContent = 'Nomor akun MT5 harus berupa angka tanpa spasi atau tanda baca.';
     $('lNo').focus();
     return;
-}
+  }
   if (!broker) {
     m.style.color = 'var(--red)';
     m.textContent = 'Pilih broker partner terlebih dahulu.';
@@ -595,8 +589,6 @@ if (!/^[0-9]+$/.test(accountNumber)) {
     return;
   }
 
-  // Asumsi: account_id menyimpan nomor akun MT5 (kolom numerik atau teks).
-  // Jika account_id bertipe UUID/FK, pemetaan ini harus disesuaikan dengan skema database.
   const payload = {
     user_id: user.id,
     account_id: accountNumber,
@@ -633,7 +625,6 @@ $('pwForm').addEventListener('submit', async e => {
 init();
 </script>
 <script>
-
 const FF_DEFAULT_PAIR={USD:'XAUUSD',GBP:'GBPUSD',AUD:'AUDUSD',NZD:'NZDUSD',EUR:'EURUSD',CAD:'USDCAD',JPY:'USDJPY',CHF:'USDCHF'};
 function ffEsc(t){return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function ffFmt(iso){
@@ -649,7 +640,6 @@ async function ffLoadEvents(client){
   if(error) throw error;
   return data||[];
 }
-// Kelompokkan: hari -> slot (waktu+mata uang) -> daftar event
 function ffGroup(events){
   const days=[]; const dmap={};
   events.forEach(e=>{
@@ -695,7 +685,7 @@ function ffRender(){
         const opts='<option value="">— pilih —</option>'+FF_PAIRS.map(x=>`<option${sel===x?' selected':''}>${x}</option>`).join('')+`<option${sel==='OFF'?' selected':''}>OFF</option>`;
         html+=`<tr class="${cls}">`;
         if(firstDay){html+=`<td class="day" rowspan="${day.n}">${ffEsc(day.label)}</td>`;firstDay=false;}
-        if(i===0) html+=`<td class="tm" rowspan="${s.items.length}">${ffEsc(s.tm)}</td><td class="cd" rowspan="${s.items.length}"><span class="cdv" data-t="${ffEsc(e.event_time)}">--:--:--</span></td><td class="cur" rowspan="${s.items.length}">${ffEsc(s.cur)}</td><td rowspan="${s.items.length}"><span class="imp"></span></td>`;
+        if(i===0) html+=`<td class="tm" rowspan="${s.items.length}">${ffEsc(s.tm)}</td><td class="cd" rowspan="${s.items.length}"><span class="cdv" data-t="${ffEsc(e.event_time)}">--:--:--</span></td><td class="cur" rowspan="${s.items.length}">${ffEsc(e.cur)}</td><td rowspan="${s.items.length}"><span class="imp"></span></td>`;
         html+=`<td class="pair"><select data-ev="${ffEsc(e.id)}">${opts}</select></td>`;
         html+=`<td>${ffEsc(e.title)}</td><td class="num">${ffEsc(e.actual||'')}</td><td class="num">${ffEsc(e.forecast||'')}</td><td class="num">${ffEsc(e.previous||'')}</td></tr>`;
       });
@@ -724,7 +714,6 @@ document.getElementById('ffDefaultBtn').addEventListener('click',async()=>{
 document.querySelector('.menu[data-view="news"]').addEventListener('click',()=>{ setTimeout(()=>ffInit(true),400); });
 </script>
 <script>
-// Jam 24 jam (sidebar)
 function scTick(){
   const n=new Date(), pad=v=>String(v).padStart(2,'0');
   const tz=(new Intl.DateTimeFormat('en',{timeZoneName:'short'}).formatToParts(n).find(x=>x.type==='timeZoneName')||{}).value||'';
@@ -732,7 +721,6 @@ function scTick(){
   if(t) t.textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
   if(d) d.textContent=n.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+' · '+tz;
 }
-// Countdown berita (diperbarui tiap detik)
 function cdTick(){
   const now=Date.now(), pad=v=>String(v).padStart(2,'0');
   document.querySelectorAll('.cdv[data-t]').forEach(el=>{
