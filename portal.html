@@ -203,6 +203,7 @@ table.ff td.cd{white-space:nowrap;text-align:center}
 .cdv.soon{color:#ffbd26}
 .cdv.now{color:#ff6b7a}
 .cdv.past{color:#7f8da6;font-weight:600}
+.pend{color:#ffbd26;font-size:12px;font-weight:600}
 </style>
 </head>
 <body>
@@ -345,8 +346,8 @@ table.ff td.cd{white-space:nowrap;text-align:center}
   <!-- Performa -->
   <section class="view" id="perf">
    <h1>Performa Akun</h1>
-   <p class="sub">Ringkasan statistik dari akun trading kamu yang terhubung dan terverifikasi.</p>
-   <div class="card"><div class="wrap"><table><thead><tr><th>Nomor Akun</th><th>Profit Bulanan</th><th>Win Rate</th><th>Total Profit</th></tr></thead><tbody id="pBody"><tr><td colspan="4" class="empty">Memuat...</td></tr></tbody></table></div></div>
+   <p class="sub">Statistik dari data EA (tabel trading_stats) untuk setiap akun lisensi yang kamu daftarkan.</p>
+   <div class="card"><div class="wrap"><table><thead><tr><th>Nomor Akun</th><th>Broker</th><th>Lisensi</th><th>Profit Bulanan</th><th>Win Rate</th><th>Total Profit</th><th>Update Terakhir</th></tr></thead><tbody id="pBody"><tr><td colspan="7" class="empty">Memuat...</td></tr></tbody></table></div></div>
   </section>
 
   <!-- News Calendar -->
@@ -396,7 +397,7 @@ const IB_BROKERS = [
 
 const $ = id => document.getElementById(id);
 const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let db = null, user = null, licenses = [], statsData = [];
+let db = null, user = null, licenses = [], statsMap = {};
 
 // Navigasi menu
 document.addEventListener('DOMContentLoaded', () => {
@@ -450,17 +451,31 @@ function renderData() {
     : activeLicenses.length > 0 ? 'Lisensi aktif. Unduh EA di menu Download EA.' 
     : 'Akun sudah terdaftar. Tunggu admin memverifikasi akun Anda.';
 
-  const userAccountNumbers = licenses.map(l => l.account_number);
-  const filteredStats = statsData.filter(s => userAccountNumbers.includes(s.account_number));
+  renderPerf();
+}
 
-  if (!filteredStats.length) {
-    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada data performa. Data akan otomatis muncul setelah akun disetujui dan diverifikasi admin.</td></tr>';
+// Performa: satu baris per akun lisensi, dicocokkan dengan trading_stats.account_id
+function renderPerf() {
+  if (!licenses.length) {
+    $('pBody').innerHTML = '<tr><td colspan="7" class="empty">Belum ada akun lisensi terdaftar. Daftarkan akun di menu Lisensi akun.</td></tr>';
     $('hWin').textContent = '-';
-  } else {
-    $('pBody').innerHTML = filteredStats.map(r => `<tr><td><b>${esc(r.account_number)}</b></td><td>${esc(Number(r.monthly_profit || 0).toFixed(1))}%</td><td>${esc(Number(r.win_rate || 0).toFixed(1))}%</td><td>$${esc(Number(r.total_profit || 0).toLocaleString())}</td></tr>`).join('');
-    const avgWin = filteredStats.reduce((s, r) => s + Number(r.win_rate || 0), 0) / filteredStats.length;
-    $('hWin').textContent = avgWin.toFixed(1) + '%';
+    return;
   }
+  const fmtDate = v => v ? new Date(v).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-';
+  const wins = [];
+  $('pBody').innerHTML = licenses.map(l => {
+    const acc = String(l.account_number);
+    const st = statsMap[acc];
+    const cls = l.status === 'active' ? 'ok' : l.status === 'rejected' ? 'no' : 'wait';
+    const txt = l.status === 'active' ? 'Aktif' : l.status === 'rejected' ? 'Ditolak' : 'Menunggu';
+    const head = `<td><b>${esc(acc)}</b></td><td>${esc(l.broker || '-')}</td><td><span class="badge ${cls}">${txt}</span></td>`;
+    if (!st) return `<tr>${head}<td colspan="4" class="empty">Belum ada data dari EA untuk akun ini.</td></tr>`;
+    const win = Number(st.win_rate || 0);
+    wins.push(win);
+    const mp = Number(st.monthly_profit || 0);
+    return `<tr>${head}<td>${mp >= 0 ? '+' : ''}${esc(mp.toFixed(1))}%</td><td>${esc(win.toFixed(1))}%</td><td>$${esc(Number(st.total_profit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}</td><td>${esc(fmtDate(st.updated_at))}</td></tr>`;
+  }).join('');
+  $('hWin').textContent = wins.length ? (wins.reduce((a, c) => a + c, 0) / wins.length).toFixed(1) + '%' : '-';
 }
 
 async function loadLicenses() {
@@ -477,52 +492,26 @@ async function loadLicenses() {
 
 async function loadStats() {
   if (!db || !user) return;
-  const userAccountNumbers = licenses.map(l => String(l.account_number));
-  
-  if (!userAccountNumbers.length) {
-    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada akun lisensi terdaftar.</td></tr>';
-    return;
-  }
+  const nums = licenses.map(l => String(l.account_number));
+  statsMap = {};
+  if (!nums.length) { renderPerf(); return; }
 
-  const { data, error } = await db.from('trading_stats').select('*').in('account_id', userAccountNumbers);
-
+  // Ambil langsung dari trading_stats berdasarkan nomor akun lisensi (account_id)
+  const { data, error } = await db.from('trading_stats').select('*').in('account_id', nums);
   if (error) {
-    console.error("Gagal memuat data trading_stats:", error);
+    console.error('Gagal memuat data trading_stats:', error);
+    $('pBody').innerHTML = '<tr><td colspan="7" class="empty">Gagal memuat performa: ' + esc(error.message) + '</td></tr>';
     return;
   }
-
-  if (data && data.length > 0) {
-    const grouped = {};
-    data.forEach(row => {
-      const acc = String(row.account_id || row.account_number || '');
-      if (!grouped[acc]) {
-        grouped[acc] = { account_number: acc, total_profit: 0, wins: 0, total_trades: 0 };
-      }
-      const rawProfit = row.profit !== undefined ? row.profit : (row.PROFIT !== undefined ? row.PROFIT : 0);
-      const profit = parseFloat(rawProfit) || 0;
-      
-      grouped[acc].total_profit += profit;
-      grouped[acc].total_trades += 1;
-      
-      if (profit > 0) {
-        grouped[acc].wins += 1;
-      }
-    });
-
-    statsData = Object.values(grouped).map(item => ({
-      account_number: item.account_number,
-      monthly_profit: 0,
-      win_rate: item.total_trades > 0 ? (item.wins / item.total_trades) * 100 : 0,
-      total_profit: item.total_profit
-    }));
-
-    renderData();
-  } else {
-    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Belum ada riwayat transaksi untuk nomor akun ini.</td></tr>';
-    $('hWin').textContent = '-';
-  }
+  (data || []).forEach(row => {
+    const acc = String(row.account_id ?? row.account_number ?? '');
+    const prev = statsMap[acc];
+    // jika ada lebih dari satu baris untuk akun yang sama, pakai yang paling baru
+    if (!prev || new Date(row.updated_at || 0) >= new Date(prev.updated_at || 0)) statsMap[acc] = row;
+  });
+  renderPerf();
 }
-  
+
 async function init() {
   if (db) {
     const { data: { session }, error: sessionError } = await db.auth.getSession();
@@ -534,7 +523,7 @@ async function init() {
     $('hello').textContent = 'Halo, Guest';
     $('nextStep').textContent = 'Silakan login terlebih dahulu untuk mengakses fitur penuh.';
     $('lBody').innerHTML = '<tr><td colspan="4" class="empty">Silakan login untuk melihat lisensi akun Anda.</td></tr>';
-    $('pBody').innerHTML = '<tr><td colspan="4" class="empty">Silakan login untuk melihat statistik performa.</td></tr>';
+    $('pBody').innerHTML = '<tr><td colspan="7" class="empty">Silakan login untuk melihat statistik performa.</td></tr>';
     return;
   }
 
@@ -620,6 +609,7 @@ $('licForm').addEventListener('submit', async e => {
   m.textContent = 'Berhasil! Permintaan lisensi dikirim ke admin untuk diverifikasi.';
   e.target.reset();
   await loadLicenses();
+  await loadStats();
 });
 
 $('pwForm').addEventListener('submit', async e => {
@@ -632,6 +622,7 @@ $('pwForm').addEventListener('submit', async e => {
 });
 
 init();
+setInterval(() => { if (user && licenses.length) loadStats(); }, 60000);
 </script>
 <script>
 const FF_DEFAULT_PAIR={USD:'XAUUSD',GBP:'GBPUSD',AUD:'AUDUSD',NZD:'NZDUSD',EUR:'EURUSD',CAD:'USDCAD',JPY:'USDJPY',CHF:'USDCHF'};
@@ -712,7 +703,7 @@ function ffRender(){
         if(firstDay){html+=`<td class="day" rowspan="${day.n}">${ffEsc(day.label)}</td>`;firstDay=false;}
         if(i===0) html+=`<td class="tm" rowspan="${s.items.length}">${ffEsc(s.tm)}</td><td class="cd" rowspan="${s.items.length}"><span class="cdv" data-t="${ffEsc(e.event_time)}">--:--:--</span></td><td class="cur" rowspan="${s.items.length}">${ffEsc(e.currency)}</td><td rowspan="${s.items.length}"><span class="imp"></span></td>`;
         html+=`<td class="pair"><select data-ev="${ffEsc(e.id)}">${opts}</select></td>`;
-        html+=`<td>${ffEsc(e.title)}</td><td class="num">${ffEsc(e.actual||'')}</td><td class="num">${ffEsc(e.forecast||'')}</td><td class="num">${ffEsc(e.previous||'')}</td></tr>`;
+        html+=`<td>${ffEsc(e.title)}</td><td class="num" data-f="a" data-id="${ffEsc(e.id)}">${ffActual(e)}</td><td class="num" data-f="f" data-id="${ffEsc(e.id)}">${ffEsc(e.forecast||'')}</td><td class="num" data-f="p" data-id="${ffEsc(e.id)}">${ffEsc(e.previous||'')}</td></tr>`;
       });
     });
   });
@@ -729,6 +720,32 @@ async function ffInit(force){
     ffDays=ffGroup(ev); ffRender(); ffLoaded=true; m.textContent='';
   }catch(e){ m.style.color='var(--red)'; m.textContent='Gagal memuat kalender: '+e.message; }
 }
+
+function ffActual(e){
+  const a=(e.actual??'').toString().trim();
+  if(a) return ffEsc(a);
+  return (new Date(e.event_time).getTime()<=Date.now()) ? '<span class="pend" title="Berita sudah lewat, data actual belum masuk ke database">Menunggu…</span>' : '';
+}
+// Cek data terbaru; hanya angka yang diperbarui di tempat, pilihan PAIR ENTRY tidak ikut terganggu
+async function ffRefreshNums(){
+  if(!db||!ffLoaded) return;
+  try{
+    const ev=await ffLoadEvents(db);
+    const ids=ev.map(e=>e.id).join(','), cur=ffDays.flatMap(d=>d.slots.flatMap(s=>s.items)).map(e=>e.id).join(',');
+    if(ids!==cur){ ffDays=ffGroup(ev); ffRender(); return; }
+    ev.forEach(e=>{
+      const q=f=>document.querySelector(`#ffBody td[data-f="${f}"][data-id="${CSS.escape(String(e.id))}"]`);
+      const a=q('a'),f=q('f'),p=q('p');
+      if(a) a.innerHTML=ffActual(e);
+      if(f) f.textContent=e.forecast||'';
+      if(p) p.textContent=e.previous||'';
+    });
+  }catch(_){}
+}
+setInterval(()=>{ if(document.getElementById('news').classList.contains('active')) ffRefreshNums(); },30000);
+try{
+  if(db){ let rt; db.channel('news_calendar_live').on('postgres_changes',{event:'*',schema:'public',table:'news_calendar'},()=>{clearTimeout(rt);rt=setTimeout(ffRefreshNums,800);}).subscribe(); }
+}catch(_){}
 document.getElementById('ffReloadBtn').addEventListener('click',()=>ffInit(true));
 document.getElementById('ffAcct').addEventListener('change',async e=>{
   ffAcct=e.target.value;
