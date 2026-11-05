@@ -552,7 +552,9 @@ $('ibLinks').innerHTML = IB_BROKERS.map(b => `<a class="btn alt" style="margin:0
 document.querySelectorAll('[data-file]').forEach(b => b.addEventListener('click', async () => {
   if (!db) return;
   // Perbaikan nama bucket tanpa spasi (atau ubah sesuai nama bucket asli di Supabase tanpa spasi, misal: 'ea-publish')
-  const { data, error } = await db.storage.from('ea-publish').createSignedUrl(b.dataset.file, 60, { download: true });
+  const { data, error } = await db.storage
+  .from('EA PUBLISH')
+  .createSignedUrl(b.dataset.file, 120, { download: true });
   if (error) { $('dlNote').textContent = 'Gagal mengunduh: ' + error.message; return; }
   location.href = data.signedUrl;
 }));
