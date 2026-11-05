@@ -628,69 +628,69 @@
     }
     fetchIndexMetricsCurrentMonth();
 
-    // --- Script Pelacak Pengunjung dengan UAParser yang Lengkap & Aman ---
-    (async function trackVisitorSession() {
+    // --- Pelacak Pengunjung (dicatat lewat fungsi log_visit di Supabase) ---
+    (function trackVisitorSession() {
       try {
         const startTime = Date.now();
-        let clickCount = 0;
-        let interactions = [];
-        const path = window.location.pathname.split('/').pop() || 'index.html';
+        const store = window.sessionStorage;
+        const sget = (k) => { try { return store.getItem(k); } catch (e) { return null; } };
+        const sset = (k, v) => { try { store.setItem(k, v); } catch (e) {} };
 
-        let ip = 'Unknown';
-        try {
-          const ipRes = await fetch('https://api.ipify.org?format=json');
-          const ipData = await ipRes.json();
-          ip = ipData.ip;
-        } catch (e) {}
-
-        // Deteksi Detail Perangkat menggunakan UAParser.js
-        let deviceName = 'Desktop PC';
-        try {
-          const parser = new UAParser();
-          const result = parser.getResult();
-          const brand = result.device.vendor || ''; 
-          const model = result.device.model || '';  
-          const os = result.os.name || 'Unknown OS';   
-          const browser = result.browser.name || 'Browser'; 
-
-          if (brand || model) {
-            deviceName = `${brand} ${model}`.trim();
-          } else if (/mobile/i.test(navigator.userAgent)) {
-            deviceName = `Mobile (${os} - ${browser})`;
-          } else {
-            deviceName = `Desktop (${os} - ${browser})`;
-          }
-        } catch (err) {
-          deviceName = navigator.platform || 'Unknown Device';
+        let sid = sget('kt_sid');
+        if (!sid) {
+          sid = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+              : 's' + Date.now() + Math.random().toString(36).slice(2, 10);
+          sset('kt_sid', sid);
         }
 
+        const path = window.location.pathname.split('/').pop() || 'index.html';
+        const flow = (sget('kt_flow') || '').split(' > ').filter(Boolean);
+        if (flow[flow.length - 1] !== path) flow.push(path);
+        sset('kt_flow', flow.join(' > '));
+
+        // Deteksi perangkat dengan UAParser
+        let deviceName = 'Desktop PC';
+        try {
+          const r = new UAParser().getResult();
+          const brand = r.device.vendor || '', model = r.device.model || '';
+          const os = r.os.name || 'Unknown OS', browser = r.browser.name || 'Browser';
+          if (brand || model) deviceName = `${brand} ${model}`.trim() + ` (${os} - ${browser})`;
+          else if (/mobile/i.test(navigator.userAgent)) deviceName = `Mobile (${os} - ${browser})`;
+          else deviceName = `Desktop (${os} - ${browser})`;
+        } catch (err) { deviceName = navigator.platform || 'Unknown Device'; }
+
+        let clickCount = 0;
+        const interactions = [];
         document.addEventListener('click', (e) => {
           clickCount++;
-          const targetName = e.target.innerText || e.target.tagName || 'Element';
-          if (interactions.length < 5) {
-            interactions.push(`Klik: ${targetName.trim().substring(0, 15)}`);
-          }
-        });
+          const t = (e.target.innerText || e.target.tagName || 'Element').trim().substring(0, 15);
+          if (interactions.length < 10) interactions.push('Klik: ' + t);
+        }, true);
 
-        window.addEventListener('beforeunload', () => {
-          const durationSeconds = Math.round((Date.now() - startTime) / 1000);
-          const userFlow = `Mulai dari ${path} (${durationSeconds}s)`;
-          const clicksEvents = interactions.join(', ') || 'Tanpa klik';
-
-          supabaseClient.from('visitor_logs').insert([
-            {
-              ip_address: ip,
-              device_name: deviceName,
-              page_visited: path,
-              duration_seconds: durationSeconds,
-              user_flow: userFlow,
-              clicks_events: clicksEvents,
-              click_count: clickCount
-            }
-          ]).then(({ error }) => {
-            if (error) console.error('Gagal mencatat log pengunjung:', error.message);
+        function sendLog() {
+          const body = JSON.stringify({
+            p_session_id: sid,
+            p_page: path,
+            p_device: deviceName,
+            p_duration: Math.round((Date.now() - startTime) / 1000),
+            p_flow: flow.join(' > '),
+            p_clicks: interactions.join(', ') || 'Tanpa klik',
+            p_click_count: clickCount
           });
-        });
+          fetch(SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/rpc/log_visit', {
+            method: 'POST',
+            keepalive: true,
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+            body
+          }).then(async (res) => {
+            if (!res.ok) console.warn('log_visit gagal:', res.status, await res.text());
+          }).catch((err) => console.warn('log_visit error:', err));
+        }
+
+        sendLog();                              // langsung saat halaman dibuka
+        setInterval(sendLog, 20000);            // perbarui durasi tiap 20 detik
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') sendLog(); });
+        window.addEventListener('pagehide', sendLog);
       } catch (err) {
         console.error('Tracker error:', err);
       }
