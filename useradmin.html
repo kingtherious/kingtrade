@@ -95,6 +95,7 @@
     </nav></div>
     <div><div class="nav-label">KOMUNIKASI</div><nav class="side-nav">
       <button data-page="broadcast"><span class="ico">✉</span> Broadcast Pesan</button>
+      <button data-page="social"><span class="ico">↗</span> Sosial Media</button>
     </nav></div>
     <div><div class="nav-label">SYSTEM</div><nav class="side-nav">
       <button data-page="logs"><span class="ico">⌁</span> Log WebRequest API</button>
@@ -406,9 +407,44 @@
 
     <section class="page hidden" id="page-admins"><section class="panel">
       <div class="panel-head"><h2>Manajemen Admin User</h2><button class="btn teal" data-action="add-admin">+ Tambah admin</button></div>
-      <form id="addAdminForm" class="toolbar hidden" style="margin-bottom:14px"><input id="admEmail" type="email" placeholder="Email calon admin" aria-label="Email calon admin" required><button class="btn teal" type="submit">Jadikan admin</button></form>
-      <div class="table-wrap"><table><thead><tr><th>Email</th><th>Ditambahkan</th><th>Aksi</th></tr></thead><tbody id="admBody"><tr><td colspan="3">Memuat daftar admin...</td></tr></tbody></table></div>
-      <div class="notice">Calon admin harus sudah memiliki akun (mendaftar di website) dengan email yang sama. Anda tidak bisa mencabut akses akun Anda sendiri, dan minimal harus ada satu admin.</div>
+      <form id="addAdminForm" class="toolbar hidden" style="margin-bottom:14px">
+        <input id="admEmail" type="email" placeholder="Email calon admin" aria-label="Email calon admin" required>
+        <select id="admRole" aria-label="Role admin baru">
+          <option value="pengawas">Admin Pengawas</option>
+          <option value="verifikasi">Admin Verifikasi</option>
+          <option value="custom">Admin Custom</option>
+        </select>
+        <button class="btn teal" type="submit">Jadikan admin</button>
+      </form>
+      <div class="toolbar" style="margin-bottom:14px">
+        <select id="admRoleFilter" aria-label="Filter role admin">
+          <option value="">Semua role</option>
+          <option value="utama">Admin Utama</option>
+          <option value="pengawas">Admin Pengawas</option>
+          <option value="verifikasi">Admin Verifikasi</option>
+          <option value="custom">Admin Custom</option>
+        </select>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Email</th><th>Role</th><th>Ditambahkan</th><th>Aksi</th></tr></thead><tbody id="admBody"><tr><td colspan="4">Memuat daftar admin...</td></tr></tbody></table></div>
+      <div class="notice">Calon admin harus sudah memiliki akun dengan email yang sama. Admin utama dapat menetapkan role dan hak akses. Perubahan role memerlukan dukungan RPC dan validasi izin di backend; jangan hanya mengandalkan filter tampilan. Anda tidak bisa mencabut akses akun sendiri dan minimal harus ada satu admin utama.</div>
+    </section></section>
+
+    <section class="page hidden" id="page-social"><section class="panel">
+      <div class="panel-head"><h2>Kelola Sosial Media & Hyperlink</h2><button class="btn" id="socialRefresh" type="button">Muat ulang</button></div>
+      <p>Tambahkan nama platform sosial media dan URL tujuan. Link dapat diaktifkan atau dinonaktifkan sebelum ditampilkan di portal/website.</p>
+      <form id="socialForm">
+        <div class="form-grid">
+          <div class="field" style="margin-top:0"><label>Nama sosial media<input name="name" required maxlength="80" placeholder="Instagram, YouTube, TikTok..."></label></div>
+          <div class="field" style="margin-top:0"><label>Hyperlink / URL<input name="url" type="url" required placeholder="https://..."></label></div>
+        </div>
+        <div class="form-grid">
+          <div class="field" style="margin-top:0"><label>Urutan tampil<input name="sort_order" type="number" min="0" value="1"></label></div>
+          <label class="check" style="align-self:center"><input name="is_active" type="checkbox" checked> Aktifkan link</label>
+        </div>
+        <button class="btn teal" type="submit">Tambah sosial media</button>
+      </form>
+      <div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>Nama</th><th>Hyperlink</th><th>Urutan</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="socialBody"><tr><td colspan="5">Memuat sosial media...</td></tr></tbody></table></div>
+      <div class="notice">Data disimpan pada tabel <b>social_links</b>. Agar tampil di portal/website, bagian portal/website perlu membaca tabel ini dan hanya menampilkan link aktif.</div>
     </section></section>
 
     <section class="page hidden" id="page-broadcast"><section class="panel">
@@ -424,7 +460,7 @@
       </form>
       <h3 style="margin:22px 0 10px;font-size:14px">Pesan terkirim</h3>
       <div class="table-wrap"><table><thead><tr><th>Pesan</th><th>Tipe</th><th>Dikirim</th><th>Berakhir</th><th>Dibaca</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="bcBody"><tr><td colspan="7">Memuat data...</td></tr></tbody></table></div>
-      <div class="notice">Pesan tampil di portal member (portal harus membaca tabel <b>broadcast_messages</b>). Ini bukan email atau notifikasi push. Menarik pesan menyembunyikannya dari portal, sedangkan menghapus menghilangkannya beserta data pembacanya.</div>
+      <div class="notice">Pesan tersimpan saat tombol kirim ditekan. Agar pesan langsung muncul tanpa member login ulang atau refresh, portal member harus berlangganan perubahan tabel <b>broadcast_messages</b> melalui Supabase Realtime dan memperbarui tampilan ketika ada pesan aktif baru. Pastikan tabel masuk publication Realtime serta RLS mengizinkan member membaca pesan aktif. Ini bukan email atau notifikasi push. Menarik pesan menyembunyikannya dari portal, sedangkan menghapus menghilangkannya beserta data pembacanya.</div>
     </section></section>
   </main>
 </section>
@@ -532,6 +568,8 @@ function showPage(name){
     loadAdmins();
   } else if (name === 'broadcast') {
     CRUDS.bc.load();
+  } else if (name === 'social') {
+    loadSocialLinks();
   }
 }
 document.querySelectorAll('[data-page]').forEach(btn=>btn.addEventListener('click',()=>showPage(btn.dataset.page)));
@@ -1556,23 +1594,68 @@ async function loadSecurity() {
 }
 $('secRefresh')?.addEventListener('click', loadSecurity);
 
-// ---------- Manajemen Admin (tambah / cabut) ----------
+// ---------- Manajemen Admin (role / tambah / cabut) ----------
+const ADMIN_ROLE_LABELS = {
+  utama: 'Admin Utama',
+  pengawas: 'Admin Pengawas',
+  verifikasi: 'Admin Verifikasi',
+  custom: 'Admin Custom'
+};
+let adminCache = [];
+
 async function loadAdmins() {
   const tb = $('admBody');
-  tb.innerHTML = '<tr><td colspan="3">Memuat daftar admin...</td></tr>';
+  tb.innerHTML = '<tr><td colspan="4">Memuat daftar admin...</td></tr>';
   const { data, error } = await supabaseClient.rpc('admin_list_admins');
-  if (error) { tb.innerHTML = `<tr><td colspan="3" style="color:var(--red)">Gagal memuat: ${esc(error.message)}. Jalankan useradmin_update_v3.sql.</td></tr>`; return; }
-  tb.innerHTML = (data || []).map(a => `<tr><td>${esc(a.email || a.user_id)}</td><td>${esc(dt(a.created_at))}</td><td>${String(a.user_id) === String(myUserId) ? '<span style="color:var(--muted)">Akun Anda</span>' : `<button class="btn danger" type="button" data-adm-del="${esc(a.user_id)}">Cabut akses</button>`}</td></tr>`).join('') || '<tr><td colspan="3">Belum ada admin.</td></tr>';
+  if (error) {
+    tb.innerHTML = `<tr><td colspan="4" style="color:var(--red)">Gagal memuat: ${esc(error.message)}. Backend perlu mendukung data role admin.</td></tr>`;
+    return;
+  }
+  adminCache = data || [];
+  renderAdmins();
 }
+function renderAdmins() {
+  const tb = $('admBody');
+  const filter = $('admRoleFilter')?.value || '';
+  const list = adminCache.filter(a => !filter || (a.role || (String(a.user_id) === String(myUserId) ? 'utama' : 'custom')) === filter);
+  tb.innerHTML = list.map(a => {
+    const isSelf = String(a.user_id) === String(myUserId);
+    const role = a.role || (isSelf ? 'utama' : 'custom');
+    const roleControl = isSelf
+      ? `<span class="status active">${esc(ADMIN_ROLE_LABELS[role] || role)}</span>`
+      : `<select data-adm-role="${esc(a.user_id)}" aria-label="Role ${esc(a.email || a.user_id)}">
+          ${Object.entries(ADMIN_ROLE_LABELS).filter(([key]) => key !== 'utama').map(([key,label]) => `<option value="${key}" ${key === role ? 'selected' : ''}>${label}</option>`).join('')}
+        </select> <button class="btn" type="button" data-adm-role-save="${esc(a.user_id)}">Simpan role</button>`;
+    const remove = isSelf ? '<span style="color:var(--muted)">Akun Anda</span>' : `<button class="btn danger" type="button" data-adm-del="${esc(a.user_id)}">Cabut akses</button>`;
+    return `<tr><td>${esc(a.email || a.user_id)}</td><td>${roleControl}</td><td>${esc(dt(a.created_at))}</td><td>${remove}</td></tr>`;
+  }).join('') || '<tr><td colspan="4">Tidak ada admin yang cocok.</td></tr>';
+}
+$('admRoleFilter')?.addEventListener('change', renderAdmins);
+
 $('addAdminForm')?.addEventListener('submit', async e => {
   e.preventDefault();
   const email = $('admEmail').value.trim();
-  if (!confirm(`Jadikan ${email} sebagai admin? Admin punya akses penuh ke Admin Console.`)) return;
-  const { error } = await supabaseClient.rpc('admin_add_admin', { p_email: email });
-  if (error) { alert('Gagal: ' + error.message); return; }
+  const role = $('admRole').value;
+  if (!confirm(`Tambahkan ${email} sebagai ${ADMIN_ROLE_LABELS[role]}? Hak akses harus divalidasi oleh backend.`)) return;
+  const { error } = await supabaseClient.rpc('admin_add_admin_with_role', { p_email: email, p_role: role });
+  if (error) {
+    alert('Gagal menambahkan admin. Backend perlu menyediakan RPC admin_add_admin_with_role dan validasi hak Admin Utama: ' + error.message);
+    return;
+  }
   e.target.reset(); e.target.classList.add('hidden'); loadAdmins();
 });
 document.addEventListener('click', async e => {
+  const saveRole = e.target.closest('[data-adm-role-save]');
+  if (saveRole) {
+    const userId = saveRole.dataset.admRoleSave;
+    const select = document.querySelector(`[data-adm-role="${CSS.escape(userId)}"]`);
+    const role = select?.value;
+    if (!role || !confirm(`Ubah role admin ini menjadi ${ADMIN_ROLE_LABELS[role]}?`)) return;
+    const { error } = await supabaseClient.rpc('admin_set_role', { p_user_id: userId, p_role: role });
+    if (error) { alert('Gagal mengubah role. Backend perlu menyediakan RPC admin_set_role: ' + error.message); return; }
+    await loadAdmins();
+    return;
+  }
   const b = e.target.closest('[data-adm-del]');
   if (!b) return;
   if (!confirm('Cabut akses admin dari akun ini?')) return;
@@ -1615,6 +1698,59 @@ function exportLicenseHistory() {
 $('lhSearch')?.addEventListener('input', renderLicenseHistory);
 $('lhAction')?.addEventListener('change', renderLicenseHistory);
 $('lhRefresh')?.addEventListener('click', loadLicenseHistory);
+
+// ---------- Sosial Media & Hyperlink ----------
+let socialRows = [];
+async function loadSocialLinks() {
+  const body = $('socialBody');
+  if (!body) return;
+  body.innerHTML = '<tr><td colspan="5">Memuat sosial media...</td></tr>';
+  const { data, error } = await supabaseClient.from('social_links')
+    .select('*').order('sort_order', { ascending: true });
+  if (error) {
+    body.innerHTML = `<tr><td colspan="5" style="color:var(--red)">Gagal memuat: ${esc(error.message)}. Buat tabel social_links dan atur RLS terlebih dahulu.</td></tr>`;
+    return;
+  }
+  socialRows = data || [];
+  body.innerHTML = socialRows.map(r => `<tr>
+    <td>${esc(r.name)}</td>
+    <td><a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--cyan)">${esc(r.url)}</a></td>
+    <td>${esc(r.sort_order ?? 0)}</td>
+    <td>${r.is_active ? '<span class="status active">Aktif</span>' : '<span class="status blocked">Nonaktif</span>'}</td>
+    <td><button class="btn" type="button" data-social-toggle="${esc(r.id)}" data-active="${r.is_active ? '1' : '0'}">${r.is_active ? 'Nonaktifkan' : 'Aktifkan'}</button>
+    <button class="btn danger" type="button" data-social-delete="${esc(r.id)}">Hapus</button></td>
+  </tr>`).join('') || '<tr><td colspan="5">Belum ada sosial media.</td></tr>';
+}
+$('socialRefresh')?.addEventListener('click', loadSocialLinks);
+$('socialForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.currentTarget;
+  const name = f.elements.name.value.trim();
+  const url = f.elements.url.value.trim();
+  if (!/^https?:\/\//i.test(url)) { alert('URL harus diawali http:// atau https://'); return; }
+  const payload = { name, url, sort_order: Number(f.elements.sort_order.value || 0), is_active: f.elements.is_active.checked };
+  const { error } = await supabaseClient.from('social_links').insert(payload);
+  if (error) { alert('Gagal menyimpan sosial media: ' + error.message); return; }
+  f.reset(); f.elements.sort_order.value = '1'; f.elements.is_active.checked = true;
+  loadSocialLinks();
+});
+document.addEventListener('click', async e => {
+  const toggle = e.target.closest('[data-social-toggle]');
+  if (toggle) {
+    const row = socialRows.find(r => String(r.id) === String(toggle.dataset.socialToggle));
+    if (!row) return;
+    const { error } = await supabaseClient.from('social_links').update({ is_active: !row.is_active }).eq('id', row.id);
+    if (error) { alert('Gagal mengubah status: ' + error.message); return; }
+    loadSocialLinks(); return;
+  }
+  const del = e.target.closest('[data-social-delete]');
+  if (del) {
+    if (!confirm('Hapus hyperlink sosial media ini?')) return;
+    const { error } = await supabaseClient.from('social_links').delete().eq('id', del.dataset.socialDelete);
+    if (error) { alert('Gagal menghapus: ' + error.message); return; }
+    loadSocialLinks();
+  }
+});
 
 // ---------- Broadcast Pesan ----------
 let bcReads = new Map(), bcMembers = null;
