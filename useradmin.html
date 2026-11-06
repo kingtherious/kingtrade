@@ -239,13 +239,18 @@
           <article class="stat"><div class="label">Total Interaksi / Klik</div><div class="num" id="visClicks" style="color:var(--teal)">0</div><small>Clicks & Events</small></article>
         </div>
 
-        <div class="toolbar" style="margin-bottom:14px"><input id="visSearch" type="search" placeholder="Cari device atau IP" aria-label="Cari device"></div>
+        <div class="toolbar" style="margin-bottom:14px">
+          <input id="visSearch" type="search" placeholder="Cari device, OS, browser, atau IP" aria-label="Cari device">
+          <select id="visType" aria-label="Filter tipe device"><option value="">Semua tipe</option><option>Mobile</option><option>Tablet</option><option>Desktop</option><option>Bot</option><option>Tidak diketahui</option></select>
+          <span id="visTypeSummary" style="align-self:center;color:#7991ab;font-size:12px"></span>
+        </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Device / Browser</th><th>IP terakhir</th><th>Pertama dilihat</th><th>Terakhir dilihat</th><th>Kunjungan</th><th>Total durasi</th><th>Total klik</th><th>Halaman terbanyak</th><th>Detail</th></tr></thead>
-            <tbody id="visitorLogsBody"><tr><td colspan="9">Belum ada riwayat pengunjung yang tercatat.</td></tr></tbody>
+            <thead><tr><th>Device</th><th>Tipe</th><th>OS / Browser</th><th>IP terakhir</th><th>Pertama dilihat</th><th>Terakhir dilihat</th><th>Kunjungan</th><th>Total durasi</th><th>Total klik</th><th>Halaman terbanyak</th><th>Detail</th></tr></thead>
+            <tbody id="visitorLogsBody"><tr><td colspan="11">Belum ada riwayat pengunjung yang tercatat.</td></tr></tbody>
           </table>
         </div>
+        <div class="notice">Device dideteksi dari kolom <b>user_agent</b> (atau <b>device_name</b> bila berisi user agent mentah). Untuk model HP yang akurat, pasang <b>visitor-device.js</b> di website dan jalankan <b>visitor_device.sql</b>.</div>
       </section>
     </section>
 
@@ -256,7 +261,7 @@
         <section class="panel"><div class="panel-head"><h2>Daftar Akun MT5</h2><button class="btn teal" data-action="add-license">+ Tambah akun</button></div>
           <form id="addLicForm" class="toolbar hidden" style="margin-bottom:14px"><input id="alEmail" type="email" placeholder="Email member" aria-label="Email member" required><input id="alNo" placeholder="Nomor akun" aria-label="Nomor akun" required><input id="alBroker" placeholder="Broker" aria-label="Broker" required><select id="alPlat" aria-label="Platform"><option>MT5</option><option>MT4</option></select><select id="alStatus" aria-label="Status"><option value="active">Active</option><option value="pending">Pending</option></select><button class="btn teal" type="submit">Simpan akun</button></form>
           <div class="toolbar"><input id="licSearch" placeholder="Cari nomor akun / email / username" aria-label="Cari akun, email, username"><select id="licFilter" aria-label="Filter status"><option value="">Semua status</option><option value="active">Active</option><option value="pending">Pending</option><option value="rejected">Rejected</option><option value="blocked">Blocked</option></select><button class="btn" data-action="refresh">Muat ulang</button></div>
-          <div class="table-wrap"><table><thead><tr><th>Nomor Akun</th><th>Email User</th><th>Username / Display Name</th><th>Broker / IB</th><th>Status</th><th>Profit</th><th>Terakhir Aktif</th><th>Aksi</th></tr></thead><tbody id="licBody"><tr><td colspan="8">Memuat data...</td></tr></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>Nomor Akun</th><th>Email User</th><th>Username / Display Name</th><th>Broker / IB</th><th>Status</th><th>Profit</th><th>Terakhir Aktif</th><th>Form Pair</th><th>Aksi</th></tr></thead><tbody id="licBody"><tr><td colspan="9">Memuat data...</td></tr></tbody></table></div>
         </section>
       </div>
 
@@ -560,12 +565,20 @@ let authUserCache = [];
 const clientCell = r => `${esc(r.client_name || r.client_email || r.user_id || '-')}<br><small style="color:#7991ab">${esc(r.client_email || '')}</small>`;
 const fmtDate = d => d ? new Date(d).toLocaleString('id-ID') : '-';
 
+// Izin fitur Form Pair (sub menu di portal member) per akun lisensi: licenses.form_access
+function formAccCell(r){
+  if (r.form_access === undefined) return '<span style="color:#7991ab" title="Kolom licenses.form_access belum ada / tidak terbaca">-</span>';
+  const on = r.form_access === true;
+  return `<span class="status ${on ? 'active' : 'pending'}">${on ? 'Diizinkan' : 'Tidak'}</span><br>`
+       + `<button class="btn ${on ? 'danger' : 'teal'}" data-formacc="${esc(r.id)}" data-val="${on ? '0' : '1'}" style="margin-top:6px">${on ? 'Cabut izin' : 'Izinkan'}</button>`;
+}
+
 function render(){
   const q = $('licSearch').value.trim().toLowerCase(), f =$('licFilter').value;
   const list = rows.filter(r => (!f || r.status === f) && (!q || [r.account_number, r.client_name, r.client_email, r.username, r.display_name, r.user_id].join(' ').toLowerCase().includes(q)));
-  $('licBody').innerHTML = list.length ? list.map(r => { const acc = r.account_number || r.account_id || '-'; return `<tr><td>${esc(acc)}</td><td>${esc(r.client_email || '-')}</td><td>${esc(r.username || r.display_name || r.client_name || '-')}</td><td>${esc(r.broker || '-')} (${esc(r.platform || 'MT5')})</td><td>${badge(r.status)}</td><td>${esc(statProfit(accStat(acc)?.total_profit))}</td><td>${esc(eaLastSeenText(acc))}</td>
+  $('licBody').innerHTML = list.length ? list.map(r => { const acc = r.account_number || r.account_id || '-'; return `<tr><td>${esc(acc)}</td><td>${esc(r.client_email || '-')}</td><td>${esc(r.username || r.display_name || r.client_name || '-')}</td><td>${esc(r.broker || '-')} (${esc(r.platform || 'MT5')})</td><td>${badge(r.status)}</td><td>${esc(statProfit(accStat(acc)?.total_profit))}</td><td>${esc(eaLastSeenText(acc))}</td><td>${formAccCell(r)}</td>
     <td><button class="btn teal" data-id="${esc(r.id)}" data-set="active">Aktifkan</button> <button class="btn" data-id="${esc(r.id)}" data-set="rejected">Tolak</button> <button class="btn danger" data-id="${esc(r.id)}" data-set="blocked">Blokir</button> <button class="btn danger" data-id="${esc(r.id)}" data-del="1">Hapus</button></td></tr>`; }).join('')
-    : '<tr><td colspan="8">Tidak ada akun yang cocok.</td></tr>';
+    : '<tr><td colspan="9">Tidak ada akun yang cocok.</td></tr>';
 
   const pend = rows.filter(r => r.status === 'pending');
   $('ibBody').innerHTML = pend.length ? pend.map(r => `<tr><td>${esc(r.account_number)}</td><td>${clientCell(r)}</td><td>${esc(r.broker)} (${esc(r.platform)})</td><td>${esc(fmtDate(r.created_at))}</td>
@@ -589,6 +602,14 @@ async function loadLicenses(){
   }
 
   rows = data || [];
+  // form_access dibaca terpisah agar tidak bergantung pada kolom yang dikembalikan RPC admin_list_licenses
+  try {
+    const { data: fa, error: fe } = await supabaseClient.from('licenses').select('id,form_access');
+    if (!fe && fa) {
+      const fm = new Map(fa.map(x => [String(x.id), x.form_access === true]));
+      rows = rows.map(r => ({ ...r, form_access: fm.has(String(r.id)) ? fm.get(String(r.id)) : undefined }));
+    }
+  } catch (_) {}
   try {
     const { data: users } = await supabaseClient.rpc('admin_list_all_users');
     authUserCache = users || [];
@@ -667,6 +688,22 @@ document.addEventListener('click', async e => {
   if (res.error) { alert('Gagal: ' + res.error.message); return; }
   loadLicenses();
   loadTradingStats();
+});
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-formacc]');
+  if (!b) return;
+  const on = b.dataset.val === '1';
+  const row = rows.find(x => String(x.id) === b.dataset.formacc);
+  const acc = row?.account_number || row?.account_id || '';
+  if (!confirm((on ? 'Beri izin fitur Form Pair untuk akun ' : 'Cabut izin fitur Form Pair dari akun ') + acc + '?')) return;
+  b.disabled = true;
+  const res = await supabaseClient.from('licenses').update({ form_access: on }).eq('id', b.dataset.formacc).select();
+  if (res.error || !res.data || !res.data.length) {
+    alert('Gagal mengubah izin: ' + (res.error ? res.error.message : 'tidak ada baris yang berubah (cek RLS admin)') + '\nPastikan kolom licenses.form_access sudah dibuat (jalankan form_access.sql).');
+    b.disabled = false; return;
+  }
+  loadLicenses();
 });
 
 $('licSearch')?.addEventListener('input', render);$('licFilter')?.addEventListener('change', render);
@@ -779,27 +816,83 @@ document.getElementById('filterStatus')?.addEventListener('change', applyTradeFi
 // Refresh daftar tiket secara berkala. Status CLOSED hanya akan muncul setelah callback EA/backend memperbarui kolom status di Supabase.
 setInterval(() => { if (document.getElementById('page-trade-entries') && !document.getElementById('page-trade-entries').classList.contains('hidden')) loadTradeEntries(); }, 15000);
 
+// ===== Deteksi device pengunjung =====
+function parseUA(ua){
+  ua = String(ua || '');
+  const r = { type: '', os: '', browser: '', model: '', label: '' };
+  if (!ua) return r;
+  let m, mm;
+  if (/bot|crawl|spider|slurp|facebookexternalhit|headlesschrome|python-requests|curl\/|wget\//i.test(ua)) r.type = 'Bot';
+
+  if (/Windows NT/.test(ua)) {
+    r.os = 'Windows'; m = ua.match(/Windows NT (\d+\.\d+)/);
+    const v = { '10.0': '10/11', '6.3': '8.1', '6.2': '8', '6.1': '7' }[m && m[1]]; if (v) r.os += ' ' + v;
+  } else if (/Android/.test(ua)) {
+    m = ua.match(/Android (\d+(?:\.\d+)?)/); r.os = 'Android' + (m ? ' ' + m[1] : '');
+    mm = ua.match(/Android[^;)]*;\s*([^;)]+?)(?:\s+Build|\)|;)/);
+    if (mm && mm[1].trim().length > 2) r.model = mm[1].trim();      // UA ter-reduksi Chrome hanya "K"
+  } else if (/iPhone|iPad|iPod/.test(ua)) {
+    m = ua.match(/OS (\d+)[_.](\d+)/); r.os = 'iOS' + (m ? ' ' + m[1] + '.' + m[2] : '');
+    r.model = /iPad/.test(ua) ? 'iPad' : /iPod/.test(ua) ? 'iPod' : 'iPhone';
+  } else if (/CrOS/.test(ua)) r.os = 'ChromeOS';
+  else if (/Mac OS X|Macintosh/.test(ua)) r.os = 'macOS';
+  else if (/Linux|X11/.test(ua)) r.os = 'Linux';
+
+  const b = [
+    [/Instagram/, 'Instagram (in-app)'], [/FBAN|FBAV/, 'Facebook (in-app)'], [/TikTok|musical_ly/i, 'TikTok (in-app)'],
+    [/Line\//, 'LINE (in-app)'], [/Edg(?:e|A|iOS)?\/(\d+)/, 'Edge'], [/OPR\/(\d+)|Opera/, 'Opera'],
+    [/SamsungBrowser\/(\d+)/, 'Samsung Internet'], [/(?:Firefox|FxiOS)\/(\d+)/, 'Firefox'],
+    [/(?:Chrome|CriOS)\/(\d+)/, 'Chrome'], [/Version\/(\d+).*Safari/, 'Safari']
+  ];
+  for (const [re, name] of b) { m = ua.match(re); if (m) { r.browser = name + (m[1] ? ' ' + m[1] : ''); break; } }
+
+  if (!r.type) {
+    if (/iPad|Tablet/.test(ua) || (/Android/.test(ua) && !/Mobile/.test(ua))) r.type = 'Tablet';
+    else if (/Mobi|iPhone|iPod|Android/.test(ua)) r.type = 'Mobile';
+    else if (r.os || r.browser) r.type = 'Desktop';
+  }
+  r.label = r.model || (r.type === 'Desktop' ? (r.os ? r.os + ' PC' : 'Desktop') : (r.os || r.type));
+  return r;
+}
+
+const looksLikeUA = t => /Mozilla\/|AppleWebKit|Gecko\/|Windows NT|Android|iPhone|CriOS|Macintosh/.test(String(t || ''));
+// Info device satu baris log: kolom hasil deteksi di website diprioritaskan, selebihnya diurai dari user agent
+function visitorInfo(r) {
+  const raw = String(r.device_name || '').trim();
+  const ua = r.user_agent || (looksLikeUA(raw) ? raw : '');
+  const p = parseUA(ua || raw);
+  const label = (!raw || looksLikeUA(raw)) ? (p.label || '') : raw;
+  return {
+    label: label || 'Tidak diketahui',
+    type: r.device_type || p.type || 'Tidak diketahui',
+    os: r.os || p.os || '',
+    browser: r.browser || p.browser || '',
+    screen: r.screen || '', lang: r.language || '', ua: r.user_agent || ''
+  };
+}
+
 let visitorDevices = [];
 async function loadVisitorLogs() {
   const tbody = document.getElementById('visitorLogsBody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="9">Mengambil data riwayat pengunjung...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="11">Mengambil data riwayat pengunjung...</td></tr>';
   const { data, error } = await supabaseClient.from('visitor_logs').select('*').order('created_at', { ascending: false }).limit(5000);
-  if (error) { tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red);">Gagal memuat data: ${esc(error.message)}</td></tr>`; return; }
-  if (!data || data.length === 0) { visitorDevices = []; tbody.innerHTML = '<tr><td colspan="9">Belum ada riwayat pengunjung yang dicatat.</td></tr>'; return; }
+  if (error) { tbody.innerHTML = `<tr><td colspan="11" style="color:var(--red);">Gagal memuat data: ${esc(error.message)}</td></tr>`; return; }
+  if (!data || data.length === 0) { visitorDevices = []; tbody.innerHTML = '<tr><td colspan="11">Belum ada riwayat pengunjung yang dicatat.</td></tr>'; return; }
 
-  // Kelompokkan per device (data sudah urut terbaru -> terlama)
+  // Kelompokkan per device: device_id (bila ada) atau nama hasil deteksi. Data urut terbaru -> terlama
   const map = new Map();
   data.forEach(r => {
-    const key = String(r.device_name || '').trim() || 'Tidak diketahui';
+    const key = r.device_id ? 'id:' + r.device_id : 'nm:' + visitorInfo(r).label;
     if (!map.has(key)) map.set(key, []);
     map.get(key).push(r);
   });
-  visitorDevices = [...map.entries()].map(([device, v]) => {
+  visitorDevices = [...map.values()].map(v => {
     const pages = new Map();
     v.forEach(r => { const p = r.page_visited || '/'; pages.set(p, (pages.get(p) || 0) + 1); });
+    const info = visitorInfo(v[0]);
     return {
-      device, visits: v, last: v[0], first: v[v.length - 1],
+      device: info.label, info, visits: v, last: v[0], first: v[v.length - 1],
       ips: new Set(v.map(r => r.ip_address).filter(Boolean)),
       dur: v.reduce((a, r) => a + (Number(r.duration_seconds) || 0), 0),
       clicks: v.reduce((a, r) => a + (Number(r.click_count) || 0), 0),
@@ -822,20 +915,35 @@ function renderVisitorDevices() {
   const tbody = document.getElementById('visitorLogsBody');
   if (!tbody) return;
   const q = ($('visSearch')?.value || '').trim().toLowerCase();
-  const list = visitorDevices.map((g, i) => ({ g, i })).filter(({ g }) => !q || g.device.toLowerCase().includes(q) || [...g.ips].join(' ').includes(q));
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="9">Tidak ada device yang cocok.</td></tr>'; return; }
+  const tf = $('visType')?.value || '';
+
+  const cnt = {};
+  visitorDevices.forEach(g => { cnt[g.info.type] = (cnt[g.info.type] || 0) + 1; });
+  const sm = $('visTypeSummary');
+  if (sm) sm.textContent = ['Mobile', 'Tablet', 'Desktop', 'Bot', 'Tidak diketahui'].filter(t => cnt[t]).map(t => `${t}: ${cnt[t]}`).join(' · ');
+
+  const list = visitorDevices.map((g, i) => ({ g, i })).filter(({ g }) =>
+    (!tf || g.info.type === tf) &&
+    (!q || [g.device, g.info.type, g.info.os, g.info.browser, ...g.ips].join(' ').toLowerCase().includes(q)));
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="11">Tidak ada device yang cocok.</td></tr>'; return; }
+  const tcls = { Mobile: 'active', Tablet: 'expired', Desktop: 'pending', Bot: 'blocked' };
   tbody.innerHTML = list.map(({ g, i }) => {
     const extraIp = g.ips.size > 1 ? ` <small style="color:#7991ab">(+${g.ips.size - 1} IP lain)</small>` : '';
     const detail = g.visits.slice(0, 10).map(r => `<tr><td>${esc(dt(r.created_at))}</td><td>${esc(r.page_visited || '/')}</td><td>${esc(r.duration_seconds ? r.duration_seconds + 's' : '-')}</td><td>${esc(r.user_flow || '-')}</td><td>${esc(r.clicks_events || '-')}</td></tr>`).join('');
+    const meta = [g.info.screen && 'Layar ' + g.info.screen, g.info.lang && 'Bahasa ' + g.info.lang, g.info.ua && 'UA: ' + g.info.ua].filter(Boolean).join(' · ');
     return `<tr>
-      <td>${esc(g.device)}</td><td>${esc(g.last.ip_address || '-')}${extraIp}</td>
+      <td>${esc(g.device)}</td>
+      <td><span class="status ${tcls[g.info.type] || 'pending'}">${esc(g.info.type)}</span></td>
+      <td>${esc([g.info.os, g.info.browser].filter(Boolean).join(' / ') || '-')}</td>
+      <td>${esc(g.last.ip_address || '-')}${extraIp}</td>
       <td>${esc(dt(g.first.created_at))}</td><td>${esc(dt(g.last.created_at))}</td>
       <td>${g.visits.length}</td><td>${esc(fmtDur(g.dur))}</td><td>${g.clicks}</td><td>${esc(g.topPage)}</td>
       <td><button class="btn" type="button" data-vd="${i}">Detail</button></td></tr>
-    <tr class="hidden" data-vd-row="${i}"><td colspan="9"><div class="table-wrap"><table><thead><tr><th>Waktu</th><th>Halaman</th><th>Durasi</th><th>Alur pengguna</th><th>Klik &amp; interaksi</th></tr></thead><tbody>${detail}</tbody></table></div><small style="color:#7991ab">Menampilkan ${Math.min(10, g.visits.length)} kunjungan terakhir dari ${g.visits.length}.</small></td></tr>`;
+    <tr class="hidden" data-vd-row="${i}"><td colspan="11">${meta ? `<small style="color:#7991ab;white-space:normal;display:block;margin-bottom:8px">${esc(meta)}</small>` : ''}<div class="table-wrap"><table><thead><tr><th>Waktu</th><th>Halaman</th><th>Durasi</th><th>Alur pengguna</th><th>Klik &amp; interaksi</th></tr></thead><tbody>${detail}</tbody></table></div><small style="color:#7991ab">Menampilkan ${Math.min(10, g.visits.length)} kunjungan terakhir dari ${g.visits.length}.</small></td></tr>`;
   }).join('');
 }
 document.getElementById('visSearch')?.addEventListener('input', renderVisitorDevices);
+document.getElementById('visType')?.addEventListener('change', renderVisitorDevices);
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-vd]');
   if (!b) return;
