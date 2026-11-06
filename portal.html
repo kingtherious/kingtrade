@@ -204,6 +204,21 @@ table.ff td.cd{white-space:nowrap;text-align:center}
 .cdv.now{color:#ff6b7a}
 .cdv.past{color:#7f8da6;font-weight:600}
 .pend{color:#ffbd26;font-size:12px;font-weight:600}
+
+/* ===== Broadcast pesan dari admin ===== */
+.bc-overlay{position:fixed;inset:0;background:rgba(2,8,16,.78);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px}
+.bc-overlay.show{display:flex}
+.bc-box{background:var(--panel);border:1px solid var(--cyan);border-radius:18px;width:100%;max-width:520px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(8,216,237,.18)}
+.bc-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
+.bc-head h2{margin:0;font-size:17px}
+.bc-count{font-size:12px;color:var(--muted)}
+.bc-body{padding:18px 22px;overflow-y:auto}
+.bc-item{padding:12px 0;border-bottom:1px solid rgba(0,190,226,.15)}
+.bc-item:last-child{border:0}
+.bc-item b{display:block;margin-bottom:4px}
+.bc-item p{margin:0;color:#d5e3f7;font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.bc-item small{display:block;margin-top:6px;color:var(--muted);font-size:11px}
+.bc-foot{padding:14px 22px;border-top:1px solid var(--line);text-align:right}
 </style>
 </head>
 <body>
@@ -361,6 +376,7 @@ table.ff td.cd{white-space:nowrap;text-align:center}
    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
      <button class="btn alt" id="ffDefaultBtn" type="button">Isi pair default</button>
      <button class="btn alt" id="ffReloadBtn" type="button">Muat ulang</button>
+     <button class="btn alt" id="ffResetBtn" type="button" style="border-color:rgba(255,107,122,.6);color:var(--red)">Reset semua entry</button>
      <span class="msg" id="ffMsg" role="status"></span>
    </div>
    <div class="ffwrap"><table class="ff"><thead><tr>
@@ -383,6 +399,14 @@ table.ff td.cd{white-space:nowrap;text-align:center}
    </div>
   </section>
  </main>
+</div>
+
+<div class="bc-overlay" id="bcOverlay" role="dialog" aria-modal="true" aria-labelledby="bcTitle">
+ <div class="bc-box">
+  <div class="bc-head"><h2 id="bcTitle">Pesan dari Admin</h2><span class="bc-count" id="bcCount"></span></div>
+  <div class="bc-body" id="bcBody"></div>
+  <div class="bc-foot"><button class="btn" id="bcClose" type="button">Mengerti</button></div>
+ </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -535,7 +559,38 @@ async function init() {
 
   await loadLicenses();
   await loadStats();
+  await loadBroadcasts();
 }
+
+// Pesan broadcast dari admin: tampilkan yang belum dibaca, lalu tandai sudah dibaca
+async function loadBroadcasts() {
+  if (!db || !user) return;
+  try {
+    const { data: msgs, error: e1 } = await db.from('broadcast_messages').select('*').order('created_at', { ascending: false });
+    const { data: reads, error: e2 } = await db.from('broadcast_reads').select('message_id');
+    if (e1 || e2) { console.error('Gagal memuat broadcast:', e1 || e2); return; }
+    const seen = new Set((reads || []).map(r => r.message_id));
+    const unread = (msgs || []).filter(m => !seen.has(m.id));
+    if (!unread.length) return;
+
+    const fmt = v => v ? new Date(v).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    $('bcCount').textContent = unread.length + ' pesan baru';
+    $('bcBody').innerHTML = unread.map(m => {
+      const title = m.title || m.subject || '';
+      const text = m.message ?? m.body ?? m.content ?? m.text ?? '';
+      return `<div class="bc-item">${title ? `<b>${esc(title)}</b>` : ''}<p>${esc(text)}</p><small>${esc(fmt(m.created_at))}</small></div>`;
+    }).join('');
+    $('bcOverlay').classList.add('show');
+
+    // setelah pesan ditampilkan, tandai dibaca
+    const rows = unread.map(m => ({ message_id: m.id, user_id: user.id }));
+    const { error } = await db.from('broadcast_reads').upsert(rows, { onConflict: 'message_id,user_id', ignoreDuplicates: true });
+    if (error) console.error('Gagal menandai pesan dibaca:', error);
+  } catch (err) {
+    console.error('Broadcast error:', err);
+  }
+}
+$('bcClose').addEventListener('click', () => $('bcOverlay').classList.remove('show'));
 
 $('logoutBtn').addEventListener('click', logout);
 
@@ -747,6 +802,20 @@ try{
   if(db){ let rt; db.channel('news_calendar_live').on('postgres_changes',{event:'*',schema:'public',table:'news_calendar'},()=>{clearTimeout(rt);rt=setTimeout(ffRefreshNums,800);}).subscribe(); }
 }catch(_){}
 document.getElementById('ffReloadBtn').addEventListener('click',()=>ffInit(true));
+// Reset: hapus semua pilihan PAIR ENTRY (list entry EA) untuk akun yang sedang dipilih
+document.getElementById('ffResetBtn').addEventListener('click',async()=>{
+  const m=document.getElementById('ffMsg');
+  if(!db||!user){m.style.color='var(--red)';m.textContent='Login dulu untuk mereset config.';return;}
+  if(!ffAcct){m.style.color='var(--red)';m.textContent='Belum ada akun aktif untuk direset.';return;}
+  if(!confirm('Hapus SEMUA list entry (pair) untuk akun '+ffAcct+'? EA tidak akan entry pada berita sampai kamu memilih pair lagi.')) return;
+  const btn=document.getElementById('ffResetBtn'); btn.disabled=true;
+  m.style.color='var(--muted)'; m.textContent='Menghapus...';
+  const {error}=await db.from('news_pair_config').delete().eq('user_id',user.id).eq('account_number',ffAcct);
+  btn.disabled=false;
+  if(error){m.style.color='var(--red)';m.textContent='Gagal reset: '+error.message;return;}
+  ffCfg={}; ffRender();
+  m.style.color='var(--teal)'; m.textContent='Semua list entry akun '+ffAcct+' berhasil dihapus ✓';
+});
 document.getElementById('ffAcct').addEventListener('change',async e=>{
   ffAcct=e.target.value;
   const m=document.getElementById('ffMsg'); m.style.color='var(--muted)'; m.textContent='Memuat config akun '+ffAcct+'...';
