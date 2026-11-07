@@ -650,10 +650,12 @@
 
         // Deteksi perangkat dengan UAParser
         let deviceName = 'Desktop PC';
+        let osName = 'Unknown OS', browserName = 'Browser';
         try {
           const r = new UAParser().getResult();
           const brand = r.device.vendor || '', model = r.device.model || '';
           const os = r.os.name || 'Unknown OS', browser = r.browser.name || 'Browser';
+          osName = os; browserName = browser;
           if (brand || model) deviceName = `${brand} ${model}`.trim() + ` (${os} - ${browser})`;
           else if (/mobile/i.test(navigator.userAgent)) deviceName = `Mobile (${os} - ${browser})`;
           else deviceName = `Desktop (${os} - ${browser})`;
@@ -687,7 +689,18 @@
           }).catch((err) => console.warn('log_visit error:', err));
         }
 
-        sendLog();                              // langsung saat halaman dibuka
+        // Model HP akurat (Android/Chrome): ambil dari User-Agent Client Hints.
+        // Catatan: iPhone/Safari memang tidak membuka model, hanya "iPhone".
+        const modelLookup = (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues)
+          ? navigator.userAgentData.getHighEntropyValues(['model', 'platform', 'platformVersion'])
+              .then((h) => {
+                if (h && h.model) {
+                  deviceName = `${h.model} (${h.platform || osName} ${h.platformVersion || ''} - ${browserName})`.replace(/\s+\)/, ')');
+                }
+              }).catch(() => {})
+          : Promise.resolve();
+        // Kirim pertama setelah model terbaca (maks. tunggu 1,5 detik)
+        Promise.race([modelLookup, new Promise((r) => setTimeout(r, 1500))]).then(sendLog);
         setInterval(sendLog, 20000);            // perbarui durasi tiap 20 detik
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') sendLog(); });
         window.addEventListener('pagehide', sendLog);
