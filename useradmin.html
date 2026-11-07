@@ -39,6 +39,12 @@
 @media(max-width:760px){.ea-head{display:none}.ea-row{grid-template-columns:1fr 1fr}.ea-row>:first-child{grid-column:1/-1}.ea-row>[data-label]::before{content:attr(data-label);display:block;font-size:11px;color:#7991ab;margin-bottom:4px;text-transform:uppercase}}
 .chip{display:inline-block;margin:2px 6px 2px 0;padding:3px 10px;border-radius:999px;border:1px solid #29445a;font-size:12px;color:#cfdbeb}
 .row-line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #1a3047;font-size:13px}
+.soc-grid{display:flex;flex-wrap:wrap;gap:12px}
+.soc-card{display:flex;flex-direction:column;align-items:center;gap:8px;width:110px;padding:12px 8px;border:1px solid #1a3047;border-radius:12px;background:#0a1626;color:var(--text);text-decoration:none;font-size:13px;text-align:center}
+.soc-card img{width:44px;height:44px;object-fit:contain;border-radius:10px}.soc-card:hover{border-color:var(--cyan)}
+.soc-thumb{width:36px;height:36px;object-fit:contain;border-radius:8px;vertical-align:middle}
+body.role-pengawas [data-set],body.role-pengawas [data-del],body.role-pengawas [data-au],body.role-pengawas [data-formacc],body.role-pengawas [data-action="add-license"],body.role-pengawas #addLicForm,
+body.role-verifikasi [data-set="blocked"],body.role-verifikasi [data-del],body.role-verifikasi [data-au="block"],body.role-verifikasi [data-au="delete"],body.role-verifikasi [data-formacc],body.role-verifikasi [data-action="add-license"],body.role-verifikasi #addLicForm{display:none!important}
 </style>
 </head>
 <body>
@@ -95,10 +101,9 @@
     </nav></div>
     <div><div class="nav-label">KOMUNIKASI</div><nav class="side-nav">
       <button data-page="broadcast"><span class="ico">✉</span> Broadcast Pesan</button>
-      <button data-page="social"><span class="ico">↗</span> Sosial Media</button>
+      <button data-page="social"><span class="ico">☍</span> Sosial</button>
     </nav></div>
     <div><div class="nav-label">SYSTEM</div><nav class="side-nav">
-      <button data-page="logs"><span class="ico">⌁</span> Log WebRequest API</button>
       <button data-page="settings"><span class="ico">⚙</span> API & Keamanan</button>
       <button data-page="admins"><span class="ico">♙</span> Manajemen Admin</button>
     </nav></div>
@@ -107,7 +112,7 @@
   <main class="main">
     <header class="topline">
       <div><h1 id="pageTitle">Dashboard</h1><p id="pageDesc">Ringkasan sistem lisensi KINGTHERIOUS.</p></div>
-      <span class="pill">● Admin area</span>
+      <span class="pill" id="rolePill">● Admin area</span>
     </header>
 
     <section class="page" id="page-overview">
@@ -376,21 +381,6 @@
       <div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Pertanyaan &amp; jawaban</th><th>Kategori</th><th>Urutan</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="faqBody"><tr><td colspan="5">Memuat data...</td></tr></tbody></table></div>
     </section></section>
 
-    <section class="page hidden" id="page-logs"><section class="panel">
-      <div class="panel-head"><h2>Log WebRequest API</h2><button class="btn" id="rqRefresh" type="button">Muat log</button></div>
-      <div class="grid" style="margin-bottom:14px">
-        <article class="stat"><div class="label">Permintaan EA</div><div class="num" id="rqTotal">0</div><small>Pada rentang waktu terpilih</small></article>
-        <article class="stat"><div class="label">Gagal / ditolak</div><div class="num" id="rqFail" style="color:var(--amber)">0%</div><small>Denied, error, atau hasil bukan ok</small></article>
-        <article class="stat"><div class="label">Akun aktif</div><div class="num" id="rqAccounts" style="color:var(--teal)">0</div><small>Akun yang mengirim sinyal</small></article>
-        <article class="stat"><div class="label">Akun diam &gt; 3 jam</div><div class="num" id="rqQuiet" style="color:var(--red)">0</div><small>Lisensi aktif tanpa sinyal EA</small></article>
-      </div>
-      <div class="toolbar"><input id="rqSearch" placeholder="Cari nomor akun" aria-label="Cari akun"><select id="rqEvent" aria-label="Filter jenis"><option value="">Semua jenis</option><option value="start">Start</option><option value="heartbeat">Heartbeat</option><option value="stop">Stop</option><option value="license_check">Cek lisensi</option><option value="denied">Ditolak</option><option value="error">Error</option></select><select id="rqEa" aria-label="Filter EA"><option value="">Semua EA</option></select><select id="rqRange" aria-label="Rentang waktu"><option value="24h">24 jam terakhir</option><option value="7d">7 hari terakhir</option></select></div>
-      <div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Waktu</th><th>Akun (disamarkan)</th><th>EA</th><th>Jenis</th><th>Versi</th><th>Hasil</th><th>Keterangan</th></tr></thead><tbody id="rqBody"><tr><td colspan="7">Memuat log...</td></tr></tbody></table></div>
-      <h3 style="margin:18px 0 8px;font-size:14px">Akun aktif tanpa sinyal EA lebih dari 3 jam</h3>
-      <div id="rqQuietList"></div>
-      <div class="notice">Log ini berasal dari pencatatan EA (<b>ea_log_usage</b>), bukan dari server. Permintaan yang diblokir MT5 sendiri (error 4014, alamat belum didaftarkan di Allow WebRequest) tidak pernah sampai ke Supabase, jadi tidak tercatat. Nomor akun disamarkan dan token tidak pernah disimpan.</div>
-    </section></section>
-
     <section class="page hidden" id="page-settings">
       <section class="panel">
         <div class="panel-head"><h2>Kesehatan keamanan tabel</h2><button class="btn" id="secRefresh" type="button">Periksa ulang</button></div>
@@ -407,46 +397,40 @@
 
     <section class="page hidden" id="page-admins"><section class="panel">
       <div class="panel-head"><h2>Manajemen Admin User</h2><button class="btn teal" data-action="add-admin">+ Tambah admin</button></div>
-      <form id="addAdminForm" class="toolbar hidden" style="margin-bottom:14px">
-        <input id="admEmail" type="email" placeholder="Email calon admin" aria-label="Email calon admin" required>
-        <select id="admRole" aria-label="Role admin baru">
-          <option value="pengawas">Admin Pengawas</option>
-          <option value="verifikasi">Admin Verifikasi</option>
-          <option value="custom">Admin Custom</option>
-        </select>
-        <button class="btn teal" type="submit">Jadikan admin</button>
-      </form>
-      <div class="toolbar" style="margin-bottom:14px">
-        <select id="admRoleFilter" aria-label="Filter role admin">
-          <option value="">Semua role</option>
-          <option value="utama">Admin Utama</option>
-          <option value="pengawas">Admin Pengawas</option>
-          <option value="verifikasi">Admin Verifikasi</option>
-          <option value="custom">Admin Custom</option>
-        </select>
-      </div>
+      <form id="addAdminForm" class="toolbar hidden" style="margin-bottom:14px"><input id="admEmail" type="email" placeholder="Email calon admin" aria-label="Email calon admin" required><select id="admRole" aria-label="Role admin"><option value="pengawas">Admin pengawas</option><option value="verifikasi">Admin verifikasi</option><option value="utama">Admin utama</option></select><button class="btn teal" type="submit">Jadikan admin</button></form>
+      <div class="toolbar" style="margin-bottom:14px"><select id="admRoleFilter" aria-label="Filter role"><option value="">Semua role</option><option value="pengawas">Admin pengawas</option><option value="verifikasi">Admin verifikasi</option><option value="utama">Admin utama</option></select><span id="admCount" class="row-note" style="min-width:0"></span></div>
       <div class="table-wrap"><table><thead><tr><th>Email</th><th>Role</th><th>Ditambahkan</th><th>Aksi</th></tr></thead><tbody id="admBody"><tr><td colspan="4">Memuat daftar admin...</td></tr></tbody></table></div>
-      <div class="notice">Calon admin harus sudah memiliki akun dengan email yang sama. Admin utama dapat menetapkan role dan hak akses. Perubahan role memerlukan dukungan RPC dan validasi izin di backend; jangan hanya mengandalkan filter tampilan. Anda tidak bisa mencabut akses akun sendiri dan minimal harus ada satu admin utama.</div>
+      <h3 style="margin:20px 0 10px;font-size:14px">Hak akses per role</h3>
+      <div class="table-wrap"><table><thead><tr><th>Menu / aksi</th><th>Admin utama</th><th>Admin verifikasi</th><th>Admin pengawas</th></tr></thead><tbody>
+        <tr><td>Dashboard, Statistik Entry Posisi, Statistik Pengguna, Riwayat Pengunjung, Riwayat Lisensi</td><td>Penuh</td><td>Lihat saja</td><td>Lihat saja</td></tr>
+        <tr><td>Akun MT5 dan Verifikasi IB</td><td>Penuh</td><td>Lihat + Aktifkan / Tolak</td><td>Lihat saja</td></tr>
+        <tr><td>Konfirmasi User Auth</td><td>Penuh</td><td>Aktifkan / Tolak</td><td>Tidak ada akses</td></tr>
+        <tr><td>Blokir, Hapus, tambah akun MT5, izin Form Pair</td><td>Penuh</td><td>Tidak ada akses</td><td>Tidak ada akses</td></tr>
+        <tr><td>Management EA, Website Content, Broadcast, Sosial, API &amp; Keamanan, Manajemen Admin</td><td>Penuh</td><td>Tidak ada akses</td><td>Tidak ada akses</td></tr>
+      </tbody></table></div>
+      <div class="notice">Calon admin harus sudah memiliki akun (mendaftar di website) dengan email yang sama. Admin baru bawaannya <b>pengawas</b> (hak paling kecil). Anda tidak bisa mengubah atau mencabut akun sendiri, dan minimal harus ada satu admin utama.</div>
     </section></section>
 
-    <section class="page hidden" id="page-social"><section class="panel">
-      <div class="panel-head"><h2>Kelola Sosial Media & Hyperlink</h2><button class="btn" id="socialRefresh" type="button">Muat ulang</button></div>
-      <p>Tambahkan nama platform sosial media dan URL tujuan. Link dapat diaktifkan atau dinonaktifkan sebelum ditampilkan di portal/website.</p>
-      <form id="socialForm">
-        <div class="form-grid">
-          <div class="field" style="margin-top:0"><label>Nama sosial media<input name="name" required maxlength="80" placeholder="Instagram, YouTube, TikTok..."></label></div>
-          <div class="field" style="margin-top:0"><label>Hyperlink / URL<input name="url" type="url" required placeholder="https://..."></label></div>
-        </div>
-        <div class="form-grid">
-          <div class="field" style="margin-top:0"><label>Urutan tampil<input name="sort_order" type="number" min="0" value="1"></label></div>
-          <label class="check" style="align-self:center"><input name="is_active" type="checkbox" checked> Aktifkan link</label>
-        </div>
-        <button class="btn teal" type="submit">Tambah sosial media</button>
-      </form>
-      <div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>Nama</th><th>Hyperlink</th><th>Urutan</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="socialBody"><tr><td colspan="5">Memuat sosial media...</td></tr></tbody></table></div>
-      <div class="notice">Data disimpan pada tabel <b>social_links</b>. Agar tampil di portal/website, bagian portal/website perlu membaca tabel ini dan hanya menampilkan link aktif.</div>
-    </section></section>
-
+    <section class="page hidden" id="page-social">
+      <section class="panel">
+        <div class="panel-head"><h2>Tambah sosial media</h2></div>
+        <form id="socForm">
+          <div class="form-grid">
+            <div class="field" style="margin-top:0"><label>Nama sosial media<input name="name" required maxlength="60" placeholder="mis. Telegram Member"></label></div>
+            <div class="field" style="margin-top:0"><label>Hyperlink<input type="url" name="url" required pattern="https?://.+" placeholder="https://t.me/namagrup"></label></div>
+          </div>
+          <div class="field"><label>Gambar / logo (PNG, JPG, WEBP, GIF, maksimal 1 MB)<input type="file" name="image" id="socFile" accept="image/png,image/jpeg,image/webp,image/gif" required></label></div>
+          <div id="socThumb" style="margin-bottom:12px"></div>
+          <button class="btn teal" type="submit">Tambah sosial media</button>
+        </form>
+        <div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Gambar</th><th>Nama</th><th>Hyperlink</th><th>Aksi</th></tr></thead><tbody id="socBody"><tr><td colspan="4">Memuat data...</td></tr></tbody></table></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Pratinjau di bagian bawah Ringkasan</h2></div>
+        <div id="socPreview"></div>
+        <div class="notice">Bagian Sosial Media di bawah Ringkasan hanya tampil jika sudah ada minimal satu tautan. Portal member harus membaca tabel <b>social_links</b> untuk menampilkannya.</div>
+      </section>
+    </section>
     <section class="page hidden" id="page-broadcast"><section class="panel">
       <div class="panel-head"><h2>Kirim pesan ke seluruh member portal</h2></div>
       <form id="bcForm">
@@ -460,7 +444,7 @@
       </form>
       <h3 style="margin:22px 0 10px;font-size:14px">Pesan terkirim</h3>
       <div class="table-wrap"><table><thead><tr><th>Pesan</th><th>Tipe</th><th>Dikirim</th><th>Berakhir</th><th>Dibaca</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="bcBody"><tr><td colspan="7">Memuat data...</td></tr></tbody></table></div>
-      <div class="notice">Pesan tersimpan saat tombol kirim ditekan. Agar pesan langsung muncul tanpa member login ulang atau refresh, portal member harus berlangganan perubahan tabel <b>broadcast_messages</b> melalui Supabase Realtime dan memperbarui tampilan ketika ada pesan aktif baru. Pastikan tabel masuk publication Realtime serta RLS mengizinkan member membaca pesan aktif. Ini bukan email atau notifikasi push. Menarik pesan menyembunyikannya dari portal, sedangkan menghapus menghilangkannya beserta data pembacanya.</div>
+      <div class="notice">Pesan langsung diterima member yang sedang membuka portal (lewat Supabase Realtime). Member yang sedang offline melihat notifikasinya saat login ke portal. Portal harus membaca tabel <b>broadcast_messages</b>. Ini bukan email atau notifikasi push ke HP. Menarik pesan menyembunyikannya dari portal, sedangkan menghapus menghilangkannya beserta data pembacanya.</div>
     </section></section>
   </main>
 </section>
@@ -524,14 +508,15 @@ const titles = {
  models:['Model AI & Pengumuman','Kelola informasi model dan pengumuman produk.'],
  proof:['Testimoni & Performance','Kelola testimoni dan data performa yang tervalidasi.'],
  faq:['FAQ & Panduan','Kelola bantuan, instalasi EA, dan konfigurasi WebRequest.'],
- logs:['Log WebRequest API','Pantau permintaan dan sinyal dari EA klien.'],
  settings:['API & Keamanan','Periksa RLS, akses publik, dan kunci yang dipakai.'],
  admins:['Manajemen Admin','Tambah atau cabut akses admin Admin Console.'],
- broadcast:['Broadcast Pesan','Kirim pesan ke seluruh member portal.']
+ broadcast:['Broadcast Pesan','Kirim pesan langsung ke seluruh member portal.'],
+ social:['Sosial','Kelola sosial media dan hyperlink yang tampil di Ringkasan.']
 };
 
 let currentPage = 'overview';
 function showPage(name){
+  if (typeof ROLE_PAGES !== 'undefined' && ROLE_PAGES[myRole] && !ROLE_PAGES[myRole].includes(name)) name = 'overview';
   currentPage=name;
   document.querySelectorAll('.page').forEach(el=>el.classList.add('hidden'));
   const page=document.getElementById('page-'+name);
@@ -560,8 +545,6 @@ function showPage(name){
     loadProof();
   } else if (name === 'faq') {
     CRUDS.faq.load();
-  } else if (name === 'logs') {
-    loadReqLogs();
   } else if (name === 'settings') {
     loadSecurity();
   } else if (name === 'admins') {
@@ -569,7 +552,7 @@ function showPage(name){
   } else if (name === 'broadcast') {
     CRUDS.bc.load();
   } else if (name === 'social') {
-    loadSocialLinks();
+    loadSocial();
   }
 }
 document.querySelectorAll('[data-page]').forEach(btn=>btn.addEventListener('click',()=>showPage(btn.dataset.page)));
@@ -778,6 +761,7 @@ function enterAdmin(){
   loadTradingStats();
   loadEaUsage();
   supabaseClient.auth.getSession().then(({ data }) => { myUserId = data?.session?.user?.id || null; });
+  applyRole();
 }
 
 (async () => {
@@ -1355,7 +1339,9 @@ function downloadCsv(name, header, lines) {
 const CRUDS = {};
 function crudButtons(key, r) {
   const c = CRUDS[key];
-  return `<button class="btn ${r[c.flag] ? '' : 'teal'}" type="button" data-crud="${key}" data-act="toggle" data-id="${esc(r.id)}">${r[c.flag] ? c.offLabel : c.onLabel}</button> <button class="btn danger" type="button" data-crud="${key}" data-act="del" data-id="${esc(r.id)}">Hapus</button>`;
+  const del = `<button class="btn danger" type="button" data-crud="${key}" data-act="del" data-id="${esc(r.id)}">Hapus</button>`;
+  if (!c.flag) return del;
+  return `<button class="btn ${r[c.flag] ? '' : 'teal'}" type="button" data-crud="${key}" data-act="toggle" data-id="${esc(r.id)}">${r[c.flag] ? c.offLabel : c.onLabel}</button> ` + del;
 }
 function mkCrud(key, cfg) {
   CRUDS[key] = cfg;
@@ -1379,6 +1365,7 @@ function mkCrud(key, cfg) {
     if (error) { alert('Gagal menyimpan: ' + error.message); return; }
     e.target.reset();
     cfg.load();
+    if (cfg.afterInsert) cfg.afterInsert();
   });
 }
 document.addEventListener('click', async e => {
@@ -1503,50 +1490,6 @@ function loadProof() {
     : '<tr><td colspan="3">Belum ada data statistik trading.</td></tr>';
 }
 
-// ---------- Log WebRequest API (dari ea_usage_logs) ----------
-let reqLogs = [];
-async function loadReqLogs() {
-  const tb = $('rqBody');
-  tb.innerHTML = '<tr><td colspan="7">Memuat log...</td></tr>';
-  const ms = $('rqRange').value === '7d' ? 7 * 864e5 : 864e5;
-  const { data, error } = await supabaseClient.from('ea_usage_logs').select('*')
-    .gte('created_at', new Date(Date.now() - ms).toISOString()).order('created_at', { ascending: false }).limit(2000);
-  if (error) { tb.innerHTML = `<tr><td colspan="7" style="color:var(--red)">Gagal memuat log: ${esc(error.message)}</td></tr>`; return; }
-  reqLogs = data || [];
-  const sel = $('rqEa'), cur = sel.value;
-  const names = [...new Set(reqLogs.map(l => l.ea_name).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">Semua EA</option>' + names.map(n => `<option value="${esc(n)}"${n === cur ? ' selected' : ''}>${esc(n)}</option>`).join('');
-  renderReqLogs();
-}
-function renderReqLogs() {
-  const q = ($('rqSearch').value || '').trim().toLowerCase(), ev = $('rqEvent').value, ea = $('rqEa').value;
-  const list = reqLogs.filter(l => (!ev || l.event === ev) && (!ea || l.ea_name === ea) && (!q || [l.account_id, l.account_name].join(' ').toLowerCase().includes(q)));
-  const bad = l => l.event === 'denied' || l.event === 'error' || (l.result && l.result !== 'ok');
-  const failed = reqLogs.filter(bad).length;
-  $('rqTotal').textContent = reqLogs.length;
-  $('rqFail').textContent = reqLogs.length ? (failed / reqLogs.length * 100).toFixed(1) + '%' : '0%';
-  $('rqAccounts').textContent = new Set(reqLogs.map(l => l.account_id)).size;
-  const last = new Map();
-  reqLogs.forEach(l => { const k = String(l.account_id); if (!last.has(k)) last.set(k, l.created_at); });
-  const quiet = (typeof rows !== 'undefined' ? rows : []).filter(r => r.status === 'active').map(r => {
-    const t = last.get(String(r.account_id)) ?? last.get(String(r.account_number));
-    return { acc: r.account_number || r.account_id, t };
-  }).filter(x => !x.t || Date.now() - new Date(x.t).getTime() > 3 * 3600e3);
-  $('rqQuiet').textContent = quiet.length;
-  $('rqQuietList').innerHTML = quiet.length
-    ? quiet.slice(0, 15).map(x => `<span class="chip">${esc(maskAcc(x.acc))} · ${x.t ? esc(dt(x.t)) : 'tanpa sinyal'}</span>`).join('')
-    : '<span class="row-note" style="min-width:0">Semua akun aktif mengirim sinyal dalam 3 jam terakhir.</span>';
-  $('rqBody').innerHTML = list.length ? list.slice(0, 300).map(l => `<tr>
-    <td>${esc(dt(l.created_at))}</td><td>${esc(maskAcc(l.account_id))}</td><td>${esc(l.ea_name || '-')}</td>
-    <td><span class="status ${bad(l) ? 'blocked' : 'active'}">${esc(l.event)}</span></td>
-    <td>${esc(l.ea_version || '-')}</td><td>${esc(l.result || '-')}</td><td class="row-note">${esc(l.message || '-')}</td></tr>`).join('')
-    : '<tr><td colspan="7">Tidak ada log yang cocok.</td></tr>';
-}
-['rqSearch'].forEach(id => $(id)?.addEventListener('input', renderReqLogs));
-['rqEvent', 'rqEa'].forEach(id => $(id)?.addEventListener('change', renderReqLogs));
-$('rqRange')?.addEventListener('change', loadReqLogs);
-$('rqRefresh')?.addEventListener('click', loadReqLogs);
-
 // ---------- API & Keamanan ----------
 const PUBLIC_TABLES_OK = ['ea_config', 'ea_changelog', 'announcements', 'ai_models', 'faq_items', 'testimonials'];
 const PUBLIC_FN_OK = ['ea_log_usage', 'is_kingtherious_admin'];
@@ -1594,74 +1537,138 @@ async function loadSecurity() {
 }
 $('secRefresh')?.addEventListener('click', loadSecurity);
 
-// ---------- Manajemen Admin (role / tambah / cabut) ----------
-const ADMIN_ROLE_LABELS = {
-  utama: 'Admin Utama',
-  pengawas: 'Admin Pengawas',
-  verifikasi: 'Admin Verifikasi',
-  custom: 'Admin Custom'
-};
-let adminCache = [];
-
+// ---------- Manajemen Admin (tambah / role / cabut) ----------
+const ROLE_LABEL = { utama: 'Admin utama', verifikasi: 'Admin verifikasi', pengawas: 'Admin pengawas' };
+const ROLE_CLS = { utama: 'active', verifikasi: 'pending', pengawas: 'expired' };
+let admData = [];
 async function loadAdmins() {
   const tb = $('admBody');
   tb.innerHTML = '<tr><td colspan="4">Memuat daftar admin...</td></tr>';
   const { data, error } = await supabaseClient.rpc('admin_list_admins');
-  if (error) {
-    tb.innerHTML = `<tr><td colspan="4" style="color:var(--red)">Gagal memuat: ${esc(error.message)}. Backend perlu mendukung data role admin.</td></tr>`;
-    return;
-  }
-  adminCache = data || [];
+  if (error) { tb.innerHTML = `<tr><td colspan="4" style="color:var(--red)">Gagal memuat: ${esc(error.message)}. Jalankan useradmin_update_v4.sql.</td></tr>`; return; }
+  admData = data || [];
   renderAdmins();
 }
 function renderAdmins() {
-  const tb = $('admBody');
-  const filter = $('admRoleFilter')?.value || '';
-  const list = adminCache.filter(a => !filter || (a.role || (String(a.user_id) === String(myUserId) ? 'utama' : 'custom')) === filter);
-  tb.innerHTML = list.map(a => {
-    const isSelf = String(a.user_id) === String(myUserId);
-    const role = a.role || (isSelf ? 'utama' : 'custom');
-    const roleControl = isSelf
-      ? `<span class="status active">${esc(ADMIN_ROLE_LABELS[role] || role)}</span>`
-      : `<select data-adm-role="${esc(a.user_id)}" aria-label="Role ${esc(a.email || a.user_id)}">
-          ${Object.entries(ADMIN_ROLE_LABELS).filter(([key]) => key !== 'utama').map(([key,label]) => `<option value="${key}" ${key === role ? 'selected' : ''}>${label}</option>`).join('')}
-        </select> <button class="btn" type="button" data-adm-role-save="${esc(a.user_id)}">Simpan role</button>`;
-    const remove = isSelf ? '<span style="color:var(--muted)">Akun Anda</span>' : `<button class="btn danger" type="button" data-adm-del="${esc(a.user_id)}">Cabut akses</button>`;
-    return `<tr><td>${esc(a.email || a.user_id)}</td><td>${roleControl}</td><td>${esc(dt(a.created_at))}</td><td>${remove}</td></tr>`;
-  }).join('') || '<tr><td colspan="4">Tidak ada admin yang cocok.</td></tr>';
+  const rf = $('admRoleFilter').value;
+  const list = admData.filter(a => !rf || a.role === rf);
+  $('admCount').textContent = `${list.length} dari ${admData.length} admin`;
+  $('admBody').innerHTML = list.length ? list.map(a => {
+    const self = String(a.user_id) === String(myUserId);
+    const acts = self ? '<span style="color:var(--muted)">Akun Anda</span>'
+      : `<select data-adm-rolesel="${esc(a.user_id)}" aria-label="Ubah role">${Object.keys(ROLE_LABEL).map(k => `<option value="${k}"${k === a.role ? ' selected' : ''}>${ROLE_LABEL[k]}</option>`).join('')}</select> <button class="btn danger" type="button" data-adm-del="${esc(a.user_id)}">Cabut akses</button>`;
+    return `<tr><td>${esc(a.email || a.user_id)}</td><td><span class="status ${ROLE_CLS[a.role] || 'pending'}">${esc(ROLE_LABEL[a.role] || a.role)}</span></td><td>${esc(dt(a.created_at))}</td><td>${acts}</td></tr>`;
+  }).join('') : '<tr><td colspan="4">Tidak ada admin dengan role ini.</td></tr>';
 }
 $('admRoleFilter')?.addEventListener('change', renderAdmins);
-
 $('addAdminForm')?.addEventListener('submit', async e => {
   e.preventDefault();
-  const email = $('admEmail').value.trim();
-  const role = $('admRole').value;
-  if (!confirm(`Tambahkan ${email} sebagai ${ADMIN_ROLE_LABELS[role]}? Hak akses harus divalidasi oleh backend.`)) return;
-  const { error } = await supabaseClient.rpc('admin_add_admin_with_role', { p_email: email, p_role: role });
-  if (error) {
-    alert('Gagal menambahkan admin. Backend perlu menyediakan RPC admin_add_admin_with_role dan validasi hak Admin Utama: ' + error.message);
-    return;
-  }
+  const email = $('admEmail').value.trim(), role = $('admRole').value;
+  if (!confirm(`Jadikan ${email} sebagai ${ROLE_LABEL[role].toLowerCase()}?`)) return;
+  const { error } = await supabaseClient.rpc('admin_add_admin', { p_email: email, p_role: role });
+  if (error) { alert('Gagal: ' + error.message); return; }
   e.target.reset(); e.target.classList.add('hidden'); loadAdmins();
 });
 document.addEventListener('click', async e => {
-  const saveRole = e.target.closest('[data-adm-role-save]');
-  if (saveRole) {
-    const userId = saveRole.dataset.admRoleSave;
-    const select = document.querySelector(`[data-adm-role="${CSS.escape(userId)}"]`);
-    const role = select?.value;
-    if (!role || !confirm(`Ubah role admin ini menjadi ${ADMIN_ROLE_LABELS[role]}?`)) return;
-    const { error } = await supabaseClient.rpc('admin_set_role', { p_user_id: userId, p_role: role });
-    if (error) { alert('Gagal mengubah role. Backend perlu menyediakan RPC admin_set_role: ' + error.message); return; }
-    await loadAdmins();
-    return;
-  }
-  const b = e.target.closest('[data-adm-del]');
-  if (!b) return;
+  const del = e.target.closest('[data-adm-del]');
+  if (!del) return;
   if (!confirm('Cabut akses admin dari akun ini?')) return;
-  const { error } = await supabaseClient.rpc('admin_remove_admin', { p_user_id: b.dataset.admDel });
+  const { error } = await supabaseClient.rpc('admin_remove_admin', { p_user_id: del.dataset.admDel });
   if (error) { alert('Gagal: ' + error.message); return; }
   loadAdmins();
+});
+document.addEventListener('change', async e => {
+  const sel = e.target.closest('[data-adm-rolesel]');
+  if (!sel) return;
+  if (!confirm(`Ubah role akun ini menjadi ${ROLE_LABEL[sel.value].toLowerCase()}?`)) { loadAdmins(); return; }
+  const { error } = await supabaseClient.rpc('admin_set_admin_role', { p_user_id: sel.dataset.admRolesel, p_role: sel.value });
+  if (error) alert('Gagal: ' + error.message);
+  loadAdmins();
+});
+
+// ---------- Pembatasan tampilan menurut role ----------
+// Catatan: ini hanya merapikan tampilan. Penjaga sebenarnya adalah RLS dan fungsi di database.
+var myRole = 'utama';
+var VIEW_PAGES = ['overview', 'trade-entries', 'analytics', 'licenses', 'ib', 'history', 'visitor-history'];
+var ROLE_PAGES = { pengawas: VIEW_PAGES, verifikasi: VIEW_PAGES.concat(['auth-users']) };
+async function applyRole() {
+  const { data, error } = await supabaseClient.rpc('admin_my_role');
+  myRole = (!error && data) ? data : 'utama';   // jika fungsi belum dibuat, jangan mengunci pemilik
+  const allowed = ROLE_PAGES[myRole];            // undefined = admin utama (semua menu)
+  document.body.classList.remove('role-pengawas', 'role-verifikasi');
+  if (allowed) document.body.classList.add('role-' + myRole);
+  document.querySelectorAll('[data-page]').forEach(b => {
+    b.style.display = (allowed && !allowed.includes(b.dataset.page)) ? 'none' : '';
+  });
+  document.querySelectorAll('.sidebar .nav-label').forEach(l => {
+    const grp = l.parentElement;
+    grp.style.display = [...grp.querySelectorAll('[data-page]')].some(b => b.style.display !== 'none') ? '' : 'none';
+  });
+  const pill = $('rolePill');
+  if (pill) pill.textContent = '● ' + (ROLE_LABEL[myRole] || 'Admin area');
+  if (allowed && !allowed.includes(currentPage)) showPage('overview');
+}
+
+// ---------- Sosial media: nama + gambar + hyperlink ----------
+const SOCIAL_BUCKET = 'social-icons';
+const SOCIAL_TYPES = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' };
+let socData = [];
+const socImg = path => supabaseClient.storage.from(SOCIAL_BUCKET).getPublicUrl(path).data.publicUrl;
+async function loadSocial() {
+  const tb = $('socBody');
+  tb.innerHTML = '<tr><td colspan="4">Memuat data...</td></tr>';
+  const { data, error } = await supabaseClient.from('social_links').select('*').order('created_at', { ascending: true });
+  if (error) {
+    tb.innerHTML = `<tr><td colspan="4" style="color:var(--red)">Gagal memuat social_links: ${esc(error.message)}. Jalankan useradmin_update_v4.sql.</td></tr>`;
+    $('socPreview').innerHTML = '';
+    return;
+  }
+  socData = data || [];
+  tb.innerHTML = socData.length ? socData.map(r => `<tr>
+    <td>${r.image_path ? `<img class="soc-thumb" src="${esc(socImg(r.image_path))}" alt="">` : '—'}</td>
+    <td><b style="color:var(--text)">${esc(r.name)}</b></td>
+    <td><a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--cyan)">${esc(r.url.length > 48 ? r.url.slice(0, 48) + '…' : r.url)}</a></td>
+    <td><button class="btn danger" type="button" data-soc-del="${esc(r.id)}">Hapus</button></td></tr>`).join('')
+    : '<tr><td colspan="4">Belum ada sosial media. Tambahkan nama, gambar, dan hyperlink di atas.</td></tr>';
+  $('socPreview').innerHTML = socData.length
+    ? `<div class="soc-grid">${socData.map(r => `<a class="soc-card" href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${r.image_path ? `<img src="${esc(socImg(r.image_path))}" alt="">` : ''}<span>${esc(r.name)}</span></a>`).join('')}</div>`
+    : '<div class="row-note" style="min-width:0">Belum ada sosial media, jadi bagian ini tidak akan tampil di Ringkasan.</div>';
+}
+$('socFile')?.addEventListener('change', e => {
+  const f = e.target.files[0];
+  $('socThumb').innerHTML = f && SOCIAL_TYPES[f.type] ? `<img class="soc-thumb" style="width:56px;height:56px" src="${URL.createObjectURL(f)}" alt="Pratinjau gambar">` : '';
+});
+$('socForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target.elements, file = f.image.files[0];
+  if (!file) { alert('Pilih gambar terlebih dahulu.'); return; }
+  const ext = SOCIAL_TYPES[file.type];
+  if (!ext) { alert('Format gambar harus PNG, JPG, WEBP, atau GIF.'); return; }
+  if (file.size > 1048576) { alert('Ukuran gambar maksimal 1 MB.'); return; }
+  const btn = e.submitter; if (btn) btn.disabled = true;
+  const id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2);
+  const path = `${id}.${ext}`;
+  const up = await supabaseClient.storage.from(SOCIAL_BUCKET).upload(path, file, { contentType: file.type, upsert: false });
+  if (up.error) { alert('Gagal mengunggah gambar: ' + up.error.message + '\nPastikan useradmin_update_v4.sql sudah dijalankan.'); if (btn) btn.disabled = false; return; }
+  const { error } = await supabaseClient.from('social_links').insert({ name: f.name.value.trim(), url: f.url.value.trim(), image_path: path, created_by: myUserId });
+  if (error) {
+    await supabaseClient.storage.from(SOCIAL_BUCKET).remove([path]);
+    alert('Gagal menyimpan: ' + error.message);
+    if (btn) btn.disabled = false; return;
+  }
+  e.target.reset(); $('socThumb').innerHTML = '';
+  if (btn) btn.disabled = false;
+  loadSocial();
+});
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-soc-del]');
+  if (!b) return;
+  if (!confirm('Hapus sosial media ini?')) return;
+  const row = socData.find(r => String(r.id) === String(b.dataset.socDel));
+  const { error } = await supabaseClient.from('social_links').delete().eq('id', b.dataset.socDel);
+  if (error) { alert('Gagal: ' + error.message); return; }
+  if (row?.image_path) await supabaseClient.storage.from(SOCIAL_BUCKET).remove([row.image_path]);
+  loadSocial();
 });
 
 // ---------- Riwayat Lisensi ----------
@@ -1699,59 +1706,6 @@ $('lhSearch')?.addEventListener('input', renderLicenseHistory);
 $('lhAction')?.addEventListener('change', renderLicenseHistory);
 $('lhRefresh')?.addEventListener('click', loadLicenseHistory);
 
-// ---------- Sosial Media & Hyperlink ----------
-let socialRows = [];
-async function loadSocialLinks() {
-  const body = $('socialBody');
-  if (!body) return;
-  body.innerHTML = '<tr><td colspan="5">Memuat sosial media...</td></tr>';
-  const { data, error } = await supabaseClient.from('social_links')
-    .select('*').order('sort_order', { ascending: true });
-  if (error) {
-    body.innerHTML = `<tr><td colspan="5" style="color:var(--red)">Gagal memuat: ${esc(error.message)}. Buat tabel social_links dan atur RLS terlebih dahulu.</td></tr>`;
-    return;
-  }
-  socialRows = data || [];
-  body.innerHTML = socialRows.map(r => `<tr>
-    <td>${esc(r.name)}</td>
-    <td><a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--cyan)">${esc(r.url)}</a></td>
-    <td>${esc(r.sort_order ?? 0)}</td>
-    <td>${r.is_active ? '<span class="status active">Aktif</span>' : '<span class="status blocked">Nonaktif</span>'}</td>
-    <td><button class="btn" type="button" data-social-toggle="${esc(r.id)}" data-active="${r.is_active ? '1' : '0'}">${r.is_active ? 'Nonaktifkan' : 'Aktifkan'}</button>
-    <button class="btn danger" type="button" data-social-delete="${esc(r.id)}">Hapus</button></td>
-  </tr>`).join('') || '<tr><td colspan="5">Belum ada sosial media.</td></tr>';
-}
-$('socialRefresh')?.addEventListener('click', loadSocialLinks);
-$('socialForm')?.addEventListener('submit', async e => {
-  e.preventDefault();
-  const f = e.currentTarget;
-  const name = f.elements.name.value.trim();
-  const url = f.elements.url.value.trim();
-  if (!/^https?:\/\//i.test(url)) { alert('URL harus diawali http:// atau https://'); return; }
-  const payload = { name, url, sort_order: Number(f.elements.sort_order.value || 0), is_active: f.elements.is_active.checked };
-  const { error } = await supabaseClient.from('social_links').insert(payload);
-  if (error) { alert('Gagal menyimpan sosial media: ' + error.message); return; }
-  f.reset(); f.elements.sort_order.value = '1'; f.elements.is_active.checked = true;
-  loadSocialLinks();
-});
-document.addEventListener('click', async e => {
-  const toggle = e.target.closest('[data-social-toggle]');
-  if (toggle) {
-    const row = socialRows.find(r => String(r.id) === String(toggle.dataset.socialToggle));
-    if (!row) return;
-    const { error } = await supabaseClient.from('social_links').update({ is_active: !row.is_active }).eq('id', row.id);
-    if (error) { alert('Gagal mengubah status: ' + error.message); return; }
-    loadSocialLinks(); return;
-  }
-  const del = e.target.closest('[data-social-delete]');
-  if (del) {
-    if (!confirm('Hapus hyperlink sosial media ini?')) return;
-    const { error } = await supabaseClient.from('social_links').delete().eq('id', del.dataset.socialDelete);
-    if (error) { alert('Gagal menghapus: ' + error.message); return; }
-    loadSocialLinks();
-  }
-});
-
 // ---------- Broadcast Pesan ----------
 let bcReads = new Map(), bcMembers = null;
 mkCrud('bc', {
@@ -1768,6 +1722,9 @@ mkCrud('bc', {
   row: r => `<td class="row-note"><b style="color:var(--text)">${esc(r.title)}</b><br><small style="${SOFT}">${esc(r.body)}</small></td><td><span class="status ${KIND_CLS[r.kind] || 'pending'}">${esc(r.kind)}</span></td><td>${esc(dt(r.created_at))}</td><td>${r.expires_at ? esc(dt(r.expires_at)) : '—'}</td><td>${bcReads.get(r.id) || 0}${bcMembers !== null ? ' / ' + bcMembers : ''}</td><td>${flagBadge(r.active, 'Aktif', 'Ditarik')}</td>`,
   payload: f => ({ title: f.title.value.trim(), body: f.body.value.trim(), kind: f.kind.value, expires_at: endOfDay(f.expires_at.value), active: true })
 });
+
+// Konfirmasi setelah broadcast terkirim
+CRUDS.bc.afterInsert = () => alert('Pesan terkirim. Member yang sedang membuka portal menerimanya langsung, member lain melihatnya saat login ke portal.');
 </script>
 </body>
 </html>
