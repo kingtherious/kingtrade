@@ -221,6 +221,11 @@ table.ff td.cd{white-space:nowrap;text-align:center}
 .bc-item p{margin:0;color:#d5e3f7;font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
 .bc-item small{display:block;margin-top:6px;color:var(--muted);font-size:11px}
 .bc-foot{padding:14px 22px;border-top:1px solid var(--line);text-align:right}
+.soc-grid{display:flex;flex-wrap:wrap;gap:12px}
+.soc-card{display:flex;flex-direction:column;align-items:center;gap:8px;width:116px;padding:14px 8px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.02);color:inherit;text-decoration:none;font-size:13px;text-align:center;transition:.15s}
+.soc-card:hover{border-color:var(--cyan);transform:translateY(-2px)}
+.soc-card img{width:46px;height:46px;object-fit:contain;border-radius:10px}
+.soc-card .soc-ph{width:46px;height:46px;border-radius:10px;background:rgba(8,216,237,.12);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--cyan)}
 </style>
 </head>
 <body>
@@ -318,6 +323,11 @@ table.ff td.cd{white-space:nowrap;text-align:center}
          <p>Dapatkan file .ex5 terupdate untuk MetaTrader 5.</p>
        </div>
      </div>
+   </div>
+   <div class="card" id="socialBox" style="display:none;margin-top:20px">
+     <h2>Sosial Media &amp; Komunitas</h2>
+     <p class="k" style="margin:0 0 14px">Gabung dan berdiskusi bersama member lain.</p>
+     <div class="soc-grid" id="socialGrid"></div>
    </div>
   </section>
 
@@ -583,9 +593,42 @@ async function init() {
   await loadLicenses();
   await loadStats();
   await loadBroadcasts();
+  await loadSocial();
+  startRealtime();
 }
 
-// Pesan broadcast dari admin: tampilkan yang belum dibaca, lalu tandai sudah dibaca
+// ===== Broadcast dari admin =====
+// - Saat login: pesan yang belum dibaca ditampilkan.
+// - Saat portal sedang terbuka: pesan baru dari admin langsung muncul (Supabase Realtime).
+const bcShown = new Set();
+const bcFmt = v => v ? new Date(v).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+function bcItemHtml(m) {
+  const title = m.title || m.subject || '';
+  const text = m.message ?? m.body ?? m.content ?? m.text ?? '';
+  return `<div class="bc-item" data-id="${esc(m.id)}">${title ? `<b>${esc(title)}</b>` : ''}<p>${esc(text)}</p><small>${esc(bcFmt(m.created_at))}</small></div>`;
+}
+function bcRefreshCount() {
+  const n = $('bcBody').querySelectorAll('.bc-item').length;
+  $('bcCount').textContent = n + ' pesan baru';
+  if (!n) $('bcOverlay').classList.remove('show');
+}
+// Tampilkan pesan yang belum pernah ditampilkan; kembalikan daftar yang baru tampil
+function bcRender(list) {
+  const fresh = list.filter(m => !bcShown.has(m.id));
+  if (!fresh.length) return [];
+  fresh.forEach(m => bcShown.add(m.id));
+  if (!$('bcOverlay').classList.contains('show')) $('bcBody').innerHTML = '';
+  $('bcBody').insertAdjacentHTML('afterbegin', fresh.map(bcItemHtml).join(''));
+  bcRefreshCount();
+  $('bcOverlay').classList.add('show');
+  return fresh;
+}
+async function bcMarkRead(list) {
+  if (!list.length) return;
+  const rows = list.map(m => ({ message_id: m.id, user_id: user.id }));
+  const { error } = await db.from('broadcast_reads').upsert(rows, { onConflict: 'message_id,user_id', ignoreDuplicates: true });
+  if (error) console.error('Gagal menandai pesan dibaca:', error);
+}
 async function loadBroadcasts() {
   if (!db || !user) return;
   try {
@@ -593,25 +636,50 @@ async function loadBroadcasts() {
     const { data: reads, error: e2 } = await db.from('broadcast_reads').select('message_id');
     if (e1 || e2) { console.error('Gagal memuat broadcast:', e1 || e2); return; }
     const seen = new Set((reads || []).map(r => r.message_id));
-    const unread = (msgs || []).filter(m => !seen.has(m.id));
-    if (!unread.length) return;
-
-    const fmt = v => v ? new Date(v).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-    $('bcCount').textContent = unread.length + ' pesan baru';
-    $('bcBody').innerHTML = unread.map(m => {
-      const title = m.title || m.subject || '';
-      const text = m.message ?? m.body ?? m.content ?? m.text ?? '';
-      return `<div class="bc-item">${title ? `<b>${esc(title)}</b>` : ''}<p>${esc(text)}</p><small>${esc(fmt(m.created_at))}</small></div>`;
-    }).join('');
-    $('bcOverlay').classList.add('show');
-
-    // setelah pesan ditampilkan, tandai dibaca
-    const rows = unread.map(m => ({ message_id: m.id, user_id: user.id }));
-    const { error } = await db.from('broadcast_reads').upsert(rows, { onConflict: 'message_id,user_id', ignoreDuplicates: true });
-    if (error) console.error('Gagal menandai pesan dibaca:', error);
+    await bcMarkRead(bcRender((msgs || []).filter(m => !seen.has(m.id))));
   } catch (err) {
     console.error('Broadcast error:', err);
   }
+}
+async function bcLive(m) {
+  if (!m || m.active === false) return;
+  if (m.expires_at && new Date(m.expires_at) < new Date()) return;
+  await bcMarkRead(bcRender([m]));
+}
+function bcRemove(id) {
+  bcShown.delete(id);
+  $('bcBody').querySelector(`.bc-item[data-id="${CSS.escape(String(id))}"]`)?.remove();
+  if ($('bcOverlay').classList.contains('show')) bcRefreshCount();
+}
+
+// ===== Sosial media (bagian bawah Ringkasan) =====
+const SOCIAL_BUCKET = 'social-icons';
+async function loadSocial() {
+  if (!db || !user) return;
+  const { data, error } = await db.from('social_links').select('*').order('created_at', { ascending: true });
+  if (error) { console.error('Gagal memuat sosial media:', error); return; }
+  const list = (data || []).filter(r => /^https?:\/\//i.test(r.url || ''));
+  $('socialBox').style.display = list.length ? '' : 'none';   // tampil hanya jika admin sudah menambahkan
+  $('socialGrid').innerHTML = list.map(r => {
+    const img = r.image_path ? db.storage.from(SOCIAL_BUCKET).getPublicUrl(r.image_path).data.publicUrl : '';
+    const ph = esc(String(r.name || '?').trim().charAt(0).toUpperCase());
+    return `<a class="soc-card" href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<span class="soc-ph">${ph}</span>`}<span>${esc(r.name)}</span></a>`;
+  }).join('');
+}
+
+// ===== Realtime: broadcast & sosial media =====
+let rtStarted = false;
+function startRealtime() {
+  if (rtStarted || !db || !user) return;
+  rtStarted = true;
+  db.channel('portal-live')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'broadcast_messages' }, p => bcLive(p.new))
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'broadcast_messages' }, p => {
+      if (p.new.active === false) bcRemove(p.new.id); else bcLive(p.new);   // pesan ditarik / diaktifkan lagi
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'broadcast_messages' }, p => bcRemove(p.old.id))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'social_links' }, () => loadSocial())
+    .subscribe();
 }
 $('bcClose').addEventListener('click', () => $('bcOverlay').classList.remove('show'));
 
