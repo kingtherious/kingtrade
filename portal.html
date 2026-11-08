@@ -52,6 +52,16 @@ th{color:var(--muted);font-weight:600}
 .dl:last-child{border:0}
 .dl b{display:block}
 
+/* Kartu countdown news (Ringkasan) */
+.nn-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 24px;margin-bottom:24px;text-align:center}
+.nn-label{color:var(--muted);font-size:14px}
+.nn-name{font-size:clamp(24px,3.4vw,36px);font-weight:850;color:var(--red);margin:8px 0 2px;letter-spacing:-.01em;line-height:1.2;word-break:break-word}
+.nn-cur{display:inline-block;margin-left:8px;font-size:.55em;font-weight:700;color:var(--muted);vertical-align:middle}
+.nn-time{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:clamp(38px,7vw,64px);font-weight:800;color:var(--teal);line-height:1.15;margin:6px 0;letter-spacing:.02em}
+.nn-time.soon{color:#ffbd26}
+.nn-time.now{color:var(--red)}
+.nn-note{color:var(--muted);font-size:13px}
+
 /* Styling Tambahan untuk Ringkasan Modern */
 .welcome-hero {
   background: linear-gradient(135deg, rgba(8, 216, 237, 0.08) 0%, rgba(0, 224, 178, 0.03) 100%);
@@ -254,6 +264,13 @@ table.ff td.cd{white-space:nowrap;text-align:center}
      <button class="btn alt" onclick="document.querySelector('[data-view=\'license\']').click()">
        + Daftarkan Akun MT5
      </button>
+   </div>
+
+   <div class="nn-card" role="timer" aria-live="off">
+     <div class="nn-label">News berikutnya</div>
+     <div class="nn-name" id="nnName">Memuat...</div>
+     <div class="nn-time" id="nnTime">--:--:--</div>
+     <div class="nn-note">Waktu ditampilkan sesuai zona waktu perangkat Anda</div>
    </div>
 
    <div class="grid">
@@ -569,12 +586,46 @@ async function loadStats() {
   renderPerf();
 }
 
+// ===== Countdown news berikutnya (Ringkasan) =====
+let nnTarget=null, nnReload=0;
+async function loadNextNews(){
+  const nameEl=document.getElementById('nnName'); if(!nameEl) return;
+  if(!db){ nameEl.textContent='Belum ada jadwal'; return; }
+  try{
+    const {data,error}=await db.from('news_calendar').select('title,currency,event_time')
+      .eq('impact','High').gte('event_time',new Date().toISOString())
+      .order('event_time',{ascending:true}).limit(1);
+    if(error) throw error;
+    const e=data&&data[0];
+    if(!e){ nnTarget=null; nameEl.textContent='Belum ada jadwal'; document.getElementById('nnTime').textContent='--:--:--'; return; }
+    nnTarget=new Date(e.event_time).getTime();
+    nameEl.textContent=e.title||'News';
+    if(e.currency){ const c=document.createElement('span'); c.className='nn-cur'; c.textContent='('+e.currency+')'; nameEl.appendChild(c); }
+  }catch(err){ console.error('Gagal memuat news berikutnya:',err); nameEl.textContent='Belum ada jadwal'; }
+}
+function nnTick(){
+  const t=document.getElementById('nnTime'); if(!t||!nnTarget) return;
+  const diff=Math.floor((nnTarget-Date.now())/1000), pad=v=>String(v).padStart(2,'0');
+  if(diff<=0){
+    t.textContent='RILIS'; t.className='nn-time now';
+    if(Date.now()-nnReload>20000){ nnReload=Date.now(); setTimeout(loadNextNews,15000); }
+    return;
+  }
+  const dd=Math.floor(diff/86400), h=Math.floor(diff%86400/3600), m=Math.floor(diff%3600/60), sec=diff%60;
+  t.textContent=(dd>0?dd+'d ':'')+pad(h)+':'+pad(m)+':'+pad(sec);
+  t.className='nn-time'+(diff<=120?' now':diff<=900?' soon':'');
+}
+setInterval(nnTick,1000);
+setInterval(loadNextNews,300000);
+
 async function init() {
   if (db) {
     const { data: { session }, error: sessionError } = await db.auth.getSession();
     if (sessionError) console.error('Gagal memeriksa sesi login:', sessionError);
     if (session) user = session.user;
   }
+
+  loadNextNews();
 
   if (!user) {
     $('hello').textContent = 'Halo, Guest';
